@@ -1,0 +1,27 @@
+.container {
+  display: flex;
+  margin: auto;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 565px;
+  width: 655px;
+  background-color: gray;
+  transform: scale(100%);
+  transform-origin: top;
+}
+.grid {
+  position: absolute;
+  top: 0;
+  transform-origin: top;
+  margin-top: 10%;
+  scale: 25%;
+}
+
+.frame {
+  position: absolute;
+  top: 0;
+  scale: 8.7%;
+  transform-origin: top;
+  margin-top: 2.7%;
+}

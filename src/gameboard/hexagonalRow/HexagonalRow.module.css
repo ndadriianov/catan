@@ -1,0 +1,13 @@
+.hexagonalRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin-bottom: -15%;
+}
+
+.image {
+  height: 50%;
+  width: 50%;
+}
