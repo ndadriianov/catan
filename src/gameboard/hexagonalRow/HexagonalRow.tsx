@@ -1,9 +1,6 @@
 import classes from './HexagonalRow.module.css'
+import { Image } from '../../typesDefinitions/image.ts'
 
-type Image = {
-  src: string,
-  alt?: string
-}
 
 type HexagonalRowProps = {
   tiles: Image[]

@@ -25,3 +25,13 @@
   transform-origin: top;
   margin-top: 2.7%;
 }
+
+.roadsContainer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  transform-origin: top;
+  scale: 10%;
+  margin-top: 10.5%;
+}
