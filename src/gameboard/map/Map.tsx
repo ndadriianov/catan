@@ -2,7 +2,7 @@ import HexagonalRow from '../hexagonalRow/HexagonalRow.jsx';
 import classes from './Map.module.css'
 import frame from '../../assets/map/frame.png';
 import TurnedRoadsRow from '../roads/TurnedRoadsRow.tsx';
-import {tilesRow3, tilesRow4, tilesRow5} from '../../constants/TileRows.ts'
+import {tilesRow1, tilesRow2, tilesRow3, tilesRow4, tilesRow5} from '../../constants/TileRows.ts';
 import {roads1, roads2, roads3, roads4, roads5, roads6, roads7, roads8, roads9, roads10, roads11}
   from '../../constants/RoadRows.ts';
 import {houseRow1, houseRow2, houseRow3, houseRow4, houseRow5, houseRow6} from '../../constants/HouseRows.ts';
@@ -16,11 +16,11 @@ const Map = () => {
       <img src={frame} alt={'frame'} className={classes.frame}/>
       
       <div className={classes.grid}>
+        <HexagonalRow tiles={tilesRow1}/>
+        <HexagonalRow tiles={tilesRow2}/>
         <HexagonalRow tiles={tilesRow3}/>
         <HexagonalRow tiles={tilesRow4}/>
         <HexagonalRow tiles={tilesRow5}/>
-        <HexagonalRow tiles={tilesRow4}/>
-        <HexagonalRow tiles={tilesRow3}/>
       </div>
       
       <div className={classes.roadsContainer}>

@@ -1,25 +1,31 @@
-import clay from '../assets/map/clay.png';
+import {tiles, Tiles} from '../typesDefinitions/tiles.ts';
 
-
-type Tile = {
-  src: string;
-};
-
-export const tilesRow3: Tile[] = [
-  { src: clay },
-  { src: clay },
-  { src: clay },
+export const tilesRow1: Tiles<3> = [
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep
 ];
-export const tilesRow4: Tile[] = [
-  { src: clay },
-  { src: clay },
-  { src: clay },
-  { src: clay },
+export const tilesRow2: Tiles<4> = [
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
 ];
-export const tilesRow5: Tile[] = [
-  { src: clay },
-  { src: clay },
-  { src: clay },
-  { src: clay },
-  { src: clay },
+export const tilesRow3: Tiles<5> = [
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
+];
+export const tilesRow4: Tiles<4> = [
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep,
+];
+export const tilesRow5: Tiles<3> = [
+  tiles.sheep,
+  tiles.sheep,
+  tiles.sheep
 ];
