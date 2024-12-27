@@ -1,0 +1,17 @@
+.housesRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 33%;
+  margin-bottom: 18%;
+}
+
+.house {
+  height: 30%;
+  width: 30%;
+}
+
+.lower {
+  margin-top: 60%;
+}

@@ -35,3 +35,13 @@
   scale: 10%;
   margin-top: 10.5%;
 }
+
+.housesContainer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  transform-origin: top;
+  scale: 10%;
+  margin-top: 5.5%;
+}

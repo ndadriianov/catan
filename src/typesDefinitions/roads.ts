@@ -54,12 +54,12 @@ export const straightRoads = {
 };
 
 
-export type LeftRoad = typeof leftRoads[keyof typeof leftRoads];
+type LeftRoad = typeof leftRoads[keyof typeof leftRoads];
 
-export type RightRoad = typeof rightRoads[keyof typeof rightRoads];
+type RightRoad = typeof rightRoads[keyof typeof rightRoads];
 
-export type StraightRoad = typeof straightRoads[keyof typeof straightRoads];
+type StraightRoad = typeof straightRoads[keyof typeof straightRoads];
 
-export type Road = LeftRoad | RightRoad | StraightRoad;
+type Road = LeftRoad | RightRoad | StraightRoad;
 
 export type Roads<L extends number> = [Road, ...Road[]] & {length: L};
