@@ -1,4 +1,4 @@
-import HexagonalRow from '../hexagonalRow/HexagonalRow.jsx';
+import HexagonalRow from '../hexagonalRow/HexagonalRow.tsx';
 import classes from './Map.module.css'
 import frame from '../../assets/map/frame.png';
 import TurnedRoadsRow from '../roads/TurnedRoadsRow.tsx';
