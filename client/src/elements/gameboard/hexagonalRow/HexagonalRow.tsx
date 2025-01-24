@@ -1,4 +1,4 @@
-import {Tiles} from '../../typesDefinitions/tiles.ts';
+import {Tiles} from '../../../typesDefinitions/tiles.ts';
 import classes from './HexagonalRow.module.css'
 
 type HexagonalRowProps = {

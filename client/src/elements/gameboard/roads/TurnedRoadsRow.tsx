@@ -1,4 +1,4 @@
-import {Roads} from '../../typesDefinitions/roads.ts';
+import {Roads} from '../../../typesDefinitions/roads.ts';
 import classes from './Roads.module.css'
 
 type TurnedRoadsRowProps = {

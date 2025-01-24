@@ -1,4 +1,4 @@
-import {Houses} from '../../typesDefinitions/houses.ts';
+import {Houses} from '../../../typesDefinitions/houses.ts';
 import classes from './HousesRow.module.css'
 import clsx from 'clsx'
 

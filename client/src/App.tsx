@@ -1,9 +1,38 @@
-import Map from './gameboard/map/Map.tsx';
+import Login from './elements/menu/Login.tsx';
+import Register from './elements/menu/Register.tsx';
+import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
+import ChooseRoom from './elements/menu/ChooseRoom.tsx';
+import InRoom from './elements/menu/InRoom.tsx';
+import {useState} from 'react';
+import GlobalHeader from './elements/menu/GlobalHeader.tsx';
+import UserContext, {User} from './context/UserContext.ts';
+
 
 function App() {
+  const [user, setUser] = useState<User>({username: undefined, password: undefined});
+  
   return (
-    <Map/>
-  )
+    <UserContext.Provider value={{ user, setUser }}>
+      <BrowserRouter>
+        <GlobalHeader/>
+        
+        <Routes>
+          <Route path="/login" element={<Login/>}/>
+          <Route path="/register" element={<Register/>}/>
+          <Route path="/choose-room" element={<ChooseRoom/>}/>
+          <Route path="/room" element={<InRoom/>}/>
+          
+          <Route path="*" element={<Navigate to={'/login'} replace/>}/>
+        </Routes>
+      </BrowserRouter>
+    </UserContext.Provider>
+  );
 }
 
-export default App
+export default App;
+
+/*
+ * ПОЛУЧИЛОСЬ СОХРАНИТЬ ПОЛЬЗОВАТЕЛЯ ПРИ ОБНОВЛЕНИИ СТРАНИЦЫ, ЕСТЬ ЧТО-ТО ПОХОЖЕЕ НА НОРМАЛЬНЫЙ ВЫБОР КОМНАТЫ
+ *
+ * НАДО ПРЕДОТВРАТИТЬ ДОСТУП К АККАУНТУ ИЗ НЕСКОЛЬКИХ ОКОН. ТО ЕСТЬ ПЕРЕД АВТОРИЗАЦИЕЙ ПРОВЕРЯТЬ, АКТИВЕН ЛИ ДАННЫЙ ПОЛЬЗОВАТЕЛЬ
+ */

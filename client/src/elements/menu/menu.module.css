@@ -1,0 +1,14 @@
+.button-minor {
+  background: none;
+  border: none;
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  font-family: inherit;
+}
+
+.button-minor:hover {
+  color: gray;
+}
