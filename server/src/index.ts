@@ -2,7 +2,7 @@ import express from 'express';
 import {createServer} from 'http';
 import {Server, Socket} from 'socket.io';
 import cors from 'cors';
-import {LoginStatus, User} from './typesDefinitions/User';
+import {ConnectionStatus, LoginStatus, User} from './typesDefinitions/User';
 import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
 
@@ -51,8 +51,8 @@ io.on('connection', (socket: Socket): void => {
   socket.on('login', (username: string, password: string, callback: (succeed: LoginStatus) => void): void => {
     const user: User|undefined = users.find((user: User): boolean => user.username === username);
     if (user && user.password === password) {
-      if (!user.isActive) {
-        user.isActive = true;
+      if (user.status !== ConnectionStatus.Green) { // пользователь не должен иметь текущей активности
+        user.status = ConnectionStatus.Green; // восстановление соединения и подключение после долгой паузы
         socket.data.user = user;
         callback(LoginStatus.Success);
       } else {
@@ -66,7 +66,7 @@ io.on('connection', (socket: Socket): void => {
   // срабатывает когда пользователь выходит из аккаунта
   socket.on('logout', () => {
     if (socket.data.user) {
-      socket.data.user.isActive = false;
+      socket.data.user.status = ConnectionStatus.Red;
       socket.data.user = null;
     }
   })
@@ -126,7 +126,7 @@ io.on('connection', (socket: Socket): void => {
   socket.on('disconnect', (reason) => {
     console.log(`Socket disconnected: ${socket.id}, reason: ${reason}`);
     if (socket.data.user) {
-      socket.data.user.isActive = false;
+      socket.data.user.status = ConnectionStatus.Yellow;
     }
   });
 });

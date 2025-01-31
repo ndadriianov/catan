@@ -40,7 +40,7 @@ export default App;
  *
  * (done)НАДО ПРЕДОТВРАТИТЬ ДОСТУП К АККАУНТУ ИЗ НЕСКОЛЬКИХ ОКОН. ТО ЕСТЬ ПЕРЕД АВТОРИЗАЦИЕЙ ПРОВЕРЯТЬ, АКТИВЕН ЛИ ДАННЫЙ ПОЛЬЗОВАТЕЛЬ
  *
- * ЗАМЕНИТЬ ТИП isActive НА enum green yellow red, ГДЕ red = false, yellow - ВРЕМЯ НА ПЕРЕПОДКЛЮЧЕНИЕ НЕ ИСТЕКЛО, green = true
+ * (done)ЗАМЕНИТЬ ТИП isActive НА enum green yellow red, ГДЕ red = false, yellow - ВРЕМЯ НА ПЕРЕПОДКЛЮЧЕНИЕ НЕ ИСТЕКЛО, green = true
  *
  * СДЕЛАТЬ ОТОБРАЖЕНИЕ ЭТОГО СТАТУСА НА КЛИЕНТЕ
  *
