@@ -2,25 +2,28 @@ import {useContext, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import socket from '../../socket.ts';
 import MyModal from '../modal/MyModal.tsx';
-import UserContext from '../../context/UserContext.ts';
+import UserContext, {LoginStatus} from '../../context/UserContext.ts';
 
 
 const Login = () => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isIncorrect, setIsIncorrect] = useState<boolean>(false);
+  const [isDuplicate, setIsDuplicate] = useState<boolean>(false);
   
   const navigate = useNavigate();
   const usernameContext = useContext(UserContext);
   
   function handleLogin(): void {
     if (username.trim()) {
-      socket.emit('login', username, password, (succeed: boolean): void => {
-        if (succeed) {
+      socket.emit('login', username, password, (status: LoginStatus): void => {
+        if (status == LoginStatus.Success) {
           usernameContext?.setUser({username, password});
           navigate(`/choose-room`);
-        } else {
+        } else if (status == LoginStatus.Incorrect) {
           setIsIncorrect(true);
+        } else {
+          setIsDuplicate(true);
         }
       });
     }
@@ -52,6 +55,9 @@ const Login = () => {
       
       <MyModal visible={isIncorrect} setVisible={setIsIncorrect}>
         Неверный логин или пароль!
+      </MyModal>
+      <MyModal visible={isDuplicate} setVisible={setIsDuplicate}>
+        Данный аккаунт уже активен!
       </MyModal>
     </div>
   );

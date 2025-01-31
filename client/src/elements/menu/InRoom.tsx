@@ -26,6 +26,7 @@ const InRoom = () => {
     });
   }
   
+  // первичная загрузка и обновление состояния комнаты
   useEffect(() => {
     loadRoom();
     socket.on('room-update', (updatedRoom: Room): void => {

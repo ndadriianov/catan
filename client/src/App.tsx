@@ -6,6 +6,7 @@ import InRoom from './elements/menu/InRoom.tsx';
 import {useState} from 'react';
 import GlobalHeader from './elements/menu/GlobalHeader.tsx';
 import UserContext, {User} from './context/UserContext.ts';
+import Map from './elements/gameboard/map/Map.tsx';
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Route path="/register" element={<Register/>}/>
           <Route path="/choose-room" element={<ChooseRoom/>}/>
           <Route path="/room" element={<InRoom/>}/>
+          <Route path="/map" element={<Map/>}/>
           
           <Route path="*" element={<Navigate to={'/login'} replace/>}/>
         </Routes>
@@ -32,7 +34,17 @@ function App() {
 export default App;
 
 /*
- * ПОЛУЧИЛОСЬ СОХРАНИТЬ ПОЛЬЗОВАТЕЛЯ ПРИ ОБНОВЛЕНИИ СТРАНИЦЫ, ЕСТЬ ЧТО-ТО ПОХОЖЕЕ НА НОРМАЛЬНЫЙ ВЫБОР КОМНАТЫ
+ * (done)ПОЛУЧИЛОСЬ СОХРАНИТЬ ПОЛЬЗОВАТЕЛЯ ПРИ ОБНОВЛЕНИИ СТРАНИЦЫ, ЕСТЬ ЧТО-ТО ПОХОЖЕЕ НА НОРМАЛЬНЫЙ ВЫБОР КОМНАТЫ
  *
- * НАДО ПРЕДОТВРАТИТЬ ДОСТУП К АККАУНТУ ИЗ НЕСКОЛЬКИХ ОКОН. ТО ЕСТЬ ПЕРЕД АВТОРИЗАЦИЕЙ ПРОВЕРЯТЬ, АКТИВЕН ЛИ ДАННЫЙ ПОЛЬЗОВАТЕЛЬ
+ * (done)НАДО СДЕЛАТЬ ОТКЛЮЧЕНИЕ ОТ КОМНАТЫ ПРИ ВЫХОДЕ ИЗ АККАУНТА/ПРЕКРАЩЕНИИ СОЕДИНЕНИЯ
+ *
+ * (done)НАДО ПРЕДОТВРАТИТЬ ДОСТУП К АККАУНТУ ИЗ НЕСКОЛЬКИХ ОКОН. ТО ЕСТЬ ПЕРЕД АВТОРИЗАЦИЕЙ ПРОВЕРЯТЬ, АКТИВЕН ЛИ ДАННЫЙ ПОЛЬЗОВАТЕЛЬ
+ *
+ * ЗАМЕНИТЬ ТИП isActive НА enum green yellow red, ГДЕ red = false, yellow - ВРЕМЯ НА ПЕРЕПОДКЛЮЧЕНИЕ НЕ ИСТЕКЛО, green = true
+ *
+ * СДЕЛАТЬ ОТОБРАЖЕНИЕ ЭТОГО СТАТУСА НА КЛИЕНТЕ
+ *
+ * НАДО СДЕЛАТЬ МЕХАНИЗМ ЗАПУСКА ИГРЫ
+ *
+ * (note)ПРИ ИЗМЕНЕНИИ СПИСКА ДОСТУПНЫХ КОМНАТ СОБЫТИЕ ПОЛУЧАЮТ ВСЕ ПОДКЛЮЧЕННЫЕ ПОЛЬЗОВАТЕЛИ, ЭТО НЕ МЕШАЕТ РАБОТЕ, НО ОТПРАВЛЯЮТСЯ ЛИШНИЕ ЗАПРОСЫ
  */

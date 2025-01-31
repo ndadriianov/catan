@@ -1,38 +1,52 @@
+import {EventEmitter} from 'node:events';
+
+
 export class Room {
   id: number;
   private _players: Array<Player>;
   private _haveStarted: boolean;
+  private _eventEmitter: EventEmitter;
+  
   
   get players() {
     return this._players;
   }
+  
+  
   addPlayer(username: string): boolean {
     if (this._players.length < 4 && !this._haveStarted) {
       if (this._players.find((player) => player.username === username)) return false;
       
       this._players.push(new Player(username));
+      this._eventEmitter.emit('update', this.id);
       return true;
     }
     else {
       return false;
     }
   }
+  
+  
   removePlayer(username: string): boolean {
     if (this._haveStarted) return false;
+    
     if (this._players.find((player) => player.username === username)) {
-      console.log(this);
-      console.log('---------------');
-      console.log(username);
+      
       this._players = this._players.filter(player => player.username !== username);
-      console.log('---------------');
-      console.log(this);
+      this._eventEmitter.emit('update', this.id);
       return true;
     }
+    
     return false;
   }
+  
+  
   start(): void {
     this._haveStarted = true;
+    this._eventEmitter.emit('update', this.id);
   }
+  
+  
   toJSON() {
     return {
       id: this.id,
@@ -50,12 +64,16 @@ export class Room {
     };
   }
   
-  constructor(id: number) {
+  
+  constructor(id: number, eventEmitter: EventEmitter) {
     this.id = id;
     this._players = [];
     this._haveStarted = false;
+    this._eventEmitter = eventEmitter;
   }
 }
+
+
 
 
 class Player {
@@ -67,6 +85,8 @@ class Player {
     this.inventory = new Inventory();
   }
 }
+
+
 
 
 class Inventory {

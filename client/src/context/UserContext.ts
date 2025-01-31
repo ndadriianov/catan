@@ -5,6 +5,12 @@ export function clearInvalidAccount(): void {
   sessionStorage.removeItem('password');
 }
 
+export enum LoginStatus{
+  Success,
+  Incorrect,
+  Duplicate,
+}
+
 export type User = {
   username?: string;
   password?: string;

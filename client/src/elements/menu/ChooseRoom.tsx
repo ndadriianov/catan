@@ -19,6 +19,7 @@ const ChooseRoom = () => {
     });
   }
   
+  // первичная загрузка и обновление списка комнат
   useEffect(() => {
     socket.emit('show-rooms', (res: Array<number>): void => {
       setRoomIds(res);
