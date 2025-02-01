@@ -38,7 +38,7 @@ io.on('connection', (socket: Socket): void => {
   // Срабатывает когда пользователь создает аккаунт, одновременно с этим пользователь входит в аккаунт. Логика, связанная с login здесь не используется
   socket.on('register', (username: string, password: string, callback: (isAvailable: boolean) => void): void => {
     if (!users.find((user: User): boolean => user.username === username)) {
-      const user: User = new User(username, password);
+      const user: User = new User(username, password, roomEmitter);
       users.push(user);
       socket.data.user = user;
       callback(true);
@@ -78,6 +78,8 @@ io.on('connection', (socket: Socket): void => {
   
   // срабатывает когда пользователь создает комнату
   socket.on('create-room', (id: number, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    
     if (rooms.find((room: Room): boolean => room.id === id)) {
       callback(false);
       return;
@@ -93,22 +95,26 @@ io.on('connection', (socket: Socket): void => {
   
   // срабатывает когда пользователь заходит в комнату, но не присоединяется
   socket.on('load-room', (id: number, callback: (currentRoom: any) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     socket.join(id.toString());
-    callback(room ? room.toJSON() : null);
+    callback(room ? room.toJSON() : undefined);
   });
   
   // срабатывает когда пользователь выходит из комнаты, если он к ней присоединился, он из нее удаляется
-  socket.on('go-back-to-choose', (id: number) => {
+  socket.on('go-back-to-choose', (id: number): void => {
+    if (!checkIsAuth({socket})) return;
     socket.leave(id.toString());
-    const room = rooms.find((room: Room): boolean => room.id === id);
+    const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     if (room) {
-      room.removePlayer(socket.data.user.username);
+      room.removePlayer(socket.data.user.username); ////////////////////
     }
   })
   
   // срабатывает когда пользователь присоединяется к комнате (не путать с 'load room')
   socket.on('join-room', (id: number, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     if (!room) {
       callback(false);
@@ -129,9 +135,31 @@ io.on('connection', (socket: Socket): void => {
       socket.data.user.status = ConnectionStatus.Yellow;
     }
   });
+  
+  // ниже disconnect только временные тестовые события, не влияющие на работу приложения
+  socket.on('log-room', (id: number): void => {
+    console.log(rooms.find((room: Room): boolean => room.id === id));
+    console.log('-------------------------------------------------');
+    console.log(users);
+  })
 });
 
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+
+type checkIsAuthProps = {
+  socket: Socket;
+  callback?: (succeed: boolean) => void
+}
+
+function checkIsAuth({socket, callback} : checkIsAuthProps): boolean {
+  if (!socket.data.user) {
+    if (callback) callback(false);
+    socket.emit('reauthorization-required');
+    return false;
+  }
+  return true;
+}

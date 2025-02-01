@@ -1,16 +1,16 @@
 import {EventEmitter} from 'node:events';
+import {ConnectionStatus} from './User';
 
 
 export class Room {
   id: number;
+  active: boolean;
   private _players: Array<Player>;
   private _haveStarted: boolean;
   private _eventEmitter: EventEmitter;
   
   
-  get players() {
-    return this._players;
-  }
+  get players(): Array<Player> {return Object.assign({}, this._players);}
   
   
   addPlayer(username: string): boolean {
@@ -52,6 +52,7 @@ export class Room {
       id: this.id,
       players: this._players.map(player => ({
         username: player.username,
+        status: player.status,
         inventory: {
           clay: player.inventory.clay,
           forrest: player.inventory.forrest,
@@ -67,9 +68,19 @@ export class Room {
   
   constructor(id: number, eventEmitter: EventEmitter) {
     this.id = id;
+    this.active = true;
     this._players = [];
     this._haveStarted = false;
     this._eventEmitter = eventEmitter;
+    eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => {
+      if (this.active) {
+        const player: Player|undefined = this._players.find((player: Player): boolean => player.username === username);
+        if (player) {
+          player.status = status;
+          eventEmitter.emit('update', this.id);
+        }
+      }
+    });
   }
 }
 
@@ -79,10 +90,13 @@ export class Room {
 class Player {
   username: string;
   inventory: Inventory;
+  status: ConnectionStatus;
+  
   
   constructor(username: string) {
     this.username = username;
     this.inventory = new Inventory();
+    this.status = ConnectionStatus.Green;
   }
 }
 

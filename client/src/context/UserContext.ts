@@ -1,10 +1,5 @@
 import {createContext} from 'react';
 
-export function clearInvalidAccount(): void {
-  sessionStorage.removeItem('username');
-  sessionStorage.removeItem('password');
-}
-
 export enum LoginStatus{
   Success,
   Incorrect,

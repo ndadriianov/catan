@@ -1,0 +1,10 @@
+.players-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.connectionIndicator {
+  height: 15px;
+  width: 15px;
+}

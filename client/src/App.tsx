@@ -2,7 +2,7 @@ import Login from './elements/menu/Login.tsx';
 import Register from './elements/menu/Register.tsx';
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
 import ChooseRoom from './elements/menu/ChooseRoom.tsx';
-import InRoom from './elements/menu/InRoom.tsx';
+import InRoom from './elements/menu/inRoom/InRoom.tsx';
 import {useState} from 'react';
 import GlobalHeader from './elements/menu/GlobalHeader.tsx';
 import UserContext, {User} from './context/UserContext.ts';
@@ -42,7 +42,10 @@ export default App;
  *
  * (done)ЗАМЕНИТЬ ТИП isActive НА enum green yellow red, ГДЕ red = false, yellow - ВРЕМЯ НА ПЕРЕПОДКЛЮЧЕНИЕ НЕ ИСТЕКЛО, green = true
  *
- * СДЕЛАТЬ ОТОБРАЖЕНИЕ ЭТОГО СТАТУСА НА КЛИЕНТЕ
+ * (done)СДЕЛАТЬ ОТОБРАЖЕНИЕ ЭТОГО СТАТУСА НА КЛИЕНТЕ
+ * (fixed)работает очень плохо, на стороне клиента появились сбои в отображении списка игроков
+ *
+ * (fixed)Возникает баг, что при перезагрузке сервера если не перезагрузить клиентскую часть, то пользователь не отбрасывается к логину
  *
  * НАДО СДЕЛАТЬ МЕХАНИЗМ ЗАПУСКА ИГРЫ
  *

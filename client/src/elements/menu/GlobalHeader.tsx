@@ -1,18 +1,25 @@
-import {useContext, useEffect} from 'react';
-import UserContext, {clearInvalidAccount, LoginStatus} from '../../context/UserContext.ts';
+import {useContext, useEffect, useState} from 'react';
+import UserContext, {LoginStatus} from '../../context/UserContext.ts';
 import {useNavigate} from 'react-router-dom';
 import socket from '../../socket.ts';
+import MyModal from '../modal/MyModal.tsx';
 
 const GlobalHeader = () => {
   const {user, setUser} = useContext(UserContext)!;
+  const [needAuthorizeAgain, setNeedAuthorizeAgain] = useState(false);
   const navigate = useNavigate();
   
   function LogOut(): void {
-    setUser({username: undefined, password: undefined});
-    navigate('/login');
     clearInvalidAccount();
     socket.emit('logout');
   }
+  function clearInvalidAccount(): void {
+    setUser({username: undefined, password: undefined});
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('password');
+    navigate('/login');
+  }
+  
   
   // сохранение логина и пароля в sessionStorage чтобы они не слетели при перезагрузке страницы
   useEffect(() => {
@@ -35,12 +42,21 @@ const GlobalHeader = () => {
             setUser({username: storageUsername, password: storagePassword});
           } else {
             clearInvalidAccount();
-            navigate('/login');
           }
         });
+      } else {
+        clearInvalidAccount();
       }
     }
   }, []);
+  
+  
+  useEffect(() => {
+    socket.on('reauthorization-required', () => {
+      setNeedAuthorizeAgain(true);
+      clearInvalidAccount();
+    })
+  })
   
   
   return (
@@ -53,6 +69,10 @@ const GlobalHeader = () => {
           </button>
         </div>
       )}
+      
+      <MyModal visible={needAuthorizeAgain} setVisible={setNeedAuthorizeAgain}>
+        Произошла ошибка аутентификации. Введите логин и пароль снова
+      </MyModal>
     </div>
   );
 };

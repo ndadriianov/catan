@@ -1,0 +1,21 @@
+import classes from './InRoom.module.css';
+import {ConnectionStatus} from '../../../typesDefinitions/room.ts';
+
+type ConnectionIndicatorProps = {
+  status: ConnectionStatus
+}
+
+const colors: Array<string> = [
+  'red',
+  'yellow',
+  'green'
+]
+
+const ConnectionIndicator = ({status}: ConnectionIndicatorProps) => {
+  console.log(status);
+  return (
+    <div className={classes.connectionIndicator} style={{backgroundColor: colors[status]}} />
+  );
+};
+
+export default ConnectionIndicator;
