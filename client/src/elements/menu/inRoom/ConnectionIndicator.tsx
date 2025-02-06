@@ -8,7 +8,8 @@ type ConnectionIndicatorProps = {
 const colors: Array<string> = [
   'red',
   'yellow',
-  'green'
+  'green',
+  'gray'
 ]
 
 const ConnectionIndicator = ({status}: ConnectionIndicatorProps) => {

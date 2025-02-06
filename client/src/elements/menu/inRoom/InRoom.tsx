@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react';
-import {parseRoom, Room} from '../../../typesDefinitions/room.ts';
+import {jsonRoom, parseRoom, Room} from '../../../typesDefinitions/room.ts';
 import socket from '../../../socket.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
-import MyModal from '../../modal/MyModal.tsx';
+import MyModal from '../../UI/modal/MyModal.tsx';
 import ConnectionIndicator from './ConnectionIndicator.tsx';
+import Map from '../../gameboard/map/Map.tsx';
 
 
 const InRoom = () => {
@@ -18,7 +19,7 @@ const InRoom = () => {
   const navigate = useNavigate();
   
   function loadRoom(): void {
-    socket.emit('load-room', roomId, (room: Room | null): void => {
+    socket.emit('load-room', roomId, (room: jsonRoom | null): void => {
       setRoom(parseRoom(room));
       if (room === null) setErrorWithRoom(true);
     });
@@ -32,7 +33,7 @@ const InRoom = () => {
   // первичная загрузка и обновление состояния комнаты
   useEffect(() => {
     loadRoom();
-    socket.on('room-update', (updatedRoom: Room): void => {
+    socket.on('room-update', (updatedRoom: jsonRoom): void => {
       setRoom(parseRoom(updatedRoom));
       if (room === null) setErrorWithRoom(true);
     })
@@ -40,25 +41,17 @@ const InRoom = () => {
   
   return (
     <div>
+      <button onClick={() => {
+        socket.emit('go-back-to-choose', roomId);
+        navigate('/choose-room');
+      }}>
+        вернуться к выбору комнаты
+      </button>
+      
       <h2>InRoom {roomId}</h2>
       
       {!errorWithRoom &&
         <div>
-          {room != undefined ? (
-            <div>
-              <ul>
-                {room.players.map((player, index) => (
-                  <li key={index} style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                    <span>{player.username}</span>
-                    <ConnectionIndicator status={player.status}/>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <h3>Список игроков пуст</h3>
-          )}
-
           <button onClick={joinRoom}>
             присоединиться
           </button>
@@ -67,13 +60,40 @@ const InRoom = () => {
             вывести в консоль комнату
           </button>
 
+          <button onClick={() => socket.emit('start-room', roomId)}>
+            начать
+          </button>
+
           <MyModal visible={unsuccessful} setVisible={setUnsuccessful}>
             Не удалось подключиться к комнате
           </MyModal>
-          
-          <button onClick={() => socket.emit('log-room', roomId)}>
+
+          <button onClick={() => socket.emit('log-room', roomId)}> {/*временная кнопка*/}
             Вывести в консоль на сервере состояние комнаты
           </button>
+          
+          {room != undefined ? (
+            <div>
+              <h3>игра {room.haveStarted ? ' ' : ' не '} началась</h3>
+              
+              <ul>
+                {room.players.map((player, index) => (
+                  <li key={index} style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <span>{player.username}</span>
+                    <ConnectionIndicator status={player.status}/>
+                  </li>
+                ))}
+              </ul>
+              
+              {room.haveStarted &&
+                <div>
+                  <Map/>
+                </div>
+              }
+            </div>
+          ) : (
+            <h3>Список игроков пуст</h3>
+          )}
         </div>
       }
       
@@ -84,13 +104,6 @@ const InRoom = () => {
           <button onClick={loadRoom}>попробовать загрузить снова</button>
         </div>
       }
-      
-      <button onClick={() => {
-        socket.emit('go-back-to-choose', roomId);
-        navigate('/choose-room');
-      }}>
-        вернуться к выбору комнаты
-      </button>
     </div>
   );
 };

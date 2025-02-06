@@ -4,10 +4,18 @@ export type Room = {
   haveStarted: boolean;
 }
 
+export type jsonRoom = Omit<Room, 'players'> & {
+  players: jsonPlayer[];
+}
+
 export type Player = {
   username: string;
   status: ConnectionStatus;
   inventory: Inventory;
+}
+
+type jsonPlayer = Player & {
+  leftTheRoom: boolean;
 }
 
 export type Inventory = {
@@ -22,7 +30,19 @@ export type Inventory = {
 export enum ConnectionStatus {
   Red,
   Yellow,
-  Green
+  Green,
+  Gray
+}
+
+
+export enum Owner {
+  nobody,
+  black,
+  blue,
+  green,
+  orange,
+  red,
+  yellow
 }
 
 
@@ -36,7 +56,8 @@ function parseInventory(inventoryJSON: Inventory): Inventory {
   };
 }
 
-function parsePlayer(playerJSON: Player): Player {
+function parsePlayer(playerJSON: jsonPlayer): Player {
+  if (playerJSON.status === ConnectionStatus.Green && playerJSON.leftTheRoom) playerJSON.status = ConnectionStatus.Gray;
   return {
     username: playerJSON.username,
     status: playerJSON.status as ConnectionStatus,
@@ -44,12 +65,12 @@ function parsePlayer(playerJSON: Player): Player {
   };
 }
 
-export function parseRoom(roomJSON: Room|null): Room|null {
+export function parseRoom(roomJSON: jsonRoom|null): Room|null {
   if (!roomJSON) return null;
   try {
     return {
       id: roomJSON.id,
-      players: roomJSON.players.map((player: Player): Player => {
+      players: roomJSON.players.map((player: jsonPlayer): Player => {
         return parsePlayer(player);
       }),
       haveStarted: roomJSON.haveStarted as boolean,

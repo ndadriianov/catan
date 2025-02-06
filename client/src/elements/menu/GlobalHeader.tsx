@@ -2,7 +2,7 @@ import {useContext, useEffect, useState} from 'react';
 import UserContext, {LoginStatus} from '../../context/UserContext.ts';
 import {useNavigate} from 'react-router-dom';
 import socket from '../../socket.ts';
-import MyModal from '../modal/MyModal.tsx';
+import MyModal from '../UI/modal/MyModal.tsx';
 
 const GlobalHeader = () => {
   const {user, setUser} = useContext(UserContext)!;

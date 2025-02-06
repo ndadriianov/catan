@@ -35,6 +35,10 @@ roomEmitter.on('update', (id: number): void => {
 io.on('connection', (socket: Socket): void => {
   console.log(`Client connected: ${socket.id}`);
   
+  /*********************************************************************************************************************
+  * Взаимодействие в меню
+  *********************************************************************************************************************/
+  
   // Срабатывает когда пользователь создает аккаунт, одновременно с этим пользователь входит в аккаунт. Логика, связанная с login здесь не используется
   socket.on('register', (username: string, password: string, callback: (isAvailable: boolean) => void): void => {
     if (!users.find((user: User): boolean => user.username === username)) {
@@ -66,14 +70,15 @@ io.on('connection', (socket: Socket): void => {
   // срабатывает когда пользователь выходит из аккаунта
   socket.on('logout', () => {
     if (socket.data.user) {
-      socket.data.user.status = ConnectionStatus.Red;
+       socket.data.user.status = ConnectionStatus.Red;
       socket.data.user = null;
     }
   })
   
   // срабатывает когда пользователь заходит на страницу выбора комнат
-  socket.on('show-rooms', (callback: (res: Array<number>) => void): void => {
-    callback(rooms.map((room: Room): number =>  room.id));
+  socket.on('show-rooms', (callback: (res: {currentRoomIds: number[], otherRoomIds: number[]}) => void): void => {
+    if (checkIsAuth({socket})) callback(prepareRoomIdLists(socket.data.user));
+    else callback({currentRoomIds: [], otherRoomIds: []});
   });
   
   // срабатывает когда пользователь создает комнату
@@ -87,7 +92,7 @@ io.on('connection', (socket: Socket): void => {
     const room: Room = new Room(id, roomEmitter);
     rooms.push(room);
     room.addPlayer(socket.data.user.username);
-    io.emit('update-room-list', rooms.map((room: Room): number => room.id)); // обновление списка комнат для пользователей
+    io.emit('update-room-list', prepareRoomIdLists(socket.data.user)); // обновление списка комнат для пользователей
     socket.data.user.activeRoom = room;
     socket.join(id.toString());
     callback(true);
@@ -96,18 +101,29 @@ io.on('connection', (socket: Socket): void => {
   // срабатывает когда пользователь заходит в комнату, но не присоединяется
   socket.on('load-room', (id: number, callback: (currentRoom: any) => void): void => {
     if (!checkIsAuth({socket, callback})) return;
+    
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
-    socket.join(id.toString());
-    callback(room ? room.toJSON() : undefined);
+    if (room) {
+      socket.join(id.toString());
+      if (room.hasStarted && room.isInRoom(socket.data.user.username)) {
+        roomEmitter.emit('update-user-status', socket.data.user.username, socket.data.user._status);
+        socket.data.user.activeRoom = room;
+      }
+      callback(room.toJSON());
+      
+    } else {
+      callback(undefined);
+    }
   });
   
   // срабатывает когда пользователь выходит из комнаты, если он к ней присоединился, он из нее удаляется
+  // если игра началась, то пользователь получает серый статус в комнате (leftTheRoom === true)
   socket.on('go-back-to-choose', (id: number): void => {
     if (!checkIsAuth({socket})) return;
     socket.leave(id.toString());
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     if (room) {
-      room.removePlayer(socket.data.user.username); ////////////////////
+      if (!room.removePlayer(socket.data.user.username)) socket.data.user.activeRoom = null;
     }
   })
   
@@ -127,6 +143,22 @@ io.on('connection', (socket: Socket): void => {
     callback(false);
   });
   
+  // срабатывает когда пользователь(в будущем - только создатель комнаты) нажимает на кнопку начать игру
+  socket.on('start-room', (id: number): void => {
+    if (!checkIsAuth({socket})) return;
+    const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
+    if (room) room.start();
+  })
+  
+  /*********************************************************************************************************************
+   * Игровой процесс
+   *********************************************************************************************************************/
+  
+   
+  
+  /*********************************************************************************************************************
+   * Отключение
+   *********************************************************************************************************************/
   
   // пользователь отключился (закрыл страницу/перезагрузил/у него пропал интернет)
   socket.on('disconnect', (reason) => {
@@ -141,7 +173,11 @@ io.on('connection', (socket: Socket): void => {
     console.log(rooms.find((room: Room): boolean => room.id === id));
     console.log('-------------------------------------------------');
     console.log(users);
-  })
+  });
+  
+  socket.on('test-room-lists', (): void => {
+    console.log(prepareRoomIdLists(socket.data.user));
+  });
 });
 
 
@@ -162,4 +198,13 @@ function checkIsAuth({socket, callback} : checkIsAuthProps): boolean {
     return false;
   }
   return true;
+}
+
+function prepareRoomIdLists(user: User): {currentRoomIds: number[], otherRoomIds: number[]} {
+  const currentRoomIds: number[] = user.participatingRooms.map((room: Room): number => room.id);
+  const allRoomIds: number[] = rooms.map((room: Room): number => room.id);
+  const otherRoomIds: number[] = allRoomIds.filter((id: number): boolean => {
+    return !currentRoomIds.some((otherId: number): boolean => id === otherId);
+  })
+  return {currentRoomIds, otherRoomIds};
 }

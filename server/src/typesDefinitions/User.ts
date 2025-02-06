@@ -5,7 +5,8 @@ import {EventEmitter} from 'node:events';
 export class User {
   username: string;
   password: string;
-  activeRoom: Room | null;
+  participatingRooms: Room[];
+  private _activeRoom: Room | null;
   private _status: ConnectionStatus;
   private _timer: NodeJS.Timeout | null = null;
   private _eventEmitter: EventEmitter;
@@ -19,8 +20,8 @@ export class User {
   }
   private _disconnect(): void {
     this._status = ConnectionStatus.Red;
-    if (this.activeRoom) {
-      this.activeRoom.removePlayer(this.username);
+    if (this._activeRoom) {
+      this._activeRoom.removePlayer(this.username);
       this.activeRoom = null;
     }
   }
@@ -30,12 +31,11 @@ export class User {
   
   // если пользователь не восстановил подключение в течение 5 секунд, он удаляется из комнаты
   set status(status: ConnectionStatus) {
+    const oldStatus: ConnectionStatus = Object.assign({}, status);
+    
     // обработка разрыва соединения
     if (status === ConnectionStatus.Yellow && this._status !== ConnectionStatus.Red) {
-      if (this._status === ConnectionStatus.Green) {
-        this._status = ConnectionStatus.Yellow;
-        if (this.activeRoom) this._eventEmitter.emit('update-user-status', this.username, this._status); // для обновления в комнате
-      }
+      this._status = ConnectionStatus.Yellow;
       this._clearTimer();
       
       this._timer = setTimeout((): void => {
@@ -46,24 +46,50 @@ export class User {
       // обработка восстановления соединения
     } else if (status === ConnectionStatus.Green && this._status === ConnectionStatus.Yellow) {
       this._status = ConnectionStatus.Green;
-      if (this.activeRoom) this._eventEmitter.emit('update-user-status', this.username, this._status); // для обновления в комнате
       this._clearTimer();
       // обработка подключения после долгой паузы
-    } else if (status === ConnectionStatus.Green && this._status === ConnectionStatus.Red) {
+    } else if (status === ConnectionStatus.Green && this._status === ConnectionStatus.Red) {/////////////////
       this._status = ConnectionStatus.Green;
       // обработка выхода из аккаунта (БОЛЬШЕ НИГДЕ НЕ ИСПОЛЬЗОВАТЬ!!!)
     } else if (status === ConnectionStatus.Red) {
-      this._disconnect();
+      this._disconnect(); // комната обновляется внутри функции
+    }
+    
+    // обновление для комнат
+    if (this._status !== oldStatus) this._eventEmitter.emit('update-user-status', this.username, this._status);
+  }
+  
+  
+  get activeRoom(): Room|null {return this._activeRoom;}
+  
+  set activeRoom(activeRoom: Room|null) {
+    if (!this._activeRoom) {
+      if (activeRoom) {
+        this._activeRoom = activeRoom;
+        this._eventEmitter.emit(`player-connected-to-room-${this._activeRoom.id}}`, this.username);
+      }
+    } else {
+      this._eventEmitter.emit(`player-disconnected-from-room-${this._activeRoom.id}`, this.username);
+      if (activeRoom) {
+        this._activeRoom = activeRoom;
+        this._eventEmitter.emit(`player-connected-to-room-${this._activeRoom.id}`, this.username);
+      }
     }
   }
+  
   
   
   constructor(username: string, password: string, emitter: EventEmitter) {
     this.username = username;
     this.password = password;
-    this.activeRoom = null;
+    this.participatingRooms = [];
+    this._activeRoom = null;
     this._status = ConnectionStatus.Green;
     this._eventEmitter = emitter;
+    
+    emitter.on(`room-started-${this.username}`, (room: Room): void => {
+      this.participatingRooms.push(room);
+    });
   }
 }
 

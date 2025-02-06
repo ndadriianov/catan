@@ -1,7 +1,7 @@
 import {useContext, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import socket from '../../socket.ts';
-import MyModal from '../modal/MyModal.tsx';
+import MyModal from '../UI/modal/MyModal.tsx';
 import UserContext from '../../context/UserContext.ts';
 
 

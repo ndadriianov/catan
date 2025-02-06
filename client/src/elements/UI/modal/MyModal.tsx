@@ -1,4 +1,4 @@
-import classes from './MyModal.module.css'
+import classes from './myModal.module.css'
 import clsx from 'clsx'
 import React, {ReactNode} from 'react';
 
