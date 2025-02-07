@@ -30,4 +30,6 @@ const tilesRow5: Tiles<3> = [
   tiles.sheep
 ];
 
-export const initialTiles = [tilesRow1, tilesRow2, tilesRow3, tilesRow4, tilesRow5];
+const initialTiles = [tilesRow1, tilesRow2, tilesRow3, tilesRow4, tilesRow5];
+
+export default initialTiles;

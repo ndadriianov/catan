@@ -60,6 +60,4 @@ type RightRoad = typeof rightRoads[keyof typeof rightRoads];
 
 type StraightRoad = typeof straightRoads[keyof typeof straightRoads];
 
-type Road = LeftRoad | RightRoad | StraightRoad;
-
-export type Roads<L extends number> = [Road, ...Road[]] & {length: L};
+export type Road = LeftRoad | RightRoad | StraightRoad;

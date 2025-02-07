@@ -7,7 +7,7 @@
   height: 565px;
   width: 655px;
   background-color: gray;
-  transform: scale(100%);
+  transform: scale(150%);
   transform-origin: top;
 }
 .grid {
@@ -34,6 +34,8 @@
   transform-origin: top;
   scale: 10%;
   margin-top: 10.5%;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .housesContainer {

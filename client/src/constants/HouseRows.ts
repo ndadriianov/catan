@@ -1,87 +1,91 @@
-import {cities, villages, Houses} from '../typesDefinitions/houses.ts';
+import {cities, villages, House} from '../typesDefinitions/houses.ts';
 
-export const houseRow1: Houses<7> = [
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black
+const houseRow1: House[] = [
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody
 ]
 
-export const houseRow2: Houses<9> = [
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black
+const houseRow2: House[] = [
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody
 ]
 
-export const houseRow3: Houses<11> = [
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black
+const houseRow3: House[] = [
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody
 ]
 
-export const houseRow34: Houses<11> = [
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black,
-  villages.black
+const houseRow34: House[] = [
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody,
+  villages.nobody
 ]
 
-export const houseRow4: Houses<11> = [
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black
+const houseRow4: House[] = [
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody
 ]
 
-export const houseRow5: Houses<9> = [
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black
+const houseRow5: House[] = [
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody
 ]
 
-export const houseRow6: Houses<7> = [
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black,
-  cities.black
+const houseRow6: House[] = [
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody,
+  cities.nobody
 ]
+
+const initialHouses: House[][] = [houseRow1, houseRow2, houseRow3, houseRow4, houseRow5, houseRow6];
+
+export default initialHouses;

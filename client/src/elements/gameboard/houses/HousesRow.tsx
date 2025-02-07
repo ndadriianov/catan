@@ -1,16 +1,19 @@
-import {Houses} from '../../../typesDefinitions/houses.ts';
+import {House} from '../../../typesDefinitions/houses.ts';
 import classes from './HousesRow.module.css'
 import clsx from 'clsx'
+import {ReactNode} from 'react';
+import emitter from '../../../typesDefinitions/emitter.ts';
 
 type HousesRowProps = {
-  houses: Houses<number>,
-  isUpper: boolean
+  houses: House[],
+  isUpper: boolean,
+  verticalIndex: number
 }
 
-const HousesRow = ({houses, isUpper}: HousesRowProps) => {
+const HousesRow = ({houses, isUpper, verticalIndex}: HousesRowProps): ReactNode => {
   return (
     <div className={classes.housesRow}>
-      {houses.map((house, index) => (
+      {houses.map((house: string, index: number): ReactNode => (
         <img
           src={house}
           key={index}
@@ -25,7 +28,9 @@ const HousesRow = ({houses, isUpper}: HousesRowProps) => {
               clsx(classes.house, classes.lower)
               :
               classes.house}
-          alt={'House'} />
+          alt={'House'}
+          onClick={() => emitter.emit('tap-on-house', verticalIndex, index)}
+        />
       ))}
     </div>
   );

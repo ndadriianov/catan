@@ -39,6 +39,4 @@ type Village = typeof villages[keyof typeof villages];
 
 type City = typeof cities[keyof typeof cities];
 
-type House = Village | City;
-
-export type Houses<L extends number> = [House, ...House[]] & {length: L};
+export type House = Village | City;

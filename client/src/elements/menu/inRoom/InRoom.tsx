@@ -1,16 +1,18 @@
 import {useEffect, useState} from 'react';
-import {jsonRoom, parseRoom, Room} from '../../../typesDefinitions/room.ts';
+import {jsonRoom, Owner, parseRoom, Room} from '../../../typesDefinitions/room.ts';
 import socket from '../../../socket.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
 import MyModal from '../../UI/modal/MyModal.tsx';
 import ConnectionIndicator from './ConnectionIndicator.tsx';
 import Map from '../../gameboard/map/Map.tsx';
+import Select from '../../UI/select/Select.tsx';
 
 
 const InRoom = () => {
   const [room, setRoom] = useState<Room|undefined|null>(undefined);
   const [unsuccessful, setUnsuccessful] = useState<boolean>(false);
   const [errorWithRoom, setErrorWithRoom] = useState<boolean>(false);
+  const [color, setColor] = useState<Owner>(Owner.nobody);
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -29,6 +31,28 @@ const InRoom = () => {
       if (!succeed) setUnsuccessful(true);
     });
   }
+  function chooseColor(input: string): Owner {
+    switch (input) {
+      case 'black': return Owner.black;
+      case 'blue': return Owner.blue;
+      case 'green': return Owner.green;
+      case 'orange': return Owner.orange;
+      case 'red': return Owner.red;
+      case 'yellow': return Owner.yellow;
+      default: return Owner.nobody;
+    }
+  }
+  
+  
+  const colorOptions = [
+    { value: 'nobody', label: 'Не выбран'},
+    { value: 'black', label: 'Черный' },
+    { value: 'blue', label: 'Синий' },
+    { value: 'green', label: 'Зеленый' },
+    { value: 'orange', label: 'Оранжевый' },
+    { value: 'red', label: 'Красный' },
+    { value: 'yellow', label: 'Желтый' }
+  ];
   
   // первичная загрузка и обновление состояния комнаты
   useEffect(() => {
@@ -85,9 +109,16 @@ const InRoom = () => {
                 ))}
               </ul>
               
+              <Select
+                options={colorOptions.slice(1)}
+                initial={colorOptions[0]}
+                value={colorOptions[color].value}
+                onChange={(value: string): void => setColor(chooseColor(value))}
+              />
+              
               {room.haveStarted &&
                 <div>
-                  <Map/>
+                  <Map owner={color}/>
                 </div>
               }
             </div>
