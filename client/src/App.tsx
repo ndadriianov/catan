@@ -6,7 +6,6 @@ import InRoom from './elements/menu/inRoom/InRoom.tsx';
 import {useState} from 'react';
 import GlobalHeader from './elements/menu/GlobalHeader.tsx';
 import UserContext, {User} from './context/UserContext.ts';
-import Map from './elements/gameboard/map/Map.tsx';
 
 
 function App() {
@@ -22,7 +21,6 @@ function App() {
           <Route path="/register" element={<Register/>}/>
           <Route path="/choose-room" element={<ChooseRoom/>}/>
           <Route path="/room" element={<InRoom/>}/>
-          <Route path="/map" element={<Map/>}/>
           
           <Route path="*" element={<Navigate to={'/login'} replace/>}/>
         </Routes>
