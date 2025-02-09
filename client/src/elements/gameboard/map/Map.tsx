@@ -13,6 +13,7 @@ import {Owner} from '../../../typesDefinitions/room.ts';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {leftRoads, rightRoads, Road, straightRoads} from '../../../typesDefinitions/roads.ts';
 import {cities, House, villages} from '../../../typesDefinitions/houses.ts';
+import MyModal from '../../UI/modal/MyModal.tsx';
 
 
 type mapProps = {
@@ -25,6 +26,9 @@ const Map = ({owner}: mapProps) => {
   const [tiles, setTiles] = useState(initialTiles);
   const [roads, setRoads] = useState<Road[][]>(initialRoads);
   const [houses, setHouses] = useState<House[][]>(initialHouses);
+  const [isConfirmationRequiredHouse, setIsConfirmationRequiredHouse] = useState<boolean>(false);
+  const [isConfirmationRequiredRoad, setIsConfirmationRequiredRoad] = useState<boolean>(false);
+  const [coords, setCoords] = useState<number[]>([-1, -1]);
   
   
   
@@ -110,12 +114,14 @@ const Map = ({owner}: mapProps) => {
   
   emitter.on('tap-on-road', (verticalIndex: number, index: number): void => {
     console.log('tap-on-road', verticalIndex, index);
-    changeColorRoad(verticalIndex, index);
+    setCoords([verticalIndex, index]);
+    setIsConfirmationRequiredRoad(true);
   });
   
   emitter.on('tap-on-house', (verticalIndex: number, index: number): void => {
     console.log('tap-on-house', verticalIndex, index);
-    changeColorHouse(verticalIndex, index, true);
+    setCoords([verticalIndex, index]);
+    setIsConfirmationRequiredHouse(true);
   })
   
   
@@ -153,6 +159,45 @@ const Map = ({owner}: mapProps) => {
         <HousesRow houses={houses[4]} isUpper={false} verticalIndex={4}/>
         <HousesRow houses={houses[5]} isUpper={false} verticalIndex={5}/>
       </div>
+      
+      <MyModal
+        visible={isConfirmationRequiredHouse}
+        setVisible={setIsConfirmationRequiredHouse}
+      >
+        <button
+          onClick={(): void => {
+            changeColorHouse(coords[0], coords[1], true);
+            setIsConfirmationRequiredHouse(false);
+          }}
+        >
+          подтвердить
+        </button>
+        
+        <button onClick={(): void => {setIsConfirmationRequiredHouse(false);}}>
+          отмена
+        </button>
+      </MyModal>
+      
+      
+      <MyModal
+        visible={isConfirmationRequiredRoad}
+        setVisible={setIsConfirmationRequiredRoad}
+      >
+        <button
+          onClick={(): void => {
+            changeColorRoad(coords[0], coords[1]);
+            setIsConfirmationRequiredRoad(false);
+          }}
+        >
+          подтвердить
+        </button>
+        
+        <button onClick={(): void => {
+          setIsConfirmationRequiredRoad(false);
+        }}>
+          отмена
+        </button>
+      </MyModal>
     </div>
   );
 };
