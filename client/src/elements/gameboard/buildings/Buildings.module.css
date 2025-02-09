@@ -1,3 +1,21 @@
+.housesRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 33%;
+  margin-bottom: 18%;
+}
+
+.house {
+  height: 30%;
+  width: 30%;
+}
+
+.lower {
+  margin-top: 60%;
+}
+
 .turnedRoadsRow {
   display: flex;
   justify-content: center;
@@ -28,4 +46,20 @@
 .vert {
   height: 10%;
   width: 10%;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.selected {
+  animation: pulse 2s infinite ease-in-out;
 }
