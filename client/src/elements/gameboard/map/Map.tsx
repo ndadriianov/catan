@@ -97,7 +97,10 @@ const Map = ({owner}: mapProps) => {
       
       <MyModal
         visible={isConfirmationRequiredHouse}
-        setVisible={setIsConfirmationRequiredHouse}
+        close={(): void => {
+          changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: true, setHouses: setHouses});
+          setIsConfirmationRequiredHouse(false);
+        }}
       >
         <button
           onClick={(): void => {
@@ -121,7 +124,10 @@ const Map = ({owner}: mapProps) => {
       
       <MyModal
         visible={isConfirmationRequiredRoad}
-        setVisible={setIsConfirmationRequiredRoad}
+        close={(): void => {
+          changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
+          setIsConfirmationRequiredRoad(false);
+        }}
       >
         <button
           onClick={(): void => {
