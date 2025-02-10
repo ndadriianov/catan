@@ -3,12 +3,17 @@ import Register from './elements/menu/Register.tsx';
 import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
 import ChooseRoom from './elements/menu/ChooseRoom.tsx';
 import InRoom from './elements/menu/inRoom/InRoom.tsx';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import GlobalHeader from './elements/menu/GlobalHeader.tsx';
 import UserContext, {User} from './context/UserContext.ts';
+import Modal from 'react-modal';
 
 
 function App() {
+  useEffect(() => {
+    Modal.setAppElement('#root');
+  }, [])
+  
   const [user, setUser] = useState<User>({username: undefined, password: undefined});
   
   return (
