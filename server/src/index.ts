@@ -19,13 +19,13 @@ const io = new Server(server, {
 
 app.use(cors());
 
-const roomEmitter = new EventEmitter();
+const eventEmitter = new EventEmitter();
 
 const users: Array<User> = [];
 const rooms: Array<Room> = [];
 
 // срабатывает когда изменяет список пользователей, либо haveStarted в комнате, аргумент - id данной комнаты
-roomEmitter.on('update', (id: number): void => {
+eventEmitter.on('update', (id: number): void => {
   const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
   if (room) io.to(id.toString()).emit('room-update', room.toJSON());
 });
@@ -35,6 +35,10 @@ roomEmitter.on('update', (id: number): void => {
 io.on('connection', (socket: Socket): void => {
   console.log(`Client connected: ${socket.id}`);
   
+  eventEmitter.on('prepare-update-room-list', (): void => {
+    socket.emit('update-room-list', prepareRoomIdLists(socket.data.user));
+  });
+  
   /*********************************************************************************************************************
   * Взаимодействие в меню
   *********************************************************************************************************************/
@@ -42,7 +46,7 @@ io.on('connection', (socket: Socket): void => {
   // Срабатывает когда пользователь создает аккаунт, одновременно с этим пользователь входит в аккаунт. Логика, связанная с login здесь не используется
   socket.on('register', (username: string, password: string, callback: (isAvailable: boolean) => void): void => {
     if (!users.find((user: User): boolean => user.username === username)) {
-      const user: User = new User(username, password, roomEmitter);
+      const user: User = new User(username, password, eventEmitter);
       users.push(user);
       socket.data.user = user;
       callback(true);
@@ -89,10 +93,10 @@ io.on('connection', (socket: Socket): void => {
       callback(false);
       return;
     }
-    const room: Room = new Room(id, roomEmitter);
+    const room: Room = new Room(id, eventEmitter);
     rooms.push(room);
     room.addPlayer(socket.data.user.username);
-    io.emit('update-room-list', prepareRoomIdLists(socket.data.user)); // обновление списка комнат для пользователей
+    eventEmitter.emit('prepare-update-room-list'); // обновление списка комнат для пользователей
     socket.data.user.activeRoom = room;
     socket.join(id.toString());
     callback(true);
@@ -106,7 +110,7 @@ io.on('connection', (socket: Socket): void => {
     if (room) {
       socket.join(id.toString());
       if (room.hasStarted && room.isInRoom(socket.data.user.username)) {
-        roomEmitter.emit('update-user-status', socket.data.user.username, socket.data.user._status);
+        eventEmitter.emit('update-user-status', socket.data.user.username, socket.data.user._status);
         socket.data.user.activeRoom = room;
       }
       callback(room.toJSON());
