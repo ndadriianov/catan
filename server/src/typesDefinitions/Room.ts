@@ -46,6 +46,8 @@ export class Room {
   
   
   start(): void {
+    if (this._hasStarted) return;
+    
     this._hasStarted = true;
     
     this._players.forEach((player: Player): void => {
