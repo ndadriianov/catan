@@ -1,5 +1,6 @@
 import {EventEmitter} from 'node:events';
 import {ConnectionStatus} from './User';
+import {Gameboard} from './Gameboard';
 
 
 export class Room {
@@ -8,6 +9,7 @@ export class Room {
   private _players: Array<Player>;
   private _hasStarted: boolean;
   private _eventEmitter: EventEmitter;
+  private _gameboard?: Gameboard;
   
   
   get players(): Array<Player> {return Object.assign({}, this._players);}
@@ -49,6 +51,7 @@ export class Room {
     if (this._hasStarted) return;
     
     this._hasStarted = true;
+    this._gameboard = new Gameboard();
     
     this._players.forEach((player: Player): void => {
       this._eventEmitter.emit(`room-started-${player.username}`, this);
@@ -70,9 +73,10 @@ export class Room {
           sheep: player.inventory.sheep,
           stone: player.inventory.stone,
           wheat: player.inventory.wheat,
-        },
+        }
       })),
       haveStarted: this._hasStarted,
+      gameboard: this._gameboard ? this._gameboard.toGSON() : undefined
     };
   }
   

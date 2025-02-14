@@ -1,7 +1,8 @@
-import {Owner} from '../../../typesDefinitions/room.ts';
+import {Owner, tile} from '../../../typesDefinitions/room.ts';
 import {cities, House, villages} from '../../../typesDefinitions/houses.ts';
 import React from 'react';
 import {leftRoads, rightRoads, Road, straightRoads} from '../../../typesDefinitions/roads.ts';
+import {Tile, tiles} from '../../../typesDefinitions/tiles.ts';
 
 
 type changeColorHouseProps = {
@@ -19,8 +20,6 @@ export function changeColorHouse({coords, owner, toCity, setHouses}: changeColor
       case Owner.blue: newValue = cities.blue; break;
       case Owner.green: newValue = cities.green; break;
       case Owner.orange: newValue = cities.orange; break;
-      case Owner.red: newValue = cities.red; break;
-      case Owner.yellow: newValue = cities.yellow; break;
       default: newValue = cities.nobody; break;
     }
   } else {
@@ -29,8 +28,6 @@ export function changeColorHouse({coords, owner, toCity, setHouses}: changeColor
       case Owner.blue: newValue = villages.blue; break;
       case Owner.green: newValue = villages.green; break;
       case Owner.orange: newValue = villages.orange; break;
-      case Owner.red: newValue = villages.red; break;
-      case Owner.yellow: newValue = villages.yellow; break;
       default: newValue = villages.nobody; break;
     }
   }
@@ -60,8 +57,6 @@ export function changeColorRoad({coords, owner, setRoads}: changeColorRoadProps)
         case Owner.blue: newValue = rightRoads.blue; break;
         case Owner.green: newValue = rightRoads.green; break;
         case Owner.orange: newValue = rightRoads.orange; break;
-        case Owner.red: newValue = rightRoads.red; break;
-        case Owner.yellow: newValue = rightRoads.yellow; break;
         default: newValue = rightRoads.nobody; break;
       }
       // left  
@@ -71,8 +66,6 @@ export function changeColorRoad({coords, owner, setRoads}: changeColorRoadProps)
         case Owner.blue: newValue = leftRoads.blue; break;
         case Owner.green: newValue = leftRoads.green; break;
         case Owner.orange: newValue = leftRoads.orange; break;
-        case Owner.red: newValue = leftRoads.red; break;
-        case Owner.yellow: newValue = leftRoads.yellow; break;
         default: newValue = leftRoads.nobody; break;
       }
     }
@@ -83,8 +76,6 @@ export function changeColorRoad({coords, owner, setRoads}: changeColorRoadProps)
       case Owner.blue: newValue = straightRoads.blue; break;
       case Owner.green: newValue = straightRoads.green; break;
       case Owner.orange: newValue = straightRoads.orange; break;
-      case Owner.red: newValue = straightRoads.red; break;
-      case Owner.yellow: newValue = straightRoads.yellow; break;
       default: newValue = straightRoads.nobody; break;
     }
   }
@@ -100,4 +91,25 @@ export function changeColorRoad({coords, owner, setRoads}: changeColorRoadProps)
 export type Coords = {
   x: number;
   y: number;
+}
+
+
+
+export function getTiles(enumTiles: tile[][]): Tile[][] {
+  const realTiles: Tile[][] = [[], [], [], [], []];
+  console.log(enumTiles);
+  
+  for (let i = 0; i < enumTiles.length; i++) {
+    enumTiles[i].forEach((currentTile: tile): void => {
+      switch (currentTile) {
+        case tile.forrest: realTiles[i].push(tiles.forrest); break;
+        case tile.wheat: realTiles[i].push(tiles.wheat); break;
+        case tile.sheep: realTiles[i].push(tiles.sheep); break;
+        case tile.clay: realTiles[i].push(tiles.clay); break;
+        case tile.stone: realTiles[i].push(tiles.stone); break;
+        default: realTiles[i].push(tiles.wasteland); break;
+      }
+    })
+  }
+  return realTiles;
 }

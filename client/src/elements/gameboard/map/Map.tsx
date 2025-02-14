@@ -2,29 +2,33 @@ import HexagonalRow from '../hexagonalRow/HexagonalRow.tsx';
 import classes from './Map.module.css';
 import frame from '../../../assets/map/frame.png';
 import TurnedRoadsRow from '../buildings/TurnedRoadsRow.tsx';
-import initialTiles from '../../../constants/TileRows.ts';
+import initialTiles, {initialNumbers} from '../../../constants/TileRows.ts';
 import initialRoads from '../../../constants/RoadRows.ts';
 import initialHouses from '../../../constants/HouseRows.ts';
 import VertRoadsRow from '../buildings/VertRoadsRow.tsx';
 import HousesRow from '../buildings/HousesRow.tsx';
 import {useEffect, useState} from 'react';
 import Loader from '../../UI/loader/Loader.tsx';
-import {Owner} from '../../../typesDefinitions/room.ts';
+import {Owner, Room} from '../../../typesDefinitions/room.ts';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {Road} from '../../../typesDefinitions/roads.ts';
 import {House} from '../../../typesDefinitions/houses.ts';
-import {changeColorHouse, changeColorRoad, Coords} from './operations.ts';
+import {changeColorHouse, changeColorRoad, Coords, getTiles} from './operations.ts';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
+import Number from '../number/Number.tsx';
+import NumbersRow from '../number/NumbersRow.tsx';
 
 
 type mapProps = {
   owner: Owner;
+  room: Room;
 }
 
 
-const Map = ({owner}: mapProps) => {
+const Map = ({owner, room}: mapProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [tiles, setTiles] = useState(initialTiles);
+  const [numbers, setNumbers] = useState<number[][]>(initialNumbers);
   const [roads, setRoads] = useState<Road[][]>(initialRoads);
   const [houses, setHouses] = useState<House[][]>(initialHouses);
   const [isConfirmationRequiredHouse, setIsConfirmationRequiredHouse] = useState<boolean>(false);
@@ -56,6 +60,14 @@ const Map = ({owner}: mapProps) => {
   }, [owner]);
   
   
+  useEffect(() => {
+    if (room.gameboard?.tiles) {
+      setTiles(getTiles(room.gameboard?.tiles));
+      setNumbers(room.gameboard.numbers);
+    }
+  }, [room.gameboard?.tiles]);
+  
+  
   if (isLoading) return <Loader/>;
   
   
@@ -63,6 +75,7 @@ const Map = ({owner}: mapProps) => {
     <div>
       <div className={classes.container}>
         <img src={frame} alt={'frame'} className={classes.frame}/>
+        
         
         <div className={classes.grid}>
           <HexagonalRow tiles={tiles[0]}/>
@@ -93,6 +106,14 @@ const Map = ({owner}: mapProps) => {
           <HousesRow houses={houses[3]} isUpper={false} verticalIndex={3} selectedCoords={houseCoords}/>
           <HousesRow houses={houses[4]} isUpper={false} verticalIndex={4} selectedCoords={houseCoords}/>
           <HousesRow houses={houses[5]} isUpper={false} verticalIndex={5} selectedCoords={houseCoords}/>
+        </div>
+
+        <div className={classes.numbersContainer}>
+          <NumbersRow numbers={numbers[0]}/>
+          <NumbersRow numbers={numbers[1]}/>
+          <NumbersRow numbers={numbers[2]}/>
+          <NumbersRow numbers={numbers[3]}/>
+          <NumbersRow numbers={numbers[4]}/>
         </div>
       </div>
       

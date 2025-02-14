@@ -7,14 +7,12 @@ import Wheat from '../assets/map/wheat.png';
 
 
 export const tiles = {
-  clay: Clay,
   forrest: Forrest,
+  wheat: Wheat,
   sheep: Sheep,
+  clay: Clay,
   stone: Stone,
   wasteland: Wasteland,
-  wheat: Wheat
 }
 
-type Tile = typeof tiles[keyof typeof tiles];
-
-export type Tiles<L extends number> = [Tile, ...Tile[]] & {length: L};
+export type Tile = typeof tiles[keyof typeof tiles];

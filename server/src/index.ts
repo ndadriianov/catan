@@ -27,6 +27,8 @@ const rooms: Array<Room> = [];
 // срабатывает когда изменяет список пользователей, либо haveStarted в комнате, аргумент - id данной комнаты
 eventEmitter.on('update', (id: number): void => {
   const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
+  console.log(room);
+  console.log(room?.toJSON());
   if (room) io.to(id.toString()).emit('room-update', room.toJSON());
 });
 
@@ -36,7 +38,7 @@ io.on('connection', (socket: Socket): void => {
   console.log(`Client connected: ${socket.id}`);
   
   eventEmitter.on('prepare-update-room-list', (): void => {
-    socket.emit('update-room-list', prepareRoomIdLists(socket.data.user));
+    if (socket.data.user) socket.emit('update-room-list', prepareRoomIdLists(socket.data.user));
   });
   
   /*********************************************************************************************************************

@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {jsonRoom, Owner, parseRoom, Room} from '../../../typesDefinitions/room.ts';
 import socket from '../../../socket.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
@@ -37,8 +37,6 @@ const InRoom = () => {
       case 'blue': return Owner.blue;
       case 'green': return Owner.green;
       case 'orange': return Owner.orange;
-      case 'red': return Owner.red;
-      case 'yellow': return Owner.yellow;
       default: return Owner.nobody;
     }
   }
@@ -50,8 +48,6 @@ const InRoom = () => {
     { value: 'blue', label: 'Синий' },
     { value: 'green', label: 'Зеленый' },
     { value: 'orange', label: 'Оранжевый' },
-    { value: 'red', label: 'Красный' },
-    { value: 'yellow', label: 'Желтый' }
   ];
   
   // первичная загрузка и обновление состояния комнаты
@@ -118,7 +114,7 @@ const InRoom = () => {
               
               {room.haveStarted &&
                 <div>
-                  <Map owner={color}/>
+                  <Map owner={color} room={room}/>
                 </div>
               }
             </div>

@@ -2,6 +2,7 @@ export type Room = {
   id: number;
   players: Player[];
   haveStarted: boolean;
+  gameboard?: Gameboard;
 }
 
 export type jsonRoom = Omit<Room, 'players'> & {
@@ -27,6 +28,42 @@ export type Inventory = {
 }
 
 
+export enum tile {
+  forrest,    //4
+  wheat,      //4
+  sheep,      //4
+  clay,       //3
+  stone,      //3
+  wasteland   //1
+}
+
+enum houseType {
+  village,
+  city
+}
+
+type House = {
+  owner: Owner;
+  type: houseType;
+}
+
+export type Gameboard = {
+  tiles: tile[][];
+  houses: House[][];
+  roads: Owner[][];
+  numbers: number[][];
+}
+
+function parseGameboard(gameboardJSON: Gameboard) {
+  return {
+    tiles: gameboardJSON.tiles,
+    houses: gameboardJSON.houses,
+    roads: gameboardJSON.roads,
+    numbers: gameboardJSON.numbers,
+  };
+}
+
+
 export enum ConnectionStatus {
   Red,
   Yellow,
@@ -40,9 +77,7 @@ export enum Owner {
   black,
   blue,
   green,
-  orange,
-  red,
-  yellow
+  orange
 }
 
 
@@ -74,6 +109,7 @@ export function parseRoom(roomJSON: jsonRoom|null): Room|null {
         return parsePlayer(player);
       }),
       haveStarted: roomJSON.haveStarted as boolean,
+      gameboard: roomJSON.gameboard ? parseGameboard(roomJSON.gameboard) : undefined
     };
   } catch (e) {
     console.log("Error parsing room:", e);

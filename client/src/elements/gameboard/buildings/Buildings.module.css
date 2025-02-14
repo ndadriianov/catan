@@ -5,11 +5,13 @@
   flex-wrap: nowrap;
   gap: 33%;
   margin-bottom: 18%;
+  z-index: 10;
 }
 
 .house {
   height: 30%;
   width: 30%;
+  z-index: 10;
 }
 
 .lower {
