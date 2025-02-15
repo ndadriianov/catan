@@ -23,6 +23,7 @@ export class User {
     if (this._activeRoom) {
       this._activeRoom.removePlayer(this.username);
       this.activeRoom = null;
+      this._eventEmitter.removeAllListeners(`${this.username}:debut-turn`);
     }
   }
   

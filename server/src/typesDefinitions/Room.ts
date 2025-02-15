@@ -1,6 +1,7 @@
 import {EventEmitter} from 'node:events';
 import {ConnectionStatus} from './User';
-import {Gameboard} from './Gameboard';
+import {Gameboard, Owner} from './Gameboard';
+import {Player} from './Player';
 
 
 export class Room {
@@ -9,10 +10,10 @@ export class Room {
   private _players: Array<Player>;
   private _hasStarted: boolean;
   private _eventEmitter: EventEmitter;
-  private _gameboard?: Gameboard;
+  gameboard?: Gameboard;
   
   
-  get players(): Array<Player> {return Object.assign({}, this._players);}
+  get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
   
   
   isInRoom(username: string): boolean {
@@ -43,20 +44,11 @@ export class Room {
     return true;
   }
   
-  
-  get hasStarted(): boolean {return this._hasStarted; }
-  
-  
-  start(): void {
-    if (this._hasStarted) return;
-    
-    this._hasStarted = true;
-    this._gameboard = new Gameboard();
-    
-    this._players.forEach((player: Player): void => {
-      this._eventEmitter.emit(`room-started-${player.username}`, this);
-    });
-    this._eventEmitter.emit('update', this.id);
+  setColor(color: Owner, username: string): boolean {
+    const player: Player|undefined = this._players.find((player: Player): boolean => player.username === username);
+    if (!player) return false;
+    player.color = color;
+    return true;
   }
   
   
@@ -76,7 +68,7 @@ export class Room {
         }
       })),
       haveStarted: this._hasStarted,
-      gameboard: this._gameboard ? this._gameboard.toGSON() : undefined
+      gameboard: this.gameboard ? this.gameboard.toGSON() : undefined
     };
   }
   
@@ -109,41 +101,26 @@ export class Room {
       }
     });
   }
-}
-
-
-
-
-class Player {
-  username: string;
-  inventory: Inventory;
-  status: ConnectionStatus;
-  leftTheRoom: boolean;
   
   
-  constructor(username: string) {
-    this.username = username;
-    this.inventory = new Inventory();
-    this.status = ConnectionStatus.Green;
-    this.leftTheRoom = false;
-  }
-}
-
-
-
-
-class Inventory {
-  clay: number;
-  forrest: number;
-  sheep: number;
-  stone: number;
-  wheat: number;
   
-  constructor() {
-    this.clay = 0;
-    this.forrest = 0;
-    this.sheep = 0;
-    this.stone = 0;
-    this.wheat = 0;
+  get hasStarted(): boolean {return this._hasStarted; }
+  
+  
+  start(): void {
+    if (this._hasStarted) return;
+    
+    this._hasStarted = true;
+    this.gameboard = new Gameboard();
+    
+    this._players.forEach((player: Player): void => {
+      this._eventEmitter.emit(`room-started-${player.username}`, this);
+    });
+    this._eventEmitter.emit('update', this.id);
+    
+    // дебют
+    this._players.forEach((player: Player): void => {
+      this._eventEmitter.emit(`${player.username}:debut-turn`, this, player.color);
+    })
   }
 }

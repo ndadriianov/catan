@@ -113,3 +113,10 @@ export function getTiles(enumTiles: tile[][]): Tile[][] {
   }
   return realTiles;
 }
+
+
+
+export type debutProps = {
+  road: Coords;
+  village: Coords;
+}

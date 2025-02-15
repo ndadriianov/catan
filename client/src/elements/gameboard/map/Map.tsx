@@ -7,25 +7,33 @@ import initialRoads from '../../../constants/RoadRows.ts';
 import initialHouses from '../../../constants/HouseRows.ts';
 import VertRoadsRow from '../buildings/VertRoadsRow.tsx';
 import HousesRow from '../buildings/HousesRow.tsx';
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Loader from '../../UI/loader/Loader.tsx';
-import {Owner, Room} from '../../../typesDefinitions/room.ts';
+import {jsonRoom, Owner, Room} from '../../../typesDefinitions/room.ts';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {Road} from '../../../typesDefinitions/roads.ts';
 import {House} from '../../../typesDefinitions/houses.ts';
-import {changeColorHouse, changeColorRoad, Coords, getTiles} from './operations.ts';
+import {changeColorHouse, changeColorRoad, Coords, debutProps, getTiles} from './operations.ts';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
-import Number from '../number/Number.tsx';
 import NumbersRow from '../number/NumbersRow.tsx';
+import socket from '../../../socket.ts';
 
 
 type mapProps = {
   owner: Owner;
   room: Room;
+  isMyTurnNow: boolean;
+  setIsMyTurnNow: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+type updateProps = {
+  villages: Coords[];
+  cities: Coords[];
+  roads: Coords[];
 }
 
 
-const Map = ({owner, room}: mapProps) => {
+const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [tiles, setTiles] = useState(initialTiles);
   const [numbers, setNumbers] = useState<number[][]>(initialNumbers);
@@ -35,20 +43,25 @@ const Map = ({owner, room}: mapProps) => {
   const [isConfirmationRequiredRoad, setIsConfirmationRequiredRoad] = useState<boolean>(false);
   const [houseCoords, setHouseCoords] = useState<Coords>({x: -1, y: -1});
   const [roadCoords, setRoadCoords] = useState<Coords>({x: -1, y: -1});
+  const [update, setUpdate] = useState<updateProps>({villages: [], cities: [], roads: []});
   
   
   useEffect(() => {
     const roadHandler = (verticalIndex: number, index: number): void => {
-      console.log('tap-on-road', verticalIndex, index);
-      setRoadCoords({y: verticalIndex, x: index});
-      changeColorRoad({coords: {x: index, y: verticalIndex}, owner: owner, setRoads: setRoads});
-      setIsConfirmationRequiredRoad(true);
+      console.log('tap-on-road', verticalIndex, index, isMyTurnNow);
+      if (isMyTurnNow) {
+        setRoadCoords({y: verticalIndex, x: index});
+        changeColorRoad({coords: {x: index, y: verticalIndex}, owner: owner, setRoads: setRoads});
+        setIsConfirmationRequiredRoad(true);
+      }
     };
     const houseHandler = (verticalIndex: number, index: number): void => {
-      console.log('tap-on-house', verticalIndex, index, 'owner: ', owner);
-      setHouseCoords({y: verticalIndex, x: index});
-      changeColorHouse({coords: {x: index, y: verticalIndex}, owner: owner, toCity: true, setHouses: setHouses});
-      setIsConfirmationRequiredHouse(true);
+      console.log('tap-on-house', verticalIndex, index, 'owner: ', owner, isMyTurnNow);
+      if (isMyTurnNow) {
+        setHouseCoords({y: verticalIndex, x: index});
+        changeColorHouse({coords: {x: index, y: verticalIndex}, owner: owner, toCity: true, setHouses: setHouses});
+        setIsConfirmationRequiredHouse(true);
+      }
     };
     emitter.on('tap-on-road', roadHandler);
     emitter.on('tap-on-house', houseHandler);
@@ -68,11 +81,26 @@ const Map = ({owner, room}: mapProps) => {
   }, [room.gameboard?.tiles]);
   
   
+  function endDebutTurn(): void {
+    if (update.villages.length !== 1 || update.roads.length !== 1 || update.cities.length !== 0) {
+      socket.emit('refresh-room', room.id);
+      return;
+    }
+    const debutData: debutProps = {road: update.roads[0], village: update.villages[0]};
+    socket.emit('debut-end-turn', debutData, (succeed: boolean): void => {
+      setIsMyTurnNow(!succeed);
+      socket.emit('refresh-room', room.id);
+    });
+  }
+  
+  
   if (isLoading) return <Loader/>;
   
   
   return (
     <div>
+      {isMyTurnNow && <div>мой ход</div>}
+      
       <div className={classes.container}>
         <img src={frame} alt={'frame'} className={classes.frame}/>
         
@@ -107,7 +135,7 @@ const Map = ({owner, room}: mapProps) => {
           <HousesRow houses={houses[4]} isUpper={false} verticalIndex={4} selectedCoords={houseCoords}/>
           <HousesRow houses={houses[5]} isUpper={false} verticalIndex={5} selectedCoords={houseCoords}/>
         </div>
-
+        
         <div className={classes.numbersContainer}>
           <NumbersRow numbers={numbers[0]}/>
           <NumbersRow numbers={numbers[1]}/>
@@ -127,6 +155,10 @@ const Map = ({owner, room}: mapProps) => {
       >
         <button
           onClick={(): void => {
+            setUpdate(update => ({
+              ...update,
+              villages: [...update.villages, houseCoords]
+            }));
             setHouseCoords({y: -1, x: -1});
             setIsConfirmationRequiredHouse(false);
           }}
@@ -153,6 +185,10 @@ const Map = ({owner, room}: mapProps) => {
         }}
       >
         <button onClick={(): void => {
+          setUpdate(update => ({
+            ...update,
+            roads: [...update.roads, roadCoords]
+          }));
           setRoadCoords({y: -1, x: -1});
           setIsConfirmationRequiredRoad(false);
         }}>
@@ -166,6 +202,8 @@ const Map = ({owner, room}: mapProps) => {
           отмена
         </button>
       </MovableModal>
+      
+      <button onClick={endDebutTurn}>завершить ход</button>
     </div>
   );
 };

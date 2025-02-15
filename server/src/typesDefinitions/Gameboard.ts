@@ -1,3 +1,5 @@
+import {Coords} from './Player';
+
 export enum Tile {
   forrest,    //4
   wheat,      //4
@@ -28,10 +30,10 @@ export type House = {
 
 
 export class Gameboard {
-  tiles: Tile[][];
-  houses: House[][];
-  roads: Owner[][];
-  numbers: number[][];
+  private tiles: Tile[][];
+  private houses: House[][];
+  private roads: Owner[][];
+  private numbers: number[][];
   
   
   constructor() {
@@ -115,4 +117,247 @@ export class Gameboard {
       numbers: this.numbers
     };
   }
+  
+  
+  
+  /*********************************************************************************************************************
+   * ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ СОСЕДНИХ ЭЛЕМЕНТОВ КАРТЫ
+   *********************************************************************************************************************/
+  
+  /*********************************************************************************************************************
+   * ДОРОГИ
+   *********************************************************************************************************************/
+  
+  private _IsRoadCoordsValid(coords: Coords): boolean {
+    if (coords.y < 0 || coords.y > this.roads.length) return false;
+    if (coords.x < 0 || coords.x > this.roads[coords.y].length) return false;
+    return true;
+  }
+  
+  private _IsRoadHorizontal(coords: Coords): boolean {
+    return coords.y % 2 === 0;
+  }
+  
+  // лево/право определяется относительно тайла, для относительно которого дорога находится в его верхней части
+  private _IsRoadLeft(coords: Coords): boolean {
+    if (this._IsRoadUpper(coords)) {
+      return coords.x % 2 === 0;
+    } else {
+      return coords.x % 2 === 1;
+    }
+  }
+  
+  // имеется ввиду она в верхней или нижней части карты
+  private _IsRoadUpper(coords: Coords): boolean {
+    return coords.y <= 4;
+  }
+  
+  // вертикальные дороги между самым длинным рядом тайлов
+  private _IsRoadCentral(coords: Coords): boolean {
+    return coords.y === 5;
+  }
+  
+  private _IsRoadBottom(coords: Coords): boolean {
+    return coords.y >= 6;
+  }
+  
+  
+  // соседние дороги для горизонтальных
+  
+  private _RoadLeftFromRoad(coords: Coords): Owner | null {
+    if (coords.x === 0) return null;
+    return this.roads[coords.y][coords.x - 1];
+  }
+  
+  private _RoadRightFromRoad(coords: Coords): Owner | null {
+    if (coords.x === this.roads[coords.y].length - 1) return null;
+    return this.roads[coords.y][coords.x - 1];
+  }
+  
+  private _RoadUpFromRoad(coords: Coords): Owner | null {
+    if (coords.y === 0) return null;
+    
+    if (this._IsRoadUpper(coords)) {
+      if (this._IsRoadLeft(coords)) {
+        return this.roads[coords.y - 1][coords.x / 2];
+      } else {
+        return this.roads[coords.y - 1][(coords.x - 1) / 2];
+      }
+    } else {
+      if (this._IsRoadLeft(coords)) {
+        return this.roads[coords.y - 1][(coords.x + 1) / 2];
+      } else {
+        return this.roads[coords.y - 1][coords.x / 2];
+      }
+    }
+  }
+  
+  private _RoadDownFromRoad(coords: Coords): Owner | null {
+    if (coords.y === this.roads.length - 1) return null;
+    
+    if (this._IsRoadUpper(coords)) {
+      if (this._IsRoadLeft(coords)) {
+        return this.roads[coords.y + 1][coords.x / 2];
+      } else {
+        return this.roads[coords.y + 1][(coords.x + 1) / 2];
+      }
+    } else {
+      if (this._IsRoadLeft(coords)) {
+        return this.roads[coords.y + 1][(coords.x - 1) / 2];
+      } else {
+        return this.roads[coords.y + 1][coords.x / 2];
+      }
+    }
+  }
+  
+  
+  // соседние дороги для вертикальных
+  
+  private _RoadUpperLeftFromRoad(coords: Coords): Owner | null {
+    if (coords.x === 0 && this._IsRoadBottom(coords)) return null;
+    
+    if (this._IsRoadCentral(coords) || this._IsRoadUpper(coords)) {
+      return this.roads[coords.y - 1][coords.x * 2 - 1];
+    } else {
+      return this.roads[coords.y - 1][coords.x * 2];
+    }
+  }
+  
+  private _RoadUpperRightFromRoad(coords: Coords): Owner | null {
+    if (coords.x === this.roads[coords.y].length - 1 && this._IsRoadBottom(coords)) return null;
+    
+    if (this._IsRoadCentral(coords) || this._IsRoadUpper(coords)) {
+      return this.roads[coords.y - 1][coords.x * 2];
+    } else {
+      return this.roads[coords.y - 1][coords.x * 2 + 1];
+    }
+  }
+  
+  private _RoadBottomLeftFromRoad(coords: Coords): Owner | null {
+    if (coords.x === 0 && !this._IsRoadUpper(coords)) return null;
+    
+    if (this._IsRoadCentral(coords) || !this._IsRoadUpper(coords)) {
+      return this.roads[coords.y + 1][coords.x * 2 - 1];
+    } else {
+      return this.roads[coords.y + 1][coords.x * 2];
+    }
+  }
+  
+  private _RoadBottomRightFromRoad(coords: Coords): Owner | null {
+    if (coords.x === this.roads[coords.y].length - 1 && !this._IsRoadUpper(coords)) return null;
+    
+    if (this._IsRoadCentral(coords) || !this._IsRoadUpper(coords)) {
+      return this.roads[coords.y + 1][coords.x * 2];
+    } else {
+      return this.roads[coords.y + 1][coords.x * 2 + 1];
+    }
+  }
+  
+  
+  private _HousesAroundTheRoad(coords: Coords): {first: House, second: House} {
+    if (this._IsRoadHorizontal(coords)) return {
+      first: this.houses[coords.y][coords.x],
+      second: this.houses[coords.y][coords.x + 1]
+    };
+    if (this._IsRoadCentral(coords)) return {
+      first: this.houses[coords.y - 1][coords.x * 2],
+      second: this.houses[coords.y + 1][coords.x * 2]
+    };
+    if (this._IsRoadUpper(coords)) return {
+      first: this.houses[coords.y - 1][coords.x * 2],
+      second: this.houses[coords.y - 1][coords.x * 2 + 1]
+    };
+    return {
+      first: this.houses[coords.y - 1][coords.x * 2 + 1],
+      second: this.houses[coords.y - 1][coords.x * 2]
+    };
+  }
+  
+  
+  /*********************************************************************************************************************
+   * ПОСЕЛЕНИЯ
+   *********************************************************************************************************************/
+  
+  private _IsHouseCoordsValid(coords: Coords): boolean {
+    if (coords.y < 0 || coords.y > this.houses.length) return false;
+    if (coords.x < 0 || coords.x > this.houses[coords.y].length) return false;
+    return true;
+  }
+  
+  // имеется ввиду выше ли он середины карты
+  private _IsHouseUpper(coords: Coords): boolean {
+    return coords.y <= 2;
+  }
+  
+  private _IsHouseCentral(coords: Coords): boolean {
+    return coords.y === 2 || coords.y === 3;
+  }
+  
+  private _IsHouseUpperCase(coords: Coords): boolean {
+    return this._IsHouseUpper(coords) ? coords.x % 2 === 1 : coords.y % 2 === 0;
+  }
+  
+  private _HousesAroundTheHouse(coords: Coords): House[] {
+    const houses: House[] = [];
+    if (coords.x > 0) houses.push(this.houses[coords.y][coords.x - 1]);
+    if (coords.x < this.houses[coords.y].length - 1) houses.push(this.houses[coords.y][coords.x + 1]);
+    
+    if (this._IsHouseUpper(coords)) {
+      if (this._IsHouseUpperCase(coords)) {
+        if (coords.y > 0) houses.push(this.houses[coords.y - 1][coords.x - 1]);
+      } else if (this._IsHouseCentral(coords)) {
+        houses.push(this.houses[coords.y + 1][coords.x]);
+      } else {
+        houses.push(this.houses[coords.y + 1][coords.x + 1]);
+      }
+    } else {
+      if (!this._IsHouseUpperCase(coords)) {
+        if (coords.y < houses.length - 1) houses.push(this.houses[coords.y + 1][coords.x - 1]);
+      } else if (this._IsHouseCentral(coords)) {
+        houses.push(this.houses[coords.y - 1][coords.x]);
+      } else {
+        houses.push(this.houses[coords.y - 1][coords.x + 1]);
+      }
+    }
+    return houses;
+  }
+  
+  
+  
+  /*********************************************************************************************************************
+   * ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ СОСЕДНИХ ЭЛЕМЕНТОВ КАРТЫ
+   *********************************************************************************************************************/
+  
+  CheckRoad(coords: Coords, owner: Owner): boolean {
+    if (!this._IsRoadCoordsValid(coords)) return false;
+    if (this.roads[coords.y][coords.x] !== Owner.nobody) return false;
+    
+    if (this._IsRoadHorizontal(coords)) return (
+      this._RoadLeftFromRoad(coords) === owner
+      || this._RoadRightFromRoad(coords) === owner
+      || this._RoadUpFromRoad(coords) === owner
+      || this._RoadDownFromRoad(coords) === owner
+      || this._HousesAroundTheRoad(coords).first.owner === owner
+      || this._HousesAroundTheRoad(coords).second.owner === owner
+    )
+    
+    return (
+      this._RoadUpperLeftFromRoad(coords) === owner
+      || this._RoadUpperRightFromRoad(coords) === owner
+      || this._RoadBottomLeftFromRoad(coords) === owner
+      || this._RoadBottomRightFromRoad(coords) === owner
+      || this._HousesAroundTheRoad(coords).first.owner === owner
+      || this._HousesAroundTheRoad(coords).second.owner === owner
+    )
+  }
+  
+  
+  DebutCheckVillage(coords: Coords, owner: Owner): boolean {
+    if (!this._IsHouseCoordsValid(coords)) return false;
+    if (this.houses[coords.y][coords.x].owner !== Owner.nobody) return false;
+    
+    return !this._HousesAroundTheHouse(coords).find((house: House): boolean => house.owner !== Owner.nobody);
+  }
+  
+  // CheckVillage
 }

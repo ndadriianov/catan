@@ -35,7 +35,7 @@
   scale: 10%;
   margin-top: 10.5%;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 .housesContainer {

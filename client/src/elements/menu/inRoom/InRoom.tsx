@@ -6,6 +6,7 @@ import MyModal from '../../UI/modal/MyModal.tsx';
 import ConnectionIndicator from './ConnectionIndicator.tsx';
 import Map from '../../gameboard/map/Map.tsx';
 import Select from '../../UI/select/Select.tsx';
+import {debutProps} from '../../gameboard/map/operations.ts';
 
 
 const InRoom = () => {
@@ -13,6 +14,7 @@ const InRoom = () => {
   const [unsuccessful, setUnsuccessful] = useState<boolean>(false);
   const [errorWithRoom, setErrorWithRoom] = useState<boolean>(false);
   const [color, setColor] = useState<Owner>(Owner.nobody);
+  const [isMyTurnNow, setIsMyTurnNow] = useState<boolean>(false);
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -40,6 +42,20 @@ const InRoom = () => {
       default: return Owner.nobody;
     }
   }
+  function applyColor(strColor: string): void {
+    const color: Owner = chooseColor(strColor);
+    setColor(color);
+    socket.emit('apply-color', color);
+  }
+  function start(): void {
+    socket.emit('start-room', roomId, (success: boolean): void => {
+      if (success) {
+        console.log('start room');
+      } else {
+        console.log('cant start room');
+      }
+    });
+  }
   
   
   const colorOptions = [
@@ -57,7 +73,25 @@ const InRoom = () => {
       setRoom(parseRoom(updatedRoom));
       if (room === null) setErrorWithRoom(true);
     })
+    return () => {
+      socket.off('room-update');
+    };
   }, [])
+  
+  // подписка на событие для начала хода во время дебюта
+  useEffect(() => {
+    console.log('subscribe on debut');
+    socket.on('debut-turn', (): void => {
+      console.log('debut');
+      setIsMyTurnNow(true);
+    });
+    
+    return () => {
+      socket.off('debut-turn');
+    };
+  }, []);
+  
+  
   
   return (
     <div>
@@ -80,7 +114,7 @@ const InRoom = () => {
             вывести в консоль комнату
           </button>
 
-          <button onClick={() => socket.emit('start-room', roomId)}>
+          <button onClick={start}>
             начать
           </button>
 
@@ -109,12 +143,12 @@ const InRoom = () => {
                 options={colorOptions.slice(1)}
                 initial={colorOptions[0]}
                 value={colorOptions[color].value}
-                onChange={(value: string): void => setColor(chooseColor(value))}
+                onChange={(value: string): void => applyColor(value)}
               />
               
               {room.haveStarted &&
                 <div>
-                  <Map owner={color} room={room}/>
+                  <Map owner={color} room={room} isMyTurnNow={isMyTurnNow} />
                 </div>
               }
             </div>

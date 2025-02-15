@@ -43,11 +43,13 @@
 .turned {
   height: 40%;
   width: 40%;
+  z-index: 10;
 }
 
 .vert {
   height: 10%;
   width: 10%;
+  z-index: 10;
 }
 
 @keyframes pulse {
