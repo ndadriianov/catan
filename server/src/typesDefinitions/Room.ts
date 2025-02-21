@@ -7,6 +7,9 @@ import {Player} from './Player';
 export class Room {
   id: number;
   active: boolean;
+  private _activePlayer?: Player;
+  debutMode: boolean;
+  private _counter: number;
   private _players: Array<Player>;
   private _hasStarted: boolean;
   private _eventEmitter: EventEmitter;
@@ -48,6 +51,7 @@ export class Room {
     const player: Player|undefined = this._players.find((player: Player): boolean => player.username === username);
     if (!player) return false;
     player.color = color;
+    this._eventEmitter.emit('update', this.id);
     return true;
   }
   
@@ -55,18 +59,9 @@ export class Room {
   toJSON() {
     return {
       id: this.id,
-      players: this._players.map(player => ({
-        username: player.username,
-        status: player.status,
-        leftTheRoom: player.leftTheRoom,
-        inventory: {
-          clay: player.inventory.clay,
-          forrest: player.inventory.forrest,
-          sheep: player.inventory.sheep,
-          stone: player.inventory.stone,
-          wheat: player.inventory.wheat,
-        }
-      })),
+      players: this._players.map(player => (player.toJSON())),
+      activePlayer: this._activePlayer?.username,
+      counter: this._counter,
       haveStarted: this._hasStarted,
       gameboard: this.gameboard ? this.gameboard.toGSON() : undefined
     };
@@ -76,6 +71,9 @@ export class Room {
   constructor(id: number, eventEmitter: EventEmitter) {
     this.id = id;
     this.active = true; // буду использовать для создания архива незаконченных сессий
+    this._activePlayer = undefined;
+    this.debutMode = false;
+    this._counter = 1;
     this._players = [];
     this._hasStarted = false;
     this._eventEmitter = eventEmitter;
@@ -107,10 +105,34 @@ export class Room {
   get hasStarted(): boolean {return this._hasStarted; }
   
   
+  get activePlayer(): Player | undefined {return this._activePlayer;}
+  
+  set activePlayer(player: Player) {
+    this._activePlayer = player;
+    this._eventEmitter.emit('update', this.id);
+  }
+  
+  
+  nextTurn(): void {
+    this._counter++;
+    if (this.debutMode && this._counter > this._players.length * 2) this.debutMode = false;
+  }
+  
+  // предполагается что при вызове _counter уже инкрементирован
+  nextPlayer(): Player {
+    if (this._counter <= this._players.length || !this.debutMode) {
+      return this._players[(this._counter - 1) % this._players.length];
+    } else {
+      return this._players[this._players.length * 2 - this._counter];
+    }
+  }
+  
+  
   start(): void {
     if (this._hasStarted) return;
     
     this._hasStarted = true;
+    this.debutMode = true;
     this.gameboard = new Gameboard();
     
     this._players.forEach((player: Player): void => {
@@ -119,8 +141,7 @@ export class Room {
     this._eventEmitter.emit('update', this.id);
     
     // дебют
-    this._players.forEach((player: Player): void => {
-      this._eventEmitter.emit(`${player.username}:debut-turn`, this, player.color);
-    })
+    this._activePlayer = this._players[0];
+    this._eventEmitter.emit('update', this.id);
   }
 }

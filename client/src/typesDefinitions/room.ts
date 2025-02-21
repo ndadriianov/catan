@@ -1,6 +1,8 @@
 export type Room = {
   id: number;
   players: Player[];
+  activePlayer: string;
+  counter: number;
   haveStarted: boolean;
   gameboard?: Gameboard;
 }
@@ -13,6 +15,7 @@ export type Player = {
   username: string;
   status: ConnectionStatus;
   inventory: Inventory;
+  color: Owner;
 }
 
 type jsonPlayer = Player & {
@@ -96,7 +99,8 @@ function parsePlayer(playerJSON: jsonPlayer): Player {
   return {
     username: playerJSON.username,
     status: playerJSON.status as ConnectionStatus,
-    inventory: parseInventory(playerJSON.inventory)
+    inventory: parseInventory(playerJSON.inventory),
+    color: playerJSON.color,
   };
 }
 
@@ -108,6 +112,8 @@ export function parseRoom(roomJSON: jsonRoom|null): Room|null {
       players: roomJSON.players.map((player: jsonPlayer): Player => {
         return parsePlayer(player);
       }),
+      activePlayer: roomJSON.activePlayer,
+      counter: roomJSON.counter,
       haveStarted: roomJSON.haveStarted as boolean,
       gameboard: roomJSON.gameboard ? parseGameboard(roomJSON.gameboard) : undefined
     };

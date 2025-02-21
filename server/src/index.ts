@@ -5,7 +5,7 @@ import cors from 'cors';
 import {ConnectionStatus, LoginStatus, User} from './typesDefinitions/User';
 import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
-import {debutProps, Player} from './typesDefinitions/Player';
+import {updateProps, Player} from './typesDefinitions/Player';
 import {Owner} from './typesDefinitions/Gameboard';
 
 
@@ -53,7 +53,6 @@ io.on('connection', (socket: Socket): void => {
       const user: User = new User(username, password, eventEmitter);
       users.push(user);
       socket.data.user = user;
-      subscribeOnGameplayEvents(username, socket);
       callback(true);
     } else {
       callback(false);
@@ -67,7 +66,6 @@ io.on('connection', (socket: Socket): void => {
       if (user.status !== ConnectionStatus.Green) { // пользователь не должен иметь текущей активности
         user.status = ConnectionStatus.Green; // восстановление соединения и подключение после долгой паузы
         socket.data.user = user;
-        subscribeOnGameplayEvents(username, socket);
         callback(LoginStatus.Success);
       } else {
         callback(LoginStatus.Duplicate)
@@ -182,13 +180,37 @@ io.on('connection', (socket: Socket): void => {
   })
   
   
-  socket.on('refresh-room', (id: number): void => {
-    const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
-    if (room) socket.emit('room-update', room.toJSON());
+  socket.on('end-turn', (update: updateProps): void => {
+    if (!checkIsAuth({socket})) return;
+    if (!socket.data.user.activeRoom) return;
+    
+    const room: Room = socket.data.user.activeRoom;
+    const color: Owner|undefined = room.players.find(p => p.username === socket.data.user.username)?.color;
+    
+    if (!color) return;
+    if (!room.hasStarted) return;
+    
+    if (room.debutMode) {
+      console.log(update);
+      console.log(room.gameboard);
+    } else {
+    
+    }
+    
+    room.nextTurn();
+    room.activePlayer = room.nextPlayer();
   })
   
   
-  socket.on('debut-end-turn', (debutData: debutProps, callback: (succeed: boolean) => void): void => {
+  
+  /*socket.on('refresh-room', (id: number): void => {
+    const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
+    if (room) socket.emit('room-update', room.toJSON());
+  })*/
+  
+  
+  
+  socket.on('debut-end-turn', (debutData: any, callback: (succeed: boolean) => void): void => {
     if (!checkIsAuth({socket, callback})) {
       callback(false);
       return;
@@ -202,13 +224,14 @@ io.on('connection', (socket: Socket): void => {
     
     console.log('debut-turn', debutData);
     if (room.gameboard) {
-      if (room.gameboard.DebutCheckVillage(debutData.village, color)) {
-      
-      }
-      
-      
-      console.log(room.gameboard.CheckRoad(debutData.road, color));
       console.log(room.gameboard.DebutCheckVillage(debutData.village, color));
+      
+      if (room.gameboard.DebutCheckVillage(debutData.village, color)) {
+        room.gameboard.PlaceVillage(debutData.village, color);
+        
+        console.log(room.gameboard.CheckRoad(debutData.road, color));
+        room.gameboard.PlaceRoad(debutData.road, color);
+      }
     }
     // check !!
     // place !!
@@ -267,20 +290,4 @@ function prepareRoomIdLists(user: User): {currentRoomIds: number[], otherRoomIds
     return !currentRoomIds.some((otherId: number): boolean => id === otherId);
   })
   return {currentRoomIds, otherRoomIds};
-}
-
-
-
-function subscribeOnGameplayEvents(username: string, socket: Socket): void {
-  eventEmitter.on(`${username}:debut-turn`, (room: Room, color: Owner): void => {
-    socket.emit('debut-turn');/*, (debutData: debutProps): void => { // НАДО ВЫЯСНИТЬ ПОЧЕМУ ПРИ ПЕРВОМ СОЗДАНИИ КОМНАТЫ НЕ ПРОХОДИТ CALLBACK
-      console.log('debut-turn', debutData);
-      if (room.gameboard) {
-        console.log(room.gameboard.CheckRoad(debutData.road, color));
-        console.log(room.gameboard.DebutCheckVillage(debutData.village, color));
-      }
-      // check !!
-      // place !!
-    })*/
-  })
 }

@@ -13,7 +13,6 @@ const colors: Array<string> = [
 ]
 
 const ConnectionIndicator = ({status}: ConnectionIndicatorProps) => {
-  console.log(status);
   return (
     <div className={classes.connectionIndicator} style={{backgroundColor: colors[status]}} />
   );

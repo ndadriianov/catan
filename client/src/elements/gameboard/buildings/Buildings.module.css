@@ -67,3 +67,7 @@
 .selected {
   animation: pulse 2s infinite ease-in-out;
 }
+
+.update {
+  border: 2px solid aqua;
+}

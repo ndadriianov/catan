@@ -16,6 +16,17 @@ export class Player {
     this.leftTheRoom = false;
     this.color = Owner.nobody;
   }
+  
+  
+  toJSON() {
+    return {
+      username: this.username,
+      inventory: this.inventory,
+      status: this.status,
+      leftTheRoom: this.leftTheRoom,
+      color: this.color
+    };
+  }
 }
 
 
@@ -50,7 +61,8 @@ export class Inventory {
 }
 
 
-export type debutProps = {
-  village: Coords;
-  road: Coords;
+export type updateProps = {
+  road: Coords[];
+  village: Coords[];
+  city: Coords[];
 }

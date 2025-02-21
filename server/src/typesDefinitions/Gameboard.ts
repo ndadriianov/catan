@@ -341,6 +341,8 @@ export class Gameboard {
       || this._HousesAroundTheRoad(coords).second.owner === owner
     )
     
+    console.log(this._HousesAroundTheRoad(coords));
+    
     return (
       this._RoadUpperLeftFromRoad(coords) === owner
       || this._RoadUpperRightFromRoad(coords) === owner
@@ -360,4 +362,17 @@ export class Gameboard {
   }
   
   // CheckVillage
+  
+  
+  /*********************************************************************************************************************
+   * ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ДОБАВЛЕНИЯ ОБЪЕКТА
+   *********************************************************************************************************************/
+  
+  PlaceVillage(coords: Coords, owner: Owner): void {
+    this.houses[coords.y][coords.x] = {owner: owner, type: houseType.village};
+  }
+  
+  PlaceRoad(coords: Coords, owner: Owner): void {
+    this.roads[coords.y][coords.x] = owner;
+  }
 }

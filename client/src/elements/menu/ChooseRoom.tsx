@@ -31,7 +31,6 @@ const ChooseRoom = () => {
       setRoomIdArrays(res);
     })
     socket.on('update-room-list', (updatedRoomIds: RoomIdArrays): void => {
-      console.log(updatedRoomIds);
       setRoomIdArrays(updatedRoomIds);
     })
   }, [])

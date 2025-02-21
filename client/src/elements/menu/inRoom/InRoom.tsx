@@ -1,16 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import {jsonRoom, Owner, parseRoom, Room} from '../../../typesDefinitions/room.ts';
+import React, {useContext, useEffect, useState} from 'react';
+import {jsonRoom, Owner, parseRoom, Player, Room} from '../../../typesDefinitions/room.ts';
 import socket from '../../../socket.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
 import MyModal from '../../UI/modal/MyModal.tsx';
 import ConnectionIndicator from './ConnectionIndicator.tsx';
 import Map from '../../gameboard/map/Map.tsx';
 import Select from '../../UI/select/Select.tsx';
-import {debutProps} from '../../gameboard/map/operations.ts';
+import UserContext from '../../../context/UserContext.ts';
 
 
 const InRoom = () => {
   const [room, setRoom] = useState<Room|undefined|null>(undefined);
+  const {user} = useContext(UserContext)!;
+  const [me, setMe] = useState<Player|undefined|null>(undefined);
   const [unsuccessful, setUnsuccessful] = useState<boolean>(false);
   const [errorWithRoom, setErrorWithRoom] = useState<boolean>(false);
   const [color, setColor] = useState<Owner>(Owner.nobody);
@@ -22,11 +24,14 @@ const InRoom = () => {
   const roomId = parseInt(params ? params : '0');
   const navigate = useNavigate();
   
-  function loadRoom(): void {
-    socket.emit('load-room', roomId, (room: jsonRoom | null): void => {
-      setRoom(parseRoom(room));
-      if (room === null) setErrorWithRoom(true);
-    });
+  
+  function SetUpRoom(roomJ: jsonRoom|null): void {
+    const parsedRoom: Room|null = parseRoom(roomJ);
+    setRoom(parsedRoom);
+    if (parsedRoom === null) {
+      setErrorWithRoom(true);
+      return;
+    }
   }
   function joinRoom(): void {
     socket.emit('join-room', roomId, (succeed: boolean): void => {
@@ -65,31 +70,31 @@ const InRoom = () => {
     { value: 'green', label: 'Зеленый' },
     { value: 'orange', label: 'Оранжевый' },
   ];
+  const colors: string[] = [
+    'Не выбран',
+    'Черный',
+    'Синий',
+    'Зеленый',
+    'Оранжевый'
+  ]
   
   // первичная загрузка и обновление состояния комнаты
   useEffect(() => {
-    loadRoom();
-    socket.on('room-update', (updatedRoom: jsonRoom): void => {
-      setRoom(parseRoom(updatedRoom));
-      if (room === null) setErrorWithRoom(true);
+    socket.emit('load-room', roomId, (roomJ: jsonRoom | null): void => {
+      SetUpRoom(roomJ);
+    });
+    socket.on('room-update', (updatedRoom: jsonRoom | null): void => {
+      SetUpRoom(updatedRoom);
     })
     return () => {
       socket.off('room-update');
     };
   }, [])
   
-  // подписка на событие для начала хода во время дебюта
   useEffect(() => {
-    console.log('subscribe on debut');
-    socket.on('debut-turn', (): void => {
-      console.log('debut');
-      setIsMyTurnNow(true);
-    });
-    
-    return () => {
-      socket.off('debut-turn');
-    };
-  }, []);
+    setMe(room?.players.find((player: Player): boolean => player.username === user.username));
+    if (user.username && room) setIsMyTurnNow(room?.activePlayer === user.username);
+  }, [user, room]);
   
   
   
@@ -114,6 +119,10 @@ const InRoom = () => {
             вывести в консоль комнату
           </button>
 
+          <button onClick={() => console.log(me)}>
+            вывести в консоль себя
+          </button>
+
           <button onClick={start}>
             начать
           </button>
@@ -135,6 +144,7 @@ const InRoom = () => {
                   <li key={index} style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                     <span>{player.username}</span>
                     <ConnectionIndicator status={player.status}/>
+                    <span>{colors[player.color]}</span>
                   </li>
                 ))}
               </ul>
@@ -142,13 +152,13 @@ const InRoom = () => {
               <Select
                 options={colorOptions.slice(1)}
                 initial={colorOptions[0]}
-                value={colorOptions[color].value}
+                value={colorOptions[me?.color || color].value}
                 onChange={(value: string): void => applyColor(value)}
               />
               
               {room.haveStarted &&
                 <div>
-                  <Map owner={color} room={room} isMyTurnNow={isMyTurnNow} />
+                  <Map owner={me?.color || color} room={room} isMyTurnNow={isMyTurnNow}/>
                 </div>
               }
             </div>
@@ -162,7 +172,15 @@ const InRoom = () => {
         <div>
           <h2>Не удалось получить данные о комнате</h2>
 
-          <button onClick={loadRoom}>попробовать загрузить снова</button>
+          <button
+            onClick={() => {
+              socket.emit('load-room', roomId, (roomJ: jsonRoom | null): void => {
+                SetUpRoom(roomJ);
+              });
+            }}
+          >
+            попробовать загрузить снова
+          </button>
         </div>
       }
     </div>

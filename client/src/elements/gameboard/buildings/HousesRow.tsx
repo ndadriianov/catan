@@ -4,15 +4,18 @@ import clsx from 'clsx'
 import {ReactNode} from 'react';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {Coords} from '../map/operations.ts';
+import {Owner} from '../../../typesDefinitions/room.ts';
 
 type HousesRowProps = {
   houses: House[],
   isUpper: boolean,
   verticalIndex: number,
-  selectedCoords: Coords
+  selectedCoords: Coords,
+  isMyTurnNow: boolean,
+  owner: Owner
 }
 
-const HousesRow = ({houses, isUpper, verticalIndex, selectedCoords}: HousesRowProps): ReactNode => {
+const HousesRow = ({houses, isUpper, verticalIndex, selectedCoords, isMyTurnNow, owner}: HousesRowProps): ReactNode => {
   return (
     <div className={classes.housesRow}>
       {houses.map((house: string, index: number): ReactNode => (
@@ -25,7 +28,7 @@ const HousesRow = ({houses, isUpper, verticalIndex, selectedCoords}: HousesRowPr
             selectedCoords.y === verticalIndex && selectedCoords.x === index&& classes.selected
           )}
           alt={'House'}
-          onClick={() => emitter.emit('tap-on-house', verticalIndex, index)}
+          onClick={() => emitter.emit('tap-on-house', verticalIndex, index, isMyTurnNow, owner)}
         />
       ))}
     </div>

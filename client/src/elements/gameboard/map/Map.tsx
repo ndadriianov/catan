@@ -9,11 +9,11 @@ import VertRoadsRow from '../buildings/VertRoadsRow.tsx';
 import HousesRow from '../buildings/HousesRow.tsx';
 import React, {useEffect, useState} from 'react';
 import Loader from '../../UI/loader/Loader.tsx';
-import {jsonRoom, Owner, Room} from '../../../typesDefinitions/room.ts';
+import {Owner, Room} from '../../../typesDefinitions/room.ts';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {Road} from '../../../typesDefinitions/roads.ts';
 import {House} from '../../../typesDefinitions/houses.ts';
-import {changeColorHouse, changeColorRoad, Coords, debutProps, getTiles} from './operations.ts';
+import {changeColorHouse, changeColorRoad, Coords, getTiles} from './operations.ts';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
 import NumbersRow from '../number/NumbersRow.tsx';
 import socket from '../../../socket.ts';
@@ -23,7 +23,6 @@ type mapProps = {
   owner: Owner;
   room: Room;
   isMyTurnNow: boolean;
-  setIsMyTurnNow: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 type updateProps = {
@@ -33,7 +32,7 @@ type updateProps = {
 }
 
 
-const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
+const Map = ({owner, room, isMyTurnNow}: mapProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [tiles, setTiles] = useState(initialTiles);
   const [numbers, setNumbers] = useState<number[][]>(initialNumbers);
@@ -47,22 +46,22 @@ const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
   
   
   useEffect(() => {
-    const roadHandler = (verticalIndex: number, index: number): void => {
+    function roadHandler(verticalIndex: number, index: number, isMyTurnNow: boolean, owner: Owner): void {
       console.log('tap-on-road', verticalIndex, index, isMyTurnNow);
       if (isMyTurnNow) {
         setRoadCoords({y: verticalIndex, x: index});
         changeColorRoad({coords: {x: index, y: verticalIndex}, owner: owner, setRoads: setRoads});
         setIsConfirmationRequiredRoad(true);
       }
-    };
-    const houseHandler = (verticalIndex: number, index: number): void => {
+    }
+    function houseHandler(verticalIndex: number, index: number, isMyTurnNow: boolean, owner: Owner): void {
       console.log('tap-on-house', verticalIndex, index, 'owner: ', owner, isMyTurnNow);
       if (isMyTurnNow) {
         setHouseCoords({y: verticalIndex, x: index});
         changeColorHouse({coords: {x: index, y: verticalIndex}, owner: owner, toCity: true, setHouses: setHouses});
         setIsConfirmationRequiredHouse(true);
       }
-    };
+    }
     emitter.on('tap-on-road', roadHandler);
     emitter.on('tap-on-house', houseHandler);
     
@@ -81,6 +80,7 @@ const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
   }, [room.gameboard?.tiles]);
   
   
+  /*
   function endDebutTurn(): void {
     if (update.villages.length !== 1 || update.roads.length !== 1 || update.cities.length !== 0) {
       socket.emit('refresh-room', room.id);
@@ -91,14 +91,18 @@ const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
       setIsMyTurnNow(!succeed);
       socket.emit('refresh-room', room.id);
     });
+  }*/
+  
+  function endTurn():void {
+    socket.emit('end-turn', update);
   }
   
   
   if (isLoading) return <Loader/>;
   
-  
   return (
     <div>
+      <div>{room.counter}</div>
       {isMyTurnNow && <div>мой ход</div>}
       
       <div className={classes.container}>
@@ -114,26 +118,26 @@ const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
         </div>
         
         <div className={classes.roadsContainer}>
-          <TurnedRoadsRow roads={roads[0]} verticalIndex={0} selectedCoords={roadCoords}/>
-          <VertRoadsRow roads={roads[1]} verticalIndex={1} selectedCoords={roadCoords}/>
-          <TurnedRoadsRow roads={roads[2]} verticalIndex={2} selectedCoords={roadCoords}/>
-          <VertRoadsRow roads={roads[3]} verticalIndex={3} selectedCoords={roadCoords}/>
-          <TurnedRoadsRow roads={roads[4]} verticalIndex={4} selectedCoords={roadCoords}/>
-          <VertRoadsRow roads={roads[5]} verticalIndex={5} selectedCoords={roadCoords}/>
-          <TurnedRoadsRow roads={roads[6]} verticalIndex={6} selectedCoords={roadCoords}/>
-          <VertRoadsRow roads={roads[7]} verticalIndex={7} selectedCoords={roadCoords}/>
-          <TurnedRoadsRow roads={roads[8]} verticalIndex={8} selectedCoords={roadCoords}/>
-          <VertRoadsRow roads={roads[9]} verticalIndex={9} selectedCoords={roadCoords}/>
-          <TurnedRoadsRow roads={roads[10]} verticalIndex={10} selectedCoords={roadCoords}/>
+          <TurnedRoadsRow roads={roads[0]} verticalIndex={0} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <VertRoadsRow roads={roads[1]} verticalIndex={1} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <TurnedRoadsRow roads={roads[2]} verticalIndex={2} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <VertRoadsRow roads={roads[3]} verticalIndex={3} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <TurnedRoadsRow roads={roads[4]} verticalIndex={4} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <VertRoadsRow roads={roads[5]} verticalIndex={5} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <TurnedRoadsRow roads={roads[6]} verticalIndex={6} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <VertRoadsRow roads={roads[7]} verticalIndex={7} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <TurnedRoadsRow roads={roads[8]} verticalIndex={8} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <VertRoadsRow roads={roads[9]} verticalIndex={9} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <TurnedRoadsRow roads={roads[10]} verticalIndex={10} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
         </div>
         
         <div className={classes.housesContainer}>
-          <HousesRow houses={houses[0]} isUpper={true} verticalIndex={0} selectedCoords={houseCoords}/>
-          <HousesRow houses={houses[1]} isUpper={true} verticalIndex={1} selectedCoords={houseCoords}/>
-          <HousesRow houses={houses[2]} isUpper={true} verticalIndex={2} selectedCoords={houseCoords}/>
-          <HousesRow houses={houses[3]} isUpper={false} verticalIndex={3} selectedCoords={houseCoords}/>
-          <HousesRow houses={houses[4]} isUpper={false} verticalIndex={4} selectedCoords={houseCoords}/>
-          <HousesRow houses={houses[5]} isUpper={false} verticalIndex={5} selectedCoords={houseCoords}/>
+          <HousesRow houses={houses[0]} isUpper={true} verticalIndex={0} selectedCoords={houseCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <HousesRow houses={houses[1]} isUpper={true} verticalIndex={1} selectedCoords={houseCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <HousesRow houses={houses[2]} isUpper={true} verticalIndex={2} selectedCoords={houseCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <HousesRow houses={houses[3]} isUpper={false} verticalIndex={3} selectedCoords={houseCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <HousesRow houses={houses[4]} isUpper={false} verticalIndex={4} selectedCoords={houseCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
+          <HousesRow houses={houses[5]} isUpper={false} verticalIndex={5} selectedCoords={houseCoords} isMyTurnNow={isMyTurnNow} owner={owner}/>
         </div>
         
         <div className={classes.numbersContainer}>
@@ -203,7 +207,7 @@ const Map = ({owner, room, isMyTurnNow, setIsMyTurnNow}: mapProps) => {
         </button>
       </MovableModal>
       
-      <button onClick={endDebutTurn}>завершить ход</button>
+      <button onClick={endTurn}>завершить ход</button>
     </div>
   );
 };

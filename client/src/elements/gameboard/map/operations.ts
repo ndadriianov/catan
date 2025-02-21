@@ -97,7 +97,6 @@ export type Coords = {
 
 export function getTiles(enumTiles: tile[][]): Tile[][] {
   const realTiles: Tile[][] = [[], [], [], [], []];
-  console.log(enumTiles);
   
   for (let i = 0; i < enumTiles.length; i++) {
     enumTiles[i].forEach((currentTile: tile): void => {
@@ -112,11 +111,4 @@ export function getTiles(enumTiles: tile[][]): Tile[][] {
     })
   }
   return realTiles;
-}
-
-
-
-export type debutProps = {
-  road: Coords;
-  village: Coords;
 }
