@@ -1,8 +1,11 @@
+import {Coords} from '../elements/gameboard/map/operations.ts';
+
 export type Room = {
   id: number;
   players: Player[];
   activePlayer: string;
   counter: number;
+  lastNumber: number;
   haveStarted: boolean;
   gameboard?: Gameboard;
 }
@@ -40,19 +43,19 @@ export enum tile {
   wasteland   //1
 }
 
-enum houseType {
+export enum houseType {
   village,
   city
 }
 
-type House = {
+export type house = {
   owner: Owner;
   type: houseType;
 }
 
 export type Gameboard = {
   tiles: tile[][];
-  houses: House[][];
+  houses: house[][];
   roads: Owner[][];
   numbers: number[][];
 }
@@ -114,6 +117,7 @@ export function parseRoom(roomJSON: jsonRoom|null): Room|null {
       }),
       activePlayer: roomJSON.activePlayer,
       counter: roomJSON.counter,
+      lastNumber: roomJSON.lastNumber,
       haveStarted: roomJSON.haveStarted as boolean,
       gameboard: roomJSON.gameboard ? parseGameboard(roomJSON.gameboard) : undefined
     };
@@ -121,4 +125,11 @@ export function parseRoom(roomJSON: jsonRoom|null): Room|null {
     console.log("Error parsing room:", e);
     return null;
   }
+}
+
+
+export type updateProps = {
+  villages: Coords[];
+  cities: Coords[];
+  roads: Coords[];
 }

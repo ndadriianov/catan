@@ -1,4 +1,4 @@
-import {Owner, tile} from '../../../typesDefinitions/room.ts';
+import {house, houseType, Owner, tile, updateProps} from '../../../typesDefinitions/room.ts';
 import {cities, House, villages} from '../../../typesDefinitions/houses.ts';
 import React from 'react';
 import {leftRoads, rightRoads, Road, straightRoads} from '../../../typesDefinitions/roads.ts';
@@ -108,7 +108,91 @@ export function getTiles(enumTiles: tile[][]): Tile[][] {
         case tile.stone: realTiles[i].push(tiles.stone); break;
         default: realTiles[i].push(tiles.wasteland); break;
       }
-    })
+    });
   }
   return realTiles;
+}
+
+export function getRoads(enumRoads: Owner[][]): Road[][] {
+  const realRoads: Road[][] = [[], [], [], [], [], [], [], [], [], [], []];
+  
+  for (let i = 0; i < enumRoads.length; i++) {
+    enumRoads[i].forEach((currentRoad: Owner, index: number): void => {
+      const isTurned: boolean = i % 2 === 0;
+      const isRight: boolean = isTurned && ((i < 6 && index % 2 === 0) || (i >= 6 && index % 2 === 1));
+      
+      switch (currentRoad) {
+        case Owner.black: realRoads[i].push(isTurned ? isRight ? rightRoads.black : leftRoads.black : straightRoads.black); break;
+        case Owner.blue: realRoads[i].push(isTurned ? isRight ? rightRoads.blue : leftRoads.blue : straightRoads.blue); break;
+        case Owner.green: realRoads[i].push(isTurned ? isRight ? rightRoads.green : leftRoads.green : straightRoads.green); break;
+        case Owner.orange: realRoads[i].push(isTurned ? isRight ? rightRoads.orange : leftRoads.orange : straightRoads.orange); break;
+        default: realRoads[i].push(isTurned ? isRight ? rightRoads.nobody : leftRoads.nobody : straightRoads.nobody); break;
+      }
+    });
+  }
+  return realRoads;
+}
+
+export function getHouses(enumHouses: house[][]): House[][] {
+  const realHouses: House[][] = [[], [], [], [], [], []];
+  
+  for (let i = 0; i < enumHouses.length; i++) {
+    enumHouses[i].forEach((currentHouse: house): void => {
+      const isCity: boolean = currentHouse.type === houseType.city;
+      
+      switch (currentHouse.owner) {
+        case Owner.black: realHouses[i].push(isCity ? cities.black : villages.black); break;
+        case Owner.blue: realHouses[i].push(isCity ? cities.blue : villages.blue); break;
+        case Owner.green: realHouses[i].push(isCity ? cities.green : villages.green); break;
+        case Owner.orange: realHouses[i].push(isCity ? cities.orange : villages.orange); break;
+        default: realHouses[i].push(isCity ? cities.nobody : villages.nobody); break;
+      }
+    });
+  }
+  return realHouses;
+}
+
+
+export function isSelectedRoadInUpdate(update: updateProps, selected: Coords): boolean {
+  return !!update.roads.find(road => road.x === selected.x && road.y === selected.y);
+}
+export function isSelectedHouseInUpdate(update: updateProps, selected: Coords): boolean {
+  return !!(update.villages.find(village => village.x === selected.x && village.y === selected.y)
+    || update.cities.find(city => city.x === selected.x && city.y === selected.y));
+}
+export function addRoadToUpdate(update: updateProps, selected: Coords): updateProps {
+  if (isSelectedRoadInUpdate(update, selected)) return update;
+  return {
+    ...update,
+    roads: [...update.roads, selected]
+  };
+}
+export function deleteRoadFromUpdate(update: updateProps, selected: Coords): updateProps {
+  return {
+    ...update,
+    roads: update.roads.filter((road: Coords): boolean => {
+      return road.x !== selected.x || road.y !== selected.y;
+    })
+  };
+}
+export function addHouseToUpdate(update: updateProps, selected: Coords, toCity: boolean): updateProps {
+  if (isSelectedHouseInUpdate(update, selected)) return update;
+  if (toCity) {
+    return {
+      ...update,
+      cities: [...update.cities, selected]
+    };
+  } else {
+    return {
+      ...update,
+      villages: [...update.villages, selected]
+    };
+  }
+}
+export function deleteHouseFromUpdate(update: updateProps, selected: Coords): updateProps {
+  return {
+    ...update,
+    cities: update.cities.filter((city: Coords): boolean => city.x !== selected.x || city.y !== selected.y),
+    villages: update.villages.filter((village: Coords): boolean => village.x !== selected.x || village.y !== selected.y)
+  };
 }

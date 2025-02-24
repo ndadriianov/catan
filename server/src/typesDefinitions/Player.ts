@@ -62,7 +62,7 @@ export class Inventory {
 
 
 export type updateProps = {
-  road: Coords[];
-  village: Coords[];
-  city: Coords[];
+  villages: Coords[];
+  cities: Coords[];
+  roads: Coords[];
 }

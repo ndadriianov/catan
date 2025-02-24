@@ -180,37 +180,79 @@ io.on('connection', (socket: Socket): void => {
   })
   
   
-  socket.on('end-turn', (update: updateProps): void => {
-    if (!checkIsAuth({socket})) return;
-    if (!socket.data.user.activeRoom) return;
+  socket.on('end-turn', (update: updateProps, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    
+    if (!socket.data.user.activeRoom) {
+      callback(false);
+      return;
+    }
     
     const room: Room = socket.data.user.activeRoom;
     const color: Owner|undefined = room.players.find(p => p.username === socket.data.user.username)?.color;
     
-    if (!color) return;
-    if (!room.hasStarted) return;
-    
-    if (room.debutMode) {
-      console.log(update);
-      console.log(room.gameboard);
-    } else {
-    
+    if (!color || !room.hasStarted || !room.gameboard || room.activePlayer?.username !== socket.data.user.username) {
+      callback(false);
+      return;
     }
     
-    room.nextTurn();
-    room.activePlayer = room.nextPlayer();
+    let isSuccessful: boolean = true;
+    
+    if (room.debutMode) {
+      if (!(update.roads.length === 1 && update.villages.length === 1 && update.cities.length === 0)) {
+        console.log('несоответствие параметров');
+        callback(false);
+        return;
+      }
+      
+      if (room.gameboard.DebutCheckVillage(update.villages[0], color)) {
+        room.gameboard.PlaceVillage(update.villages[0], color);
+      } else {
+        isSuccessful = false;
+        console.log('ошибка при добавлении здания');
+      }
+      
+      if (isSuccessful && room.gameboard.CheckRoad(update.roads[0], color)) {
+        room.gameboard.PlaceRoad(update.roads[0], color);
+      } else {
+        console.log('ошибка при добавлении дороги');
+        room.gameboard.Undo();
+        isSuccessful = false;
+      }
+      
+      room.gameboard.ClearUndo();
+      
+      // если последний ход в дебюте, то бросается кубик
+      if (room.counter === room.players.length * 2) room.gameboard.GiveResources(room.players);
+      
+    } else {
+      room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
+    }
+    
+    
+    if (isSuccessful) {
+      room.nextTurn();
+      room.activePlayer = room.nextPlayer();
+    }
+    
+    console.log(update);
+    console.log(room.gameboard);
+    room.players.forEach((p: Player): void => {console.log(p.inventory)})
+    console.log(isSuccessful);
+    
+    callback(isSuccessful);
   })
   
   
   
-  /*socket.on('refresh-room', (id: number): void => {
+  socket.on('refresh-room', (id: number): void => {
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     if (room) socket.emit('room-update', room.toJSON());
-  })*/
+  })
   
   
   
-  socket.on('debut-end-turn', (debutData: any, callback: (succeed: boolean) => void): void => {
+  /*socket.on('debut-end-turn', (debutData: any, callback: (succeed: boolean) => void): void => {
     if (!checkIsAuth({socket, callback})) {
       callback(false);
       return;
@@ -236,7 +278,7 @@ io.on('connection', (socket: Socket): void => {
     // check !!
     // place !!
   })
-  
+  */
   
   
   /*********************************************************************************************************************

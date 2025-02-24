@@ -1,4 +1,5 @@
-import {Coords} from './Player';
+import {Coords, Player} from './Player';
+import * as punycode from 'node:punycode';
 
 export enum Tile {
   forrest,    //4
@@ -34,6 +35,9 @@ export class Gameboard {
   private houses: House[][];
   private roads: Owner[][];
   private numbers: number[][];
+  private undoRoads: Coords[];
+  private undoCities: Coords[];
+  private undoVillages: Coords[];
   
   
   constructor() {
@@ -94,6 +98,10 @@ export class Gameboard {
       new Array(4).fill(Owner.nobody),
       new Array(6).fill(Owner.nobody),
     ]
+    
+    this.undoRoads = [];
+    this.undoVillages = [];
+    this.undoCities = [];
   }
   
   
@@ -255,21 +263,25 @@ export class Gameboard {
   
   
   private _HousesAroundTheRoad(coords: Coords): {first: House, second: House} {
+    // если горизонтальная, то остальное не важно
     if (this._IsRoadHorizontal(coords)) return {
-      first: this.houses[coords.y][coords.x],
-      second: this.houses[coords.y][coords.x + 1]
+      first: this.houses[coords.y / 2][coords.x],
+      second: this.houses[coords.y / 2][coords.x + 1]
     };
+    // если центральная, то сверху и снизу x-координаты одинаковые
     if (this._IsRoadCentral(coords)) return {
-      first: this.houses[coords.y - 1][coords.x * 2],
-      second: this.houses[coords.y + 1][coords.x * 2]
+      first: this.houses[(coords.y - 1) / 2][coords.x * 2],
+      second: this.houses[(coords.y + 1) / 2][coords.x * 2]
     };
+    // если верхняя, то снизу x-координата больше
     if (this._IsRoadUpper(coords)) return {
-      first: this.houses[coords.y - 1][coords.x * 2],
-      second: this.houses[coords.y - 1][coords.x * 2 + 1]
+      first: this.houses[(coords.y - 1) / 2][coords.x * 2],
+      second: this.houses[(coords.y + 1) / 2][coords.x * 2 + 1]
     };
+    // если нижняя, то сверху x-координата больше
     return {
-      first: this.houses[coords.y - 1][coords.x * 2 + 1],
-      second: this.houses[coords.y - 1][coords.x * 2]
+      first: this.houses[(coords.y - 1) / 2][coords.x * 2 + 1],
+      second: this.houses[(coords.y + 1) / 2][coords.x * 2]
     };
   }
   
@@ -369,10 +381,105 @@ export class Gameboard {
    *********************************************************************************************************************/
   
   PlaceVillage(coords: Coords, owner: Owner): void {
+    this.undoVillages.push(coords);
     this.houses[coords.y][coords.x] = {owner: owner, type: houseType.village};
   }
   
   PlaceRoad(coords: Coords, owner: Owner): void {
+    this.undoRoads.push(coords);
     this.roads[coords.y][coords.x] = owner;
+  }
+  
+  
+  Undo(): void {
+    this.undoRoads.forEach((coords: Coords): void => {
+      this.roads[coords.y][coords.x] = Owner.nobody;
+    });
+    this.undoCities.forEach((coords: Coords): void => {
+      this.houses[coords.y][coords.x] = {...this.houses[coords.y][coords.x], type: houseType.village};
+    })
+    this.undoVillages.forEach((coords: Coords): void => {
+      this.houses[coords.y][coords.x] = {owner: Owner.nobody, type: houseType.village};
+    });
+    
+    this.ClearUndo();
+  }
+  
+  public ClearUndo(): void {
+    this.undoRoads = [];
+    this.undoCities = [];
+    this.undoVillages = [];
+  }
+  
+  
+  /*********************************************************************************************************************
+   * МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ РЕСУРСОВ
+   *********************************************************************************************************************/
+  
+  private ThrowDice(): number {
+    return this.getRandomInt(1, 6) + this.getRandomInt(1, 6);
+  }
+  
+  private _HousesAroundTheTile(coords: Coords): House[] {
+    const result: House[] = [];
+    const xBase: number = coords.x * 2;
+    const yBase: number = coords.y;
+    
+    // central
+    if (coords.y === 2) {
+      result.push(this.houses[yBase][xBase]);
+      result.push(this.houses[yBase][xBase + 1]);
+      result.push(this.houses[yBase][xBase + 2]);
+      result.push(this.houses[yBase + 1][xBase]);
+      result.push(this.houses[yBase + 1][xBase + 1]);
+      result.push(this.houses[yBase + 1][xBase + 2]);
+    }
+    // upper
+    else if (coords.y < 2) {
+      result.push(this.houses[yBase][xBase]);
+      result.push(this.houses[yBase][xBase + 1]);
+      result.push(this.houses[yBase][xBase + 2]);
+      result.push(this.houses[yBase + 1][xBase + 1]);
+      result.push(this.houses[yBase + 1][xBase + 2]);
+      result.push(this.houses[yBase + 1][xBase + 3]);
+    }
+    // lower
+    else {
+      result.push(this.houses[yBase][xBase + 1]);
+      result.push(this.houses[yBase][xBase + 2]);
+      result.push(this.houses[yBase][xBase + 3]);
+      result.push(this.houses[yBase + 1][xBase]);
+      result.push(this.houses[yBase + 1][xBase + 1]);
+      result.push(this.houses[yBase + 1][xBase + 2]);
+    }
+    return result;
+  }
+  
+  public GiveResources(players: Player[]): number {
+    const roll: number = this.ThrowDice();
+    if (roll === 7) console.log('разбойник');
+    this.numbers.forEach((nums: number[], yIndex: number): void => {
+      nums.forEach((num: number, xIndex: number): void => {
+        if (num === roll) {
+          const resource: Tile = this.tiles[yIndex][xIndex];
+          const houses: House[] = this._HousesAroundTheTile({x: xIndex, y: yIndex});
+          houses.forEach(house => {
+            if (house.owner !== Owner.nobody) {
+              const currentPlayer: Player|undefined = players.find(player => player.color === house.owner);
+              if (currentPlayer) {
+                switch (resource) {
+                  case Tile.forrest: currentPlayer.inventory.forrest += house.type === houseType.village ? 1 : 2; break;
+                  case Tile.wheat: currentPlayer.inventory.wheat += house.type === houseType.village ? 1 : 2; break;
+                  case Tile.sheep: currentPlayer.inventory.sheep += house.type === houseType.village ? 1 : 2; break;
+                  case Tile.clay: currentPlayer.inventory.clay += house.type === houseType.village ? 1 : 2; break;
+                  case Tile.stone: currentPlayer.inventory.stone += house.type === houseType.village ? 1 : 2; break;
+                }
+              }
+            }
+          });
+        }
+      });
+    });
+    return roll;
   }
 }

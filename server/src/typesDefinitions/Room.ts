@@ -9,6 +9,7 @@ export class Room {
   active: boolean;
   private _activePlayer?: Player;
   debutMode: boolean;
+  lastNumber: number;
   private _counter: number;
   private _players: Array<Player>;
   private _hasStarted: boolean;
@@ -17,6 +18,8 @@ export class Room {
   
   
   get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
+  
+  get playersByLink(): Player[] {return this._players;}
   
   
   isInRoom(username: string): boolean {
@@ -62,6 +65,7 @@ export class Room {
       players: this._players.map(player => (player.toJSON())),
       activePlayer: this._activePlayer?.username,
       counter: this._counter,
+      lastNumber: this.lastNumber,
       haveStarted: this._hasStarted,
       gameboard: this.gameboard ? this.gameboard.toGSON() : undefined
     };
@@ -77,6 +81,7 @@ export class Room {
     this._players = [];
     this._hasStarted = false;
     this._eventEmitter = eventEmitter;
+    this.lastNumber = 0;
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {
@@ -112,6 +117,8 @@ export class Room {
     this._eventEmitter.emit('update', this.id);
   }
   
+  
+  get counter(): number {return this._counter;}
   
   nextTurn(): void {
     this._counter++;

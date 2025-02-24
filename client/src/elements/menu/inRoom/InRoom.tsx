@@ -156,9 +156,9 @@ const InRoom = () => {
                 onChange={(value: string): void => applyColor(value)}
               />
               
-              {room.haveStarted &&
+              {room.haveStarted && me &&
                 <div>
-                  <Map owner={me?.color || color} room={room} isMyTurnNow={isMyTurnNow}/>
+                  <Map owner={me.color || color} room={room} isMyTurnNow={isMyTurnNow} inventory={me.inventory}/>
                 </div>
               }
             </div>
