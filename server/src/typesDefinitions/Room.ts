@@ -105,6 +105,15 @@ export class Room {
     });
   }
   
+  public PREPARE() {
+    this._counter = 5;
+    this.lastNumber = 5;
+    this._players[0].color = Owner.black;
+    this._players[1].color = Owner.blue;
+    this.start();
+    this.gameboard?.PREPARE();
+    this.debutMode = false;
+  }
   
   
   get hasStarted(): boolean {return this._hasStarted; }

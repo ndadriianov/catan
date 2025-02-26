@@ -5,8 +5,8 @@ import cors from 'cors';
 import {ConnectionStatus, LoginStatus, User} from './typesDefinitions/User';
 import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
-import {updateProps, Player} from './typesDefinitions/Player';
-import {Owner} from './typesDefinitions/Gameboard';
+import {updateProps, Player, Coords} from './typesDefinitions/Player';
+import {Gameboard, Owner} from './typesDefinitions/Gameboard';
 
 
 const PORT = 4000;
@@ -25,6 +25,21 @@ const eventEmitter = new EventEmitter();
 
 const users: Array<User> = [];
 const rooms: Array<Room> = [];
+
+//////////
+
+users.push(new User('a', 'a', eventEmitter));
+users.push(new User('q', 'q', eventEmitter));
+
+rooms.push(new Room(1, eventEmitter));
+rooms[0].addPlayer(users[0].username);
+rooms[0].addPlayer(users[1].username);
+users[0].activeRoom = rooms[0];
+users[1].activeRoom = rooms[0];
+
+rooms[0].PREPARE();
+
+//////////
 
 // срабатывает когда изменяет список пользователей, либо haveStarted в комнате, аргумент - id данной комнаты
 eventEmitter.on('update', (id: number): void => {
@@ -195,9 +210,14 @@ io.on('connection', (socket: Socket): void => {
       callback(false);
       return;
     }
+    const gameboard: Gameboard = room.gameboard;
     
     let isSuccessful: boolean = true;
     
+    
+    /*********
+     * ДЕБЮТ *
+     *********/
     if (room.debutMode) {
       if (!(update.roads.length === 1 && update.villages.length === 1 && update.cities.length === 0)) {
         console.log('несоответствие параметров');
@@ -223,10 +243,65 @@ io.on('connection', (socket: Socket): void => {
       room.gameboard.ClearUndo();
       
       // если последний ход в дебюте, то бросается кубик
-      if (room.counter === room.players.length * 2) room.gameboard.GiveResources(room.players);
+      if (isSuccessful && room.counter === room.players.length * 2) room.gameboard.GiveResources(room.players);
       
-    } else {
+      /*****************
+       * ОСНОВНАЯ ИГРА *
+       *****************/
+    }
+    else {
       room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
+      
+      // добавление дорог
+      try {
+        update.roads.forEach((road: Coords): void => {
+          if (isSuccessful && gameboard.CheckRoad(road, color)) {
+            gameboard.PlaceRoad(road, color);
+          } else {
+            throw new Error('road unavailable!');
+          }
+        })
+      } catch (error) {
+        if (error instanceof Error) console.log(error.message);
+        else console.log('возникла неизвестная ошибка при добавлении дорог!');
+        isSuccessful = false;
+        gameboard.Undo();
+      }
+      
+      // добавление поселений
+      try {
+        update.villages.forEach((village: Coords): void => {
+          if (isSuccessful && gameboard.CheckVillage(village, color)) { // проверка room.gameboard есть раньше, здесь написал чтобы компилятор не ругался
+            gameboard.PlaceVillage(village, color);
+          } else {
+            throw new Error('village unavailable!');
+          }
+        })
+      } catch (error) {
+        if (error instanceof Error) console.log(error.message);
+        else console.log('возникла неизвестная ошибка при добавлении поселений!');
+        isSuccessful = false;
+        gameboard.Undo();
+      }
+      
+      // добавление городов
+      try {
+        update.cities.forEach((city: Coords): void => {
+          if (isSuccessful && gameboard.CheckCity(city, color)) {
+            gameboard.PlaceCity(city, color);
+          } else {
+            throw new Error('city unavailable!');
+          }
+        })
+      }catch (error) {
+        if (error instanceof Error) console.log(error.message);
+        else console.log('возникла неизвестная ошибка при добавлении городов!');
+        isSuccessful = false;
+        gameboard.Undo();
+      }
+      
+      gameboard.ClearUndo();
+      if (isSuccessful) gameboard.GiveResources(room.playersByLink);
     }
     
     

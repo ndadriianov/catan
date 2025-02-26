@@ -105,6 +105,19 @@ export class Gameboard {
   }
   
   
+  public PREPARE(): void {
+    this.houses[3][4] = {owner: Owner.black, type: houseType.village};
+    this.houses[2][3] = {owner: Owner.black, type: houseType.village};
+    this.roads[5][2] = Owner.black;
+    this.roads[4][3] = Owner.black;
+    
+    this.houses[3][8] = {owner: Owner.blue, type: houseType.village};
+    this.houses[2][7] = {owner: Owner.blue, type: houseType.village};
+    this.roads[5][4] = Owner.blue;
+    this.roads[4][7] = Owner.blue;
+  }
+  
+  
   private _Coords(pos: number): {x: number, y: number} {
     if (pos <= 3) return {x: 1, y: pos};
     if (pos <= 7) return {x: 2, y: pos - 3};
@@ -179,7 +192,7 @@ export class Gameboard {
   
   private _RoadRightFromRoad(coords: Coords): Owner | null {
     if (coords.x === this.roads[coords.y].length - 1) return null;
-    return this.roads[coords.y][coords.x - 1];
+    return this.roads[coords.y][coords.x + 1];
   }
   
   private _RoadUpFromRoad(coords: Coords): Owner | null {
@@ -262,27 +275,59 @@ export class Gameboard {
   }
   
   
-  private _HousesAroundTheRoad(coords: Coords): {first: House, second: House} {
+  private _HousesAroundTheRoad(coords: Coords): House[] {
+    const houses: House[] = [];
+    
     // если горизонтальная, то остальное не важно
-    if (this._IsRoadHorizontal(coords)) return {
-      first: this.houses[coords.y / 2][coords.x],
-      second: this.houses[coords.y / 2][coords.x + 1]
-    };
+    if (this._IsRoadHorizontal(coords)) {
+      houses.push(this.houses[coords.y / 2][coords.x]);
+      houses.push(this.houses[coords.y / 2][coords.x + 1]);
+    }
     // если центральная, то сверху и снизу x-координаты одинаковые
-    if (this._IsRoadCentral(coords)) return {
-      first: this.houses[(coords.y - 1) / 2][coords.x * 2],
-      second: this.houses[(coords.y + 1) / 2][coords.x * 2]
-    };
+    else if (this._IsRoadCentral(coords)) {
+      houses.push(this.houses[(coords.y - 1) / 2][coords.x * 2]);
+      houses.push(this.houses[(coords.y + 1) / 2][coords.x * 2]);
+    }
     // если верхняя, то снизу x-координата больше
-    if (this._IsRoadUpper(coords)) return {
-      first: this.houses[(coords.y - 1) / 2][coords.x * 2],
-      second: this.houses[(coords.y + 1) / 2][coords.x * 2 + 1]
-    };
+    else if (this._IsRoadUpper(coords)) {
+      houses.push(this.houses[(coords.y - 1) / 2][coords.x * 2]);
+      houses.push(this.houses[(coords.y + 1) / 2][coords.x * 2 + 1]);
+    }
     // если нижняя, то сверху x-координата больше
-    return {
-      first: this.houses[(coords.y - 1) / 2][coords.x * 2 + 1],
-      second: this.houses[(coords.y + 1) / 2][coords.x * 2]
-    };
+    else {
+      houses.push(this.houses[(coords.y - 1) / 2][coords.x * 2 + 1]);
+      houses.push(this.houses[(coords.y + 1) / 2][coords.x * 2]);
+    }
+    return houses;
+  }
+  
+  private _RoadsAroundTheRoad(coords: Coords): Owner[] {
+    const roads: Owner[] = [];
+    
+    if (this._IsRoadHorizontal(coords)) {
+      const right = this._RoadRightFromRoad(coords);
+      const left = this._RoadLeftFromRoad(coords);
+      const up = this._RoadUpFromRoad(coords);
+      const down = this._RoadDownFromRoad(coords);
+      
+      if (right !== null) roads.push(right);
+      if (left !== null) roads.push(left);
+      if (up !== null) roads.push(up);
+      if (down !== null) roads.push(down);
+      
+    } else {
+      const ul = this._RoadUpperLeftFromRoad(coords)
+      const ur = this._RoadUpperRightFromRoad(coords)
+      const bl = this._RoadBottomLeftFromRoad(coords)
+      const br = this._RoadBottomRightFromRoad(coords)
+      
+      if (ul !== null) roads.push(ul);
+      if (ur !== null) roads.push(ur);
+      if (bl !== null) roads.push(bl);
+      if (br !== null) roads.push(br);
+    }
+    
+    return roads;
   }
   
   
@@ -334,6 +379,27 @@ export class Gameboard {
     return houses;
   }
   
+  private _RoadsAroundTheHouse(coords: Coords): Owner[] {
+    const roads: Owner[] = [];
+    if (coords.x > 0) roads.push(this.roads[coords.y * 2][coords.x - 1]);
+    if (coords.x < this.houses[coords.y].length - 1) roads.push(this.roads[coords.y * 2][coords.x]);
+    
+    if (this._IsHouseUpper(coords)) {
+      if (this._IsHouseUpperCase(coords)) {
+        if (coords.y > 0) roads.push(this.roads[coords.y * 2 - 1][(coords.x - 1) / 2]);
+      } else {
+        roads.push(this.roads[coords.y * 2 + 1][coords.x / 2]);
+      }
+    } else {
+      if (this._IsHouseUpperCase(coords)) {
+        roads.push(this.roads[coords.y * 2 - 1][coords.x / 2]);
+      } else {
+        if (coords.y < this.houses.length - 1) roads.push(this.roads[coords.y * 2 + 1][(coords.x - 1) / 2]);
+      }
+    }
+    return roads;
+  }
+  
   
   
   /*********************************************************************************************************************
@@ -344,25 +410,11 @@ export class Gameboard {
     if (!this._IsRoadCoordsValid(coords)) return false;
     if (this.roads[coords.y][coords.x] !== Owner.nobody) return false;
     
-    if (this._IsRoadHorizontal(coords)) return (
-      this._RoadLeftFromRoad(coords) === owner
-      || this._RoadRightFromRoad(coords) === owner
-      || this._RoadUpFromRoad(coords) === owner
-      || this._RoadDownFromRoad(coords) === owner
-      || this._HousesAroundTheRoad(coords).first.owner === owner
-      || this._HousesAroundTheRoad(coords).second.owner === owner
-    )
+    const neighbourRoads: Owner[] = this._RoadsAroundTheRoad(coords);
+    const neighbourHouses: House[] = this._HousesAroundTheRoad(coords);
     
-    console.log(this._HousesAroundTheRoad(coords));
-    
-    return (
-      this._RoadUpperLeftFromRoad(coords) === owner
-      || this._RoadUpperRightFromRoad(coords) === owner
-      || this._RoadBottomLeftFromRoad(coords) === owner
-      || this._RoadBottomRightFromRoad(coords) === owner
-      || this._HousesAroundTheRoad(coords).first.owner === owner
-      || this._HousesAroundTheRoad(coords).second.owner === owner
-    )
+    return (!!neighbourRoads.find((road: Owner): boolean => road === owner)
+      || !!neighbourHouses.find((house: House): boolean => house.owner === owner));
   }
   
   
@@ -373,7 +425,25 @@ export class Gameboard {
     return !this._HousesAroundTheHouse(coords).find((house: House): boolean => house.owner !== Owner.nobody);
   }
   
-  // CheckVillage
+  
+  CheckVillage(coords: Coords, owner: Owner): boolean {
+    if (!this._IsHouseCoordsValid(coords)) return false;
+    if (this.houses[coords.y][coords.x].owner !== Owner.nobody) return false;
+    
+    const neighbourRoads: Owner[] = this._RoadsAroundTheHouse(coords);
+    const neighbourHouses: House[] = this._HousesAroundTheHouse(coords);
+    
+    return (!!neighbourRoads.find((road: Owner): boolean => road === owner)
+      && !neighbourHouses.find((house: House): boolean => house.owner !== Owner.nobody));
+  }
+  
+  
+  CheckCity(coords: Coords, owner: Owner): boolean {
+    if (!this._IsHouseCoordsValid(coords)) return false;
+    if (this.houses[coords.y][coords.x].owner !== owner) return false;
+    
+    return this.houses[coords.y][coords.x].type == houseType.village;
+  }
   
   
   /*********************************************************************************************************************
@@ -383,6 +453,11 @@ export class Gameboard {
   PlaceVillage(coords: Coords, owner: Owner): void {
     this.undoVillages.push(coords);
     this.houses[coords.y][coords.x] = {owner: owner, type: houseType.village};
+  }
+  
+  PlaceCity(coords: Coords, owner: Owner): void {
+    this.undoCities.push(coords);
+    this.houses[coords.y][coords.x] = {owner: owner, type: houseType.city};
   }
   
   PlaceRoad(coords: Coords, owner: Owner): void {

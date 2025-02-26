@@ -43,9 +43,9 @@ export class Inventory {
   sheep: number;
   stone: number;
   wheat: number;
-  roads: Coords[];
-  villages: Coords[];
-  cities: Coords[];
+  roads: number;
+  villages: number;
+  cities: number;
   
   
   constructor() {
@@ -54,9 +54,9 @@ export class Inventory {
     this.sheep = 0;
     this.stone = 0;
     this.wheat = 0;
-    this.roads = [];
-    this.villages = [];
-    this.cities = [];
+    this.roads = 0;
+    this.villages = 0;
+    this.cities = 0;
   }
 }
 
