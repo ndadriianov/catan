@@ -9,27 +9,32 @@ import VertRoadsRow from '../buildings/VertRoadsRow.tsx';
 import HousesRow from '../buildings/HousesRow.tsx';
 import React, {useEffect, useState} from 'react';
 import Loader from '../../UI/loader/Loader.tsx';
-import {house, houseType, Inventory, Owner, Room, updateProps} from '../../../typesDefinitions/room.ts';
+import Room from '../../../typesDefinitions/room/room.ts';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {Road} from '../../../typesDefinitions/roads.ts';
 import {House} from '../../../typesDefinitions/houses.ts';
+import {changeColorHouse, changeColorRoad} from './mapRelatedFunctions/changeColorOperations.ts';
 import {
-  addHouseToUpdate,
+  addCityToUpdate,
   addRoadToUpdate,
-  changeColorHouse,
-  changeColorRoad,
-  Coords,
-  deleteHouseFromUpdate,
+  addVillageToUpdate,
+  deleteCityFromUpdate,
   deleteRoadFromUpdate,
-  getHouses,
-  getRoads,
-  getTiles,
+  deleteVillageFromUpdate,
   isSelectedHouseInUpdate,
   isSelectedRoadInUpdate
-} from './operations.ts';
+} from './mapRelatedFunctions/updateOperations.ts';
+import {getHouses, getRoads, getTiles} from './mapRelatedFunctions/mapObjectsProcessing.ts';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
 import NumbersRow from '../number/NumbersRow.tsx';
 import socket from '../../../socket.ts';
+import Costs from '../../../typesDefinitions/costs.ts';
+import Coords from '../../../typesDefinitions/coords.ts';
+import Owner from '../../../typesDefinitions/owner.ts';
+import Inventory from '../../../typesDefinitions/room/inventory.ts';
+import updateProps from '../../../typesDefinitions/updateProps.ts';
+import house from '../../../typesDefinitions/house/house.ts';
+import houseType from '../../../typesDefinitions/house/houseType.ts';
 
 
 type mapProps = {
@@ -49,12 +54,15 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   const [isRoadNobodys, setIsRoadNobodys] = useState(false);
   const [isHouseNobodys, setIsHouseNobodys] = useState(false);
   const [isMyVillage, setIsMyVillage] = useState(false);
+  const [isMyUpdateVillage, setIsMyUpdateVillage] = useState(false);
+  const [isMyUpdateCity, setIsMyUpdateCity] = useState(false);
   const [isConfirmationRequiredHouse, setIsConfirmationRequiredHouse] = useState<boolean>(false);
   const [isConfirmationRequiredRoad, setIsConfirmationRequiredRoad] = useState<boolean>(false);
   const [isTurnIncorrect, setIsTurnIncorrect] = useState<boolean>(false);
   const [houseCoords, setHouseCoords] = useState<Coords>({x: -1, y: -1});
   const [roadCoords, setRoadCoords] = useState<Coords>({x: -1, y: -1});
   const [update, setUpdate] = useState<updateProps>({villages: [], cities: [], roads: []});
+  const [costs, setCosts] = useState<Costs>({clay: 0, forrest: 0, sheep: 0, stone: 0, wheat: 0});
   
   
   useEffect(() => {
@@ -68,19 +76,26 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
         setIsConfirmationRequiredRoad(true);
       }
     }
-    function houseHandler(y: number, x: number, isMyTurnNow: boolean, owner: Owner): void {
-      const currentHouse: house|undefined = room.gameboard?.houses[y][x];
+    
+    function houseHandler(y: number, x: number, isMyTurnNow: boolean, owner: Owner, update: updateProps): void {
+      const currentHouse: house | undefined = room.gameboard?.houses[y][x];
       const isNobodys: boolean = currentHouse?.owner === Owner.nobody;
       const isMyVillage: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.village;
+      const isMyUpdateVillage: boolean = !!update.villages.find((village: Coords):boolean => village.x === x && village.y === y);
+      const isMyCity: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.city;
+      const isMyUpdateCity: boolean = !!update.cities.find((city: Coords): boolean => city.x === x && city.y === y);
       
-      if (isMyTurnNow && (isNobodys || isMyVillage)) {
+      if (isMyTurnNow && (isNobodys || isMyVillage || isMyUpdateVillage) && !isMyCity) {
         setHouseCoords({y: y, x: x});
         setIsHouseNobodys(isNobodys);
         setIsMyVillage(isMyVillage);
-        changeColorHouse({coords: {x: x, y: y}, owner: owner, toCity: false, setHouses: setHouses});
+        setIsMyUpdateVillage(isMyUpdateVillage);
+        setIsMyUpdateCity(isMyUpdateCity);
+        changeColorHouse({coords: {x: x, y: y}, owner: owner, toCity: isMyUpdateCity, setHouses: setHouses});
         setIsConfirmationRequiredHouse(true);
       }
     }
+    
     emitter.on('tap-on-road', roadHandler);
     emitter.on('tap-on-house', houseHandler);
     
@@ -105,8 +120,80 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     }
   }, [room.gameboard]);
   
+  function closeRoadModal(): void {
+    if (!isSelectedRoadInUpdate(update, roadCoords) && isRoadNobodys) {
+      changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
+    }
+    setIsConfirmationRequiredRoad(false);
+    setRoadCoords({y: -1, x: -1});
+  }
+  function buyRoad(): void {
+    setUpdate(update => addRoadToUpdate(update, roadCoords));
+    setRoadCoords({y: -1, x: -1});
+    setIsConfirmationRequiredRoad(false);
+  }
+  function cancelRoadPurchase(): void {
+    if (isRoadNobodys) changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
+    setRoadCoords({y: -1, x: -1});
+    setIsConfirmationRequiredRoad(false);
+  }
+  function deleteRoad(): void {
+    setUpdate(update => deleteRoadFromUpdate(update, roadCoords));
+    changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
+    setIsConfirmationRequiredRoad(false);
+    setRoadCoords({y: -1, x: -1});
+  }
+  function cancelRoadDeletion(): void {
+    setIsConfirmationRequiredRoad(false);
+    setRoadCoords({y: -1, x: -1});
+  }
   
-  function endTurn():void {
+  function closeHouseModal(): void {
+    if (!isSelectedHouseInUpdate(update, houseCoords) && isHouseNobodys) {
+      changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: true, setHouses: setHouses});
+    }
+    setIsConfirmationRequiredHouse(false);
+    setHouseCoords({y: -1, x: -1});
+  }
+  function buyVillage(): void {
+    setUpdate((update: updateProps): updateProps => addVillageToUpdate(update, houseCoords));
+    setHouseCoords({y: -1, x: -1});
+    setIsConfirmationRequiredHouse(false);
+  }
+  function buyCity(): void {
+    setUpdate((update: updateProps): updateProps => addCityToUpdate(update, houseCoords));
+    changeColorHouse({coords: houseCoords, owner: owner, toCity: true, setHouses: setHouses});
+    setHouseCoords({y: -1, x: -1});
+    setIsConfirmationRequiredHouse(false);
+  }
+  function cancelVillagePurchase(): void {
+    changeColorHouse({
+      coords: houseCoords,
+      owner: Owner.nobody,
+      toCity: false,
+      setHouses: setHouses
+    });
+    setHouseCoords({y: -1, x: -1});
+    setIsConfirmationRequiredHouse(false);
+  }
+  function cancelCityPurchase(): void {
+    setHouseCoords({y: -1, x: -1});
+    setIsConfirmationRequiredHouse(false);
+  }
+  function deleteVillage(): void {
+    setUpdate(update => deleteVillageFromUpdate(update, houseCoords));
+    changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: false, setHouses: setHouses});
+    setIsConfirmationRequiredHouse(false);
+    setHouseCoords({y: -1, x: -1});
+  }
+  function degradeToVillage(): void {
+    setUpdate(update => deleteCityFromUpdate(update, houseCoords));
+    changeColorHouse({coords: houseCoords, owner: owner, toCity: false, setHouses: setHouses});
+    setIsConfirmationRequiredHouse(false);
+    setHouseCoords({y: -1, x: -1});
+  }
+  
+  function endTurn(): void {
     socket.emit('end-turn', update, (succeed: boolean) => {
       if (!succeed) setIsTurnIncorrect(true);
       setUpdate({villages: [], cities: [], roads: []});
@@ -126,7 +213,14 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       <div>{inventory.sheep} - овцы</div>
       <div>{inventory.stone} - камень</div>
       <div>{inventory.wheat} - пшеница</div>
-      {room.lastNumber > 0 &&<div>выпало число {room.lastNumber}</div>}
+      {room.lastNumber > 0 && <div>выпало число {room.lastNumber}</div>}
+      
+      <div>цена покупок</div>
+      <div>{costs.clay} - глина</div>
+      <div>{costs.forrest} - лес</div>
+      <div>{costs.sheep} - овцы</div>
+      <div>{costs.stone} - камень</div>
+      <div>{costs.wheat} - пшеница</div>
       
       <div className={classes.container} style={{scale: '80%'}}>
         <img src={frame} alt={'frame'} className={classes.frame}/>
@@ -191,62 +285,24 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       
       
       <MovableModal
-        isOpen={isConfirmationRequiredHouse}
-        onClose={(): void => {
-          if (!isSelectedHouseInUpdate(update, houseCoords) && isHouseNobodys) {
-            changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: true, setHouses: setHouses});
-          }
-          setIsConfirmationRequiredHouse(false);
-          setHouseCoords({y: -1, x: -1});
-        }}
+        isOpen={isConfirmationRequiredRoad}
+        onClose={closeRoadModal}
       >
-        {!isSelectedHouseInUpdate(update, houseCoords) ?
+        {!isSelectedRoadInUpdate(update, roadCoords) ?
           <div>
-            <button
-              onClick={(): void => {
-                const toCity: boolean = room.gameboard?.houses[houseCoords.y][houseCoords.x].owner !== Owner.nobody;
-                setUpdate(update => addHouseToUpdate(update, houseCoords, toCity));
-                if (toCity) {
-                  changeColorHouse({coords: houseCoords, owner: owner, toCity: true, setHouses: setHouses});
-                }
-                setHouseCoords({y: -1, x: -1});
-                setIsConfirmationRequiredHouse(false);
-              }}
-            >
-              {isMyVillage ? <div>заменить на город</div> : <div>подтвердить</div>}
+            <button onClick={buyRoad}>
+              подтвердить
             </button>
-            
-            <button
-              onClick={(): void => {
-                if (isHouseNobodys) changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: false, setHouses: setHouses});
-                setHouseCoords({y: -1, x: -1});
-                setIsConfirmationRequiredHouse(false);
-              }}
-            >
+            <button onClick={cancelRoadPurchase}>
               отмена
             </button>
           </div>
           :
           <div>
-            <button
-              onClick={(): void => {
-                if (!update.cities.find(city => city.y === houseCoords.y && city.x === houseCoords.x)) {
-                  changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: false, setHouses: setHouses});
-                }
-                setUpdate(update => deleteHouseFromUpdate(update, houseCoords));
-                setIsConfirmationRequiredHouse(false);
-                setHouseCoords({y: -1, x: -1});
-              }}
-            >
+            <button onClick={deleteRoad}>
               удалить
             </button>
-            
-            <button
-              onClick={(): void => {
-                setIsConfirmationRequiredHouse(false);
-                setHouseCoords({y: -1, x: -1});
-              }}
-            >
+            <button onClick={cancelRoadDeletion}>
               отмена
             </button>
           </div>
@@ -255,51 +311,30 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       
       
       <MovableModal
-        isOpen={isConfirmationRequiredRoad}
-        onClose={() => {
-          if (!isSelectedRoadInUpdate(update, roadCoords) && isRoadNobodys) {
-            changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
-          }
-          setIsConfirmationRequiredRoad(false);
-          setRoadCoords({y: -1, x: -1});
-        }}
+        isOpen={isConfirmationRequiredHouse}
+        onClose={closeHouseModal}
       >
-        {!isSelectedRoadInUpdate(update, roadCoords) ?
+        {(isMyVillage || isMyUpdateVillage) && !isMyUpdateCity ?
           <div>
-            <button onClick={(): void => {
-              setUpdate(update => addRoadToUpdate(update, roadCoords));
-              setRoadCoords({y: -1, x: -1});
-              setIsConfirmationRequiredRoad(false);
-            }}>
-              подтвердить
+            <button onClick={buyCity}>
+              купить город
             </button>
-            
-            <button onClick={(): void => {
-              if (isRoadNobodys) changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
-              setRoadCoords({y: -1, x: -1});
-              setIsConfirmationRequiredRoad(false);
-            }}>
+            {isHouseNobodys && <button onClick={deleteVillage}>удалить деревню</button>}
+            <button onClick={cancelCityPurchase}>
               отмена
             </button>
           </div>
           :
-          <div>
-            <button onClick={(): void => {
-              setUpdate(update => deleteRoadFromUpdate(update, roadCoords));
-              changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
-              setIsConfirmationRequiredRoad(false);
-              setRoadCoords({y: -1, x: -1});
-            }}>
-              удалить
-            </button>
-            
-            <button onClick={(): void => {
-              setIsConfirmationRequiredRoad(false);
-              setRoadCoords({y: -1, x: -1});
-            }}>
-              отмена
-            </button>
-          </div>
+          isMyUpdateCity ?
+            <div>
+              <button onClick={degradeToVillage}>понизить до деревни</button>
+              <button onClick={cancelCityPurchase}>отмена</button>
+            </div>
+            :
+            <div>
+              <button onClick={buyVillage}>купить деревню</button>
+              <button onClick={cancelVillagePurchase}>отмена</button>
+            </div>
         }
       </MovableModal>
       

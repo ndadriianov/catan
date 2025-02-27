@@ -2,9 +2,10 @@ import {Road} from '../../../typesDefinitions/roads.ts';
 import classes from './Buildings.module.css';
 import emitter from '../../../typesDefinitions/emitter.ts';
 import {ReactNode} from 'react';
-import {Coords} from '../map/operations.ts';
 import clsx from 'clsx';
-import {Owner, updateProps} from '../../../typesDefinitions/room.ts';
+import Owner from '../../../typesDefinitions/owner.ts';
+import Coords from '../../../typesDefinitions/coords.ts';
+import updateProps from '../../../typesDefinitions/updateProps.ts';
 
 
 type VertRoadsRowProps = {

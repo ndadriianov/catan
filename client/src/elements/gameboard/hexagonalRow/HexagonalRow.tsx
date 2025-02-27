@@ -1,8 +1,8 @@
-import {Tiles} from '../../../typesDefinitions/tiles.ts';
+import {Tile} from '../../../typesDefinitions/tiles.ts';
 import classes from './HexagonalRow.module.css'
 
 type HexagonalRowProps = {
-  tiles: Tiles<number>
+  tiles: Tile[]
 }
 
 const HexagonalRow = ({tiles}: HexagonalRowProps) => {

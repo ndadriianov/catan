@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {jsonRoom, Owner, parseRoom, Player, Room} from '../../../typesDefinitions/room.ts';
+import Room, {jsonRoom, parseRoom} from '../../../typesDefinitions/room/room.ts';
 import socket from '../../../socket.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
 import MyModal from '../../UI/modal/MyModal.tsx';
@@ -7,6 +7,8 @@ import ConnectionIndicator from './ConnectionIndicator.tsx';
 import Map from '../../gameboard/map/Map.tsx';
 import Select from '../../UI/select/Select.tsx';
 import UserContext from '../../../context/UserContext.ts';
+import Player from '../../../typesDefinitions/room/player.ts';
+import Owner from '../../../typesDefinitions/owner.ts';
 
 
 const InRoom = () => {

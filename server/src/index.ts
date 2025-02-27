@@ -7,6 +7,7 @@ import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
 import {updateProps, Player, Coords} from './typesDefinitions/Player';
 import {Gameboard, Owner} from './typesDefinitions/Gameboard';
+import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 
 
 const PORT = 4000;
@@ -204,9 +205,10 @@ io.on('connection', (socket: Socket): void => {
     }
     
     const room: Room = socket.data.user.activeRoom;
-    const color: Owner|undefined = room.players.find(p => p.username === socket.data.user.username)?.color;
+    const player: Player|undefined = room.players.find(p => p.username === socket.data.user.username);
+    const color: Owner|undefined = player?.color;
     
-    if (!color || !room.hasStarted || !room.gameboard || room.activePlayer?.username !== socket.data.user.username) {
+    if (!player || !color || !room.hasStarted || !room.gameboard || room.activePlayer?.username !== socket.data.user.username) {
       callback(false);
       return;
     }
@@ -252,23 +254,20 @@ io.on('connection', (socket: Socket): void => {
     else {
       room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
       
+      const priceCalculator: PriceCalculator = new PriceCalculator();
+      priceCalculator.AddRoad(update.roads.length);
+      priceCalculator.AddVillage(update.villages.length);
+      priceCalculator.AddCity(update.cities.length);
+      
+      if (!priceCalculator.DoesPlayerHaveEnoughResources(player)
+        || !room.borrowResourcesFromPlayer(player.username, priceCalculator)) {
+        console.log('пользователю нехватает ресурсов');
+        callback(false);
+        return;
+      }
+      
+      
       // добавление дорог
-      /*
-      try {
-        update.roads.forEach((road: Coords): void => {
-          if (isSuccessful && gameboard.CheckRoad(road, color)) {
-            gameboard.PlaceRoad(road, color);
-          } else {
-            throw new Error('road unavailable!');
-          }
-        })
-      } catch (error) {
-        if (error instanceof Error) console.log(error.message);
-        else console.log('возникла неизвестная ошибка при добавлении дорог!');
-        isSuccessful = false;
-        gameboard.Undo();
-      }*/
-      // продвинутый способ
       try {
         let processedRoadsCounter: number = 0;
         let prevProcessedRoadsCounter: number = 0;

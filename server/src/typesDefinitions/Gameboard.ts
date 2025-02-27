@@ -1,5 +1,4 @@
 import {Coords, Player} from './Player';
-import * as punycode from 'node:punycode';
 
 export enum Tile {
   forrest,    //4

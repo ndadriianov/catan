@@ -1,5 +1,5 @@
 import classes from './InRoom.module.css';
-import {ConnectionStatus} from '../../../typesDefinitions/room.ts';
+import ConnectionStatus from '../../../typesDefinitions/connectionStatus.ts';
 
 type ConnectionIndicatorProps = {
   status: ConnectionStatus

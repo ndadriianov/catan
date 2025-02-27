@@ -3,8 +3,10 @@ import classes from './Buildings.module.css'
 import clsx from 'clsx'
 import {ReactNode} from 'react';
 import emitter from '../../../typesDefinitions/emitter.ts';
-import {Coords} from '../map/operations.ts';
-import {Owner, updateProps} from '../../../typesDefinitions/room.ts';
+import Coords from '../../../typesDefinitions/coords.ts';
+import Owner from '../../../typesDefinitions/owner.ts';
+import updateProps from '../../../typesDefinitions/updateProps.ts';
+
 
 type HousesRowProps = {
   houses: House[],
@@ -38,7 +40,7 @@ const HousesRow = ({houses, isUpper, verticalIndex, selectedCoords, isMyTurnNow,
             inUpdate[index] && classes.update
           )}
           alt={'House'}
-          onClick={() => emitter.emit('tap-on-house', verticalIndex, index, isMyTurnNow, owner)}
+          onClick={() => emitter.emit('tap-on-house', verticalIndex, index, isMyTurnNow, owner, update)}
         />
       ))}
     </div>

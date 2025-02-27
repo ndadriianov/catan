@@ -2,6 +2,7 @@ import {EventEmitter} from 'node:events';
 import {ConnectionStatus} from './User';
 import {Gameboard, Owner} from './Gameboard';
 import {Player} from './Player';
+import {PriceCalculator} from './PriceCalculator';
 
 
 export class Room {
@@ -55,6 +56,19 @@ export class Room {
     if (!player) return false;
     player.color = color;
     this._eventEmitter.emit('update', this.id);
+    return true;
+  }
+  
+  borrowResourcesFromPlayer(username: string, priceCalculator: PriceCalculator): boolean {
+    const player: Player|undefined = this._players.find((player: Player): boolean => player.username === username);
+    if (!player) return false;
+    
+    player.inventory.clay -= priceCalculator.clay;
+    player.inventory.forrest -= priceCalculator.forrest;
+    player.inventory.sheep -= priceCalculator.sheep;
+    player.inventory.stone -= priceCalculator.stone;
+    player.inventory.wheat -= priceCalculator.wheat;
+    
     return true;
   }
   
