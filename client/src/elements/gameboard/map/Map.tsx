@@ -20,9 +20,9 @@ import {
   addVillageToUpdate,
   deleteCityFromUpdate,
   deleteRoadFromUpdate,
-  deleteVillageFromUpdate,
+  deleteVillageFromUpdate, isSelectedCityInUpdate,
   isSelectedHouseInUpdate,
-  isSelectedRoadInUpdate
+  isSelectedRoadInUpdate, isSelectedVillageInUpdate
 } from './mapRelatedFunctions/updateOperations.ts';
 import {getHouses, getRoads, getTiles} from './mapRelatedFunctions/mapObjectsProcessing.ts';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
@@ -128,6 +128,10 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     setRoadCoords({y: -1, x: -1});
   }
   function buyRoad(): void {
+    if (!isSelectedRoadInUpdate(update, roadCoords)) {
+      costs.clay++;
+      costs.forrest++;
+    }
     setUpdate(update => addRoadToUpdate(update, roadCoords));
     setRoadCoords({y: -1, x: -1});
     setIsConfirmationRequiredRoad(false);
@@ -138,6 +142,10 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     setIsConfirmationRequiredRoad(false);
   }
   function deleteRoad(): void {
+    if (isSelectedRoadInUpdate(update, roadCoords)) {
+      costs.clay--;
+      costs.forrest--;
+    }
     setUpdate(update => deleteRoadFromUpdate(update, roadCoords));
     changeColorRoad({coords: roadCoords, owner: Owner.nobody, setRoads: setRoads});
     setIsConfirmationRequiredRoad(false);
@@ -156,11 +164,21 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     setHouseCoords({y: -1, x: -1});
   }
   function buyVillage(): void {
+    if (!isSelectedVillageInUpdate(update, houseCoords)) {
+      costs.clay++;
+      costs.forrest++;
+      costs.sheep++;
+      costs.wheat++;
+    }
     setUpdate((update: updateProps): updateProps => addVillageToUpdate(update, houseCoords));
     setHouseCoords({y: -1, x: -1});
     setIsConfirmationRequiredHouse(false);
   }
   function buyCity(): void {
+    if (!isSelectedCityInUpdate(update, houseCoords)) {
+      costs.wheat += 2;
+      costs.stone += 3;
+    }
     setUpdate((update: updateProps): updateProps => addCityToUpdate(update, houseCoords));
     changeColorHouse({coords: houseCoords, owner: owner, toCity: true, setHouses: setHouses});
     setHouseCoords({y: -1, x: -1});
@@ -181,12 +199,22 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     setIsConfirmationRequiredHouse(false);
   }
   function deleteVillage(): void {
+    if (isSelectedVillageInUpdate(update, houseCoords)) {
+      costs.clay--;
+      costs.forrest--;
+      costs.sheep--;
+      costs.wheat--;
+    }
     setUpdate(update => deleteVillageFromUpdate(update, houseCoords));
     changeColorHouse({coords: houseCoords, owner: Owner.nobody, toCity: false, setHouses: setHouses});
     setIsConfirmationRequiredHouse(false);
     setHouseCoords({y: -1, x: -1});
   }
   function degradeToVillage(): void {
+    if (isSelectedCityInUpdate(update, houseCoords)) {
+      costs.wheat -= 2;
+      costs.stone -= 3;
+    }
     setUpdate(update => deleteCityFromUpdate(update, houseCoords));
     changeColorHouse({coords: houseCoords, owner: owner, toCity: false, setHouses: setHouses});
     setIsConfirmationRequiredHouse(false);
@@ -197,6 +225,7 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     socket.emit('end-turn', update, (succeed: boolean) => {
       if (!succeed) setIsTurnIncorrect(true);
       setUpdate({villages: [], cities: [], roads: []});
+      setCosts({clay: 0, forrest: 0, sheep: 0, stone: 0, wheat: 0});
       socket.emit('refresh-room', room.id);
     });
   }

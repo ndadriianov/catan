@@ -11,6 +11,10 @@ export function isSelectedHouseInUpdate(update: updateProps, selected: Coords): 
     || update.cities.find(city => city.x === selected.x && city.y === selected.y));
 }
 
+export function isSelectedVillageInUpdate(update: updateProps, selected: Coords): boolean {
+  return !!update.villages.find(village => village.x === selected.x && village.y === selected.y);
+}
+
 export function isSelectedCityInUpdate(update: updateProps, selected: Coords): boolean {
   return !!update.cities.find(city => city.x === selected.x && city.y === selected.y)
 }
@@ -33,7 +37,7 @@ export function deleteRoadFromUpdate(update: updateProps, selected: Coords): upd
 }
 
 export function addVillageToUpdate(update: updateProps, selected: Coords): updateProps {
-  if (isSelectedHouseInUpdate(update, selected)) return update;
+  if (isSelectedVillageInUpdate(update, selected)) return update;
   return {
     ...update,
     villages: [...update.villages, selected]
