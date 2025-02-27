@@ -110,6 +110,12 @@ export class Room {
     this.lastNumber = 5;
     this._players[0].color = Owner.black;
     this._players[1].color = Owner.blue;
+    this._players[0].inventory = {
+      clay: 3, forrest: 3, stone: 3, sheep: 3, wheat: 3, roads: 0, cities: 0, villages: 0
+    }
+    this._players[1].inventory = {
+      clay: 3, forrest: 3, stone: 3, sheep: 3, wheat: 3, roads: 0, cities: 0, villages: 0
+    }
     this.start();
     this.gameboard?.PREPARE();
     this.debutMode = false;

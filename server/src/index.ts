@@ -253,6 +253,7 @@ io.on('connection', (socket: Socket): void => {
       room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
       
       // добавление дорог
+      /*
       try {
         update.roads.forEach((road: Coords): void => {
           if (isSuccessful && gameboard.CheckRoad(road, color)) {
@@ -266,7 +267,33 @@ io.on('connection', (socket: Socket): void => {
         else console.log('возникла неизвестная ошибка при добавлении дорог!');
         isSuccessful = false;
         gameboard.Undo();
+      }*/
+      // продвинутый способ
+      try {
+        let processedRoadsCounter: number = 0;
+        let prevProcessedRoadsCounter: number = 0;
+        const processedRoads: boolean[] = new Array(update.roads.length).fill(false);
+        do {
+          update.roads.forEach((road: Coords, index: number): void => {
+            prevProcessedRoadsCounter = processedRoadsCounter;
+            if (!processedRoads[index] && gameboard.CheckRoad(road, color)) {
+              gameboard.PlaceRoad(road, color);
+              processedRoads[index] = true;
+              processedRoadsCounter++;
+            }
+          })
+        } while (processedRoadsCounter > prevProcessedRoadsCounter);
+        
+        if (processedRoadsCounter !== update.roads.length) {
+          throw new Error('road unavailable');
+        }
+      } catch (error) {
+        if (error instanceof Error) console.log(error.message);
+        else console.log('возникла неизвестная ошибка при добавлении дорог!');
+        isSuccessful = false;
+        gameboard.Undo();
       }
+      
       
       // добавление поселений
       try {
