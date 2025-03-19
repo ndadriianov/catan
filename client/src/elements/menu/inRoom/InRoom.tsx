@@ -9,6 +9,9 @@ import Select from '../../UI/select/Select.tsx';
 import UserContext from '../../../context/UserContext.ts';
 import Player from '../../../typesDefinitions/room/player.ts';
 import Owner from '../../../typesDefinitions/owner.ts';
+import globalClasses from '../../../styles.module.css';
+import classes from './InRoom.module.css';
+import MovableModal from '../../UI/movableModal/MovableModal.tsx';
 
 
 const InRoom = () => {
@@ -19,6 +22,7 @@ const InRoom = () => {
   const [errorWithRoom, setErrorWithRoom] = useState<boolean>(false);
   const [color, setColor] = useState<Owner>(Owner.nobody);
   const [isMyTurnNow, setIsMyTurnNow] = useState<boolean>(false);
+  const [isAdditionalButtonsOpen, setIsAdditionalButtonsOpen] = useState<boolean>(false);
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -73,12 +77,19 @@ const InRoom = () => {
     { value: 'orange', label: 'Оранжевый' },
   ];
   const colors: string[] = [
-    'Не выбран',
-    'Черный',
-    'Синий',
-    'Зеленый',
-    'Оранжевый'
-  ]
+    'не выбран',
+    'черный',
+    'синий',
+    'зеленый',
+    'оранжевый'
+  ];
+  const engColors: string[] = [
+    'gray',
+    'black',
+    'blue',
+    'green',
+    'orange'
+  ];
   
   // первичная загрузка и обновление состояния комнаты
   useEffect(() => {
@@ -99,64 +110,60 @@ const InRoom = () => {
   }, [user, room]);
   
   
-  
   return (
     <div>
-      <button onClick={() => {
-        socket.emit('go-back-to-choose', roomId);
-        navigate('/choose-room');
-      }}>
-        вернуться к выбору комнаты
-      </button>
+      <div className={classes.roomHeader}>
+        <div className={classes.roomName}>комната {roomId}</div>
+        
+        <button className={globalClasses.button} onClick={() => {
+          socket.emit('go-back-to-choose', roomId);
+          navigate('/choose-room');
+        }}>
+          вернуться к выбору комнаты
+        </button>
+        
+        <button onClick={() => setIsAdditionalButtonsOpen(true)}>tmp</button>
+      </div>
       
-      <h2>InRoom {roomId}</h2>
       
       {!errorWithRoom &&
-        <div>
-          <button onClick={joinRoom}>
-            присоединиться
-          </button>
-
-          <button onClick={() => console.log(room)}>
-            вывести в консоль комнату
-          </button>
-
-          <button onClick={() => console.log(me)}>
-            вывести в консоль себя
-          </button>
-
-          <button onClick={start}>
-            начать
-          </button>
-
-          <MyModal visible={unsuccessful} setVisible={setUnsuccessful}>
-            Не удалось подключиться к комнате
-          </MyModal>
-
-          <button onClick={() => socket.emit('log-room', roomId)}> {/*временная кнопка*/}
-            Вывести в консоль на сервере состояние комнаты
-          </button>
-          
+        <div className={classes.room}>
           {room != undefined ? (
-            <div>
-              <h3>игра {room.haveStarted ? ' ' : ' не '} началась</h3>
+            <div style={{display: 'flex', flexDirection: 'row'}}>
+              <div>
+                {room.haveStarted ||
+                  <div>
+                    <button onClick={joinRoom} className={globalClasses.button}>
+                      присоединиться
+                    </button>
+
+                    <Select
+                      className={classes.colorInput}
+                      options={colorOptions.slice(1)}
+                      initial={colorOptions[0]}
+                      value={colorOptions[me?.color || color].value}
+                      onChange={(value: string): void => applyColor(value)}
+                    />
+
+                    <button onClick={start} className={globalClasses.button}>
+                      начать
+                    </button>
+                  </div>
+                }
+                
+                <ul className={classes.roomList}>
+                  {room.players.map((player, index) => (
+                    <li className={classes.roomListElement} key={index}>
+                      <div className={classes.roomListElementName}>
+                        <ConnectionIndicator status={player.status}/>
+                        <div style={{color: '#2c4fff'}}>{player.username}</div>
+                      </div>
+                      <div style={{color: `${engColors[player.color]}`}}>{colors[player.color]}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               
-              <ul>
-                {room.players.map((player, index) => (
-                  <li key={index} style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                    <span>{player.username}</span>
-                    <ConnectionIndicator status={player.status}/>
-                    <span>{colors[player.color]}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Select
-                options={colorOptions.slice(1)}
-                initial={colorOptions[0]}
-                value={colorOptions[me?.color || color].value}
-                onChange={(value: string): void => applyColor(value)}
-              />
               
               {room.haveStarted && me &&
                 <div>
@@ -167,6 +174,11 @@ const InRoom = () => {
           ) : (
             <h3>Список игроков пуст</h3>
           )}
+          
+          
+          <MyModal visible={unsuccessful} setVisible={setUnsuccessful}>
+            Не удалось подключиться к комнате
+          </MyModal>
         </div>
       }
       
@@ -185,6 +197,20 @@ const InRoom = () => {
           </button>
         </div>
       }
+      
+      <MovableModal isOpen={isAdditionalButtonsOpen} onClose={(): void => setIsAdditionalButtonsOpen(false)}>
+        <button onClick={() => console.log(room)}>
+          вывести в консоль комнату
+        </button>
+        
+        <button onClick={() => console.log(me)}>
+          вывести в консоль себя
+        </button>
+        
+        <button onClick={() => socket.emit('log-room', roomId)}> {/*временная кнопка*/}
+          Вывести в консоль на сервере состояние комнаты
+        </button>
+      </MovableModal>
     </div>
   );
 };

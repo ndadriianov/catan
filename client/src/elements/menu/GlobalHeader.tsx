@@ -3,6 +3,8 @@ import UserContext, {LoginStatus} from '../../context/UserContext.ts';
 import {useNavigate} from 'react-router-dom';
 import socket from '../../socket.ts';
 import MyModal from '../UI/modal/MyModal.tsx';
+import globalClasses from '../../styles.module.css'
+import classes from './menu.module.css'
 
 const GlobalHeader = () => {
   const {user, setUser} = useContext(UserContext)!;
@@ -60,11 +62,11 @@ const GlobalHeader = () => {
   
   
   return (
-    <div>
+    <div style={{backgroundColor: 'skyblue'}}>
       {user.username && (
-        <div>
-          <p>{user.username}</p>
-          <button onClick={LogOut}>
+        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+          <div className={classes.headerText}>{user.username}</div>
+          <button onClick={LogOut} className={globalClasses.button} style={{margin: '5px'}}>
             выйти из аккаунта
           </button>
         </div>

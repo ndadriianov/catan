@@ -8,3 +8,78 @@
   height: 15px;
   width: 15px;
 }
+
+.roomHeader {
+  display: flex;
+  flex-direction: row;
+  background-color: #2c4fff;
+}
+
+.roomName {
+  font-size: 20px;
+  font-family: "Alice", serif;
+  font-weight: 400;
+  color: aliceblue;
+  padding: 10px 10px !important;
+}
+
+.room {
+  background-color: dodgerblue;
+  display: flex;
+  padding-left: 10px;
+}
+
+.hasStarted {
+  margin-bottom: 10px;
+  margin-left: 5px;
+  color: aliceblue;
+}
+
+.colorInput {
+  width: 150px;
+  font-size: 14px;
+  color: #2c4fff;
+  border: 2px solid #01d9ff;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.colorInput:hover {
+  border-color: deeppink;
+}
+
+.colorInput:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.roomList {
+  background-color: lightsteelblue;
+  border-radius: 8px;
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 30px;
+  margin-bottom: 50px;
+  width: fit-content;
+}
+
+.roomListElement {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 5px;
+  margin-left: 10px;
+  margin-top: 10px;
+  background-color: lightslategrey;
+  border-radius: 8px;
+  border: 3px solid lightslategrey;
+  gap: 50px;
+}
+
+.roomListElementName {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}

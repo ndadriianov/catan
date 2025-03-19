@@ -235,21 +235,24 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   
   return (
     <div>
-      <div>{room.counter}</div>
-      {isMyTurnNow && <div>мой ход</div>}
-      <div>{inventory.clay} - глина</div>
-      <div>{inventory.forrest} - лес</div>
-      <div>{inventory.sheep} - овцы</div>
-      <div>{inventory.stone} - камень</div>
-      <div>{inventory.wheat} - пшеница</div>
-      {room.lastNumber > 0 && <div>выпало число {room.lastNumber}</div>}
+      <div>
+        <div>{room.counter}</div>
+        {isMyTurnNow && <div>мой ход</div>}
+        <div>{inventory.clay} - глина</div>
+        <div>{inventory.forrest} - лес</div>
+        <div>{inventory.sheep} - овцы</div>
+        <div>{inventory.stone} - камень</div>
+        <div>{inventory.wheat} - пшеница</div>
+        {room.lastNumber > 0 && <div>выпало число {room.lastNumber}</div>}
+        
+        <div>цена покупок</div>
+        <div>{costs.clay} - глина</div>
+        <div>{costs.forrest} - лес</div>
+        <div>{costs.sheep} - овцы</div>
+        <div>{costs.stone} - камень</div>
+        <div>{costs.wheat} - пшеница</div>
+      </div>
       
-      <div>цена покупок</div>
-      <div>{costs.clay} - глина</div>
-      <div>{costs.forrest} - лес</div>
-      <div>{costs.sheep} - овцы</div>
-      <div>{costs.stone} - камень</div>
-      <div>{costs.wheat} - пшеница</div>
       
       <div className={classes.container} style={{scale: '80%'}}>
         <img src={frame} alt={'frame'} className={classes.frame}/>

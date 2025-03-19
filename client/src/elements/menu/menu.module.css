@@ -1,14 +1,84 @@
-.button-minor {
-  background: none;
-  border: none;
-  color: white;
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-  font-family: inherit;
+.headerText {
+  color: #2c4fff;
+  background-color: white;
+  border-radius: 15px;
+  border: 5px solid white;
+  padding: 0 10px;
+  margin: 10px;
+  font-family: "Alumni Sans Pinstripe", sans-serif;
+  font-weight: bold;
+  font-style: italic;
+  font-size: 20px;
 }
 
-.button-minor:hover {
-  color: gray;
+.chooseRoomContainer {
+  display: flex;
+  flex-direction: row;
+  background-color: #2c4fff;
+  margin: 15px auto;
+  width: 70%;
+  border-radius: 15px;
+}
+
+.chooseRoomContainer > div {
+  flex: 1;
+  padding: 10px;
+  position: relative;
+}
+
+.chooseRoomContainer > div:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  background-color: black;
+}
+
+.chooseRoomContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chooseRoomRooms {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background-color: cornflowerblue;
+  border-radius: 10px;
+}
+
+.chooseRoomList {
+  background-color: lightsteelblue;
+  margin: 0;
+  gap: 15px;
+  border-radius: 8px;
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.chooseRoomListElement {
+  background-color: rgb(164, 178, 193);
+  margin: 10px 3px;
+  border-radius: 10px;
+  border: 5px solid rgb(164, 178, 193);
+  color: midnightblue;
+}
+
+h3 {
+  color: lightslategrey;
+  background-color: whitesmoke;
+  border-radius: 10px;
+  border: 5px solid whitesmoke;
+}
+
+h4 {
+  color: white;
+  background-color: lightslategrey;
+  border-radius: 10px;
+  margin: 0;
+  border: 5px solid lightslategrey;
 }
