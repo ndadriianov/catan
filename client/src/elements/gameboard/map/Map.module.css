@@ -1,29 +1,27 @@
 .container {
   display: flex;
-  margin: auto;
   justify-content: center;
-  align-items: center;
   position: relative;
-  height: 565px;
-  width: 655px;
-  background-color: gray;
-  transform: scale(150%);
-  transform-origin: top;
+  height: 500px;
+  width: 600px;
+  background-color: lightsteelblue;
+  transform: scale(100%);
+  transform-origin: top left
 }
 .grid {
   position: absolute;
   top: 0;
   transform-origin: top;
-  margin-top: 10%;
-  scale: 25%;
+  margin-top: 8.5%;
+  scale: 29%;
 }
 
 .frame {
   position: absolute;
   top: 0;
-  scale: 8.7%;
+  bottom: 0;
+  height: 100%;
   transform-origin: top;
-  margin-top: 2.7%;
 }
 
 .roadsContainer {
@@ -32,8 +30,8 @@
   flex-direction: column;
   top: 0;
   transform-origin: top;
-  scale: 10%;
-  margin-top: 10.5%;
+  scale: 11.55%;
+  margin-top: 9.2%;
   pointer-events: none;
   z-index: 2;
 }
@@ -44,8 +42,8 @@
   flex-direction: column;
   top: 0;
   transform-origin: top;
-  scale: 10%;
-  margin-top: 5.5%;
+  scale: 11.55%;
+  margin-top: 3.5%;
   z-index: 1;
 }
 
@@ -55,5 +53,6 @@
   flex-direction: column;
   top: 0;
   transform-origin: top;
-  margin-top: 13%;
+  margin-top: 12%;
+  scale: 106%;
 }
