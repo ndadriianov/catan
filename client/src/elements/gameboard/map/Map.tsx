@@ -36,6 +36,7 @@ import updateProps from '../../../typesDefinitions/updateProps.ts';
 import house from '../../../typesDefinitions/house/house.ts';
 import houseType from '../../../typesDefinitions/house/houseType.ts';
 import globalClasses from '../../../styles.module.css';
+import Trade from './Trade.tsx';
 
 
 type mapProps = {
@@ -242,7 +243,7 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       </div>
       
       
-      <div>Торговля</div>
+      <Trade room={room} color={owner}/>
       
       
       <div className={classes.container} style={{scale: '100%'}}>
