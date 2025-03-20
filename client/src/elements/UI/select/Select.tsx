@@ -1,8 +1,8 @@
 import React from 'react';
 
 type selectProps = {
-  options: {value: string, label: string}[],
-  initial: {value: string, label: string},
+  options: string[],
+  initial: string,
   value: string,
   onChange: (value: string) => void,
   className: any
@@ -15,10 +15,10 @@ const Select = ({options, initial, value, onChange, className}: selectProps) => 
       onChange={event => onChange(event.target.value)}
       className={className}
     >
-      <option value={initial.value} disabled={true}>{initial.label}</option>
+      <option value={initial} disabled={true}>{initial}</option>
       {options.map(option =>
-        <option value={option.value} key={option.value}>
-          {option.label}
+        <option value={option} key={option}>
+          {option}
         </option>
       )}
     </select>

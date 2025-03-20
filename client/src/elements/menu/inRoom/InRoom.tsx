@@ -46,10 +46,10 @@ const InRoom = () => {
   }
   function chooseColor(input: string): Owner {
     switch (input) {
-      case 'black': return Owner.black;
-      case 'blue': return Owner.blue;
-      case 'green': return Owner.green;
-      case 'orange': return Owner.orange;
+      case 'черный': return Owner.black;
+      case 'синий': return Owner.blue;
+      case 'зеленый': return Owner.green;
+      case 'оранжевый': return Owner.orange;
       default: return Owner.nobody;
     }
   }
@@ -139,9 +139,9 @@ const InRoom = () => {
 
                     <Select
                       className={classes.colorInput}
-                      options={colorOptions.slice(1)}
-                      initial={colorOptions[0]}
-                      value={colorOptions[me?.color || color].value}
+                      options={colors}
+                      initial={colors[0]}
+                      value={colors[me?.color || color]}
                       onChange={(value: string): void => applyColor(value)}
                     />
 
