@@ -35,6 +35,7 @@ import Inventory from '../../../typesDefinitions/room/inventory.ts';
 import updateProps from '../../../typesDefinitions/updateProps.ts';
 import house from '../../../typesDefinitions/house/house.ts';
 import houseType from '../../../typesDefinitions/house/houseType.ts';
+import globalClasses from '../../../styles.module.css';
 
 
 type mapProps = {
@@ -234,7 +235,16 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   if (isLoading) return <Loader/>;
   
   return (
-    <div>
+    <div className={classes.wrapper}>
+      <div className={classes.turnActionsContainer}>
+        <div className={classes.counter}>{room.counter}</div>
+        <button onClick={endTurn} className={globalClasses.button} disabled={!isMyTurnNow}>завершить ход</button>
+      </div>
+      
+      
+      <div>Торговля</div>
+      
+      
       <div className={classes.container} style={{scale: '100%'}}>
         <img src={frame} alt={'frame'} className={classes.frame}/>
         
@@ -298,21 +308,27 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       
       
       <div>
-        <div>{room.counter}</div>
-        {isMyTurnNow && <div>мой ход</div>}
-        <div>{inventory.clay} - глина</div>
-        <div>{inventory.forrest} - лес</div>
-        <div>{inventory.sheep} - овцы</div>
-        <div>{inventory.stone} - камень</div>
-        <div>{inventory.wheat} - пшеница</div>
-        {room.lastNumber > 0 && <div>выпало число {room.lastNumber}</div>}
+        {room.lastNumber > 0 && <div className={classes.number}>выпало число {room.lastNumber}</div>}
         
-        <div>цена покупок</div>
-        <div>{costs.clay} - глина</div>
-        <div>{costs.forrest} - лес</div>
-        <div>{costs.sheep} - овцы</div>
-        <div>{costs.stone} - камень</div>
-        <div>{costs.wheat} - пшеница</div>
+        <div className={classes.resourcesContainer}>
+          <div className={classes.resources}>
+            <div className={classes.resource} style={{marginBottom: '10px'}}>ресурсы</div>
+            <div className={classes.resource}>{inventory.clay} - глина</div>
+            <div className={classes.resource}>{inventory.forrest} - лес</div>
+            <div className={classes.resource}>{inventory.sheep} - овцы</div>
+            <div className={classes.resource}>{inventory.stone} - камень</div>
+            <div className={classes.resource}>{inventory.wheat} - пшеница</div>
+          </div>
+          
+          <div className={classes.resources}>
+            <div className={classes.resource} style={{marginBottom: '10px'}}>цена покупок</div>
+            <div className={classes.resource}>{costs.clay} - глина</div>
+            <div className={classes.resource}>{costs.forrest} - лес</div>
+            <div className={classes.resource}>{costs.sheep} - овцы</div>
+            <div className={classes.resource}>{costs.stone} - камень</div>
+            <div className={classes.resource}>{costs.wheat} - пшеница</div>
+          </div>
+        </div>
       </div>
       
       
@@ -376,10 +392,6 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       >
         Такой ход невозможен. Попробуйте снова
       </MovableModal>
-      
-      <button onClick={endTurn}>завершить ход</button>
-      
-      <button onClick={() => console.log(update)}>console.log(update)</button>
     </div>
   );
 };

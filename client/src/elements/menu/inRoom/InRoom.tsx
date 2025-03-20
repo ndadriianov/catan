@@ -129,7 +129,7 @@ const InRoom = () => {
       {!errorWithRoom &&
         <div className={classes.room}>
           {room != undefined ? (
-            <div style={{display: 'flex', flexDirection: 'row'}}>
+            <div style={{display: 'grid', gridTemplateColumns: '20% 1fr 20%', width: '100%'}}>
               <div>
                 {room.haveStarted ||
                   <div>
@@ -166,7 +166,7 @@ const InRoom = () => {
               
               
               {room.haveStarted && me &&
-                <div>
+                <div style={{width: '100%'}}>
                   <Map owner={me.color || color} room={room} isMyTurnNow={isMyTurnNow} inventory={me.inventory}/>
                 </div>
               }
