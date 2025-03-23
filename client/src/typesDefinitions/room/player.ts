@@ -7,6 +7,7 @@ type Player = {
   status: ConnectionStatus;
   inventory: Inventory;
   color: Owner;
+  ports: PortTypes[];
 }
 
 export type jsonPlayer = Player & {
@@ -20,7 +21,18 @@ export function parsePlayer(playerJSON: jsonPlayer): Player {
     status: playerJSON.status as ConnectionStatus,
     inventory: parseInventory(playerJSON.inventory),
     color: playerJSON.color,
+    ports: playerJSON.ports,
   };
+}
+
+export enum PortTypes {
+  noPort,
+  common,
+  clay,
+  forrest,
+  sheep,
+  stone,
+  wheat
 }
 
 export default Player;

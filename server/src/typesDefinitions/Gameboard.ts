@@ -1,4 +1,13 @@
 import {Coords, Player} from './Player';
+import {
+  clayPortLocations,
+  commonPortLocations,
+  forrestPortLocations,
+  PortTypes,
+  sheepPortLocations,
+  stonePortLocations,
+  wheatPortLocations
+} from './Ports';
 
 export enum Tile {
   forrest,    //4
@@ -37,6 +46,7 @@ export class Gameboard {
   private undoRoads: Coords[];
   private undoCities: Coords[];
   private undoVillages: Coords[];
+  private portsBuffer: {port: PortTypes, owner: Owner}[];
   
   
   constructor() {
@@ -52,6 +62,7 @@ export class Gameboard {
     
     this.tiles = [[], [], [], [], []];
     this.numbers = [[], [], [], [], []];
+    this.portsBuffer = [];
     
     
     const place = (i: number)=>  {
@@ -400,6 +411,17 @@ export class Gameboard {
   }
   
   
+  private _CheckPort(coords: Coords): PortTypes {
+    if (commonPortLocations.find(c => c.x === coords.x && c.y === coords.y)) return PortTypes.common;
+    if (clayPortLocations.find(c => c.x === coords.x && c.y === coords.y)) return PortTypes.clay;
+    if (forrestPortLocations.find(c => c.x === coords.x && c.y === coords.y)) return PortTypes.forrest;
+    if (sheepPortLocations.find(c => c.x === coords.x && c.y === coords.y)) return PortTypes.sheep;
+    if (stonePortLocations.find(c => c.x === coords.x && c.y === coords.y)) return PortTypes.stone;
+    if (wheatPortLocations.find(c => c.x === coords.x && c.y === coords.y)) return PortTypes.wheat;
+    return PortTypes.noPort;
+  }
+  
+  
   
   /*********************************************************************************************************************
    * ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ СОСЕДНИХ ЭЛЕМЕНТОВ КАРТЫ
@@ -449,9 +471,12 @@ export class Gameboard {
    * ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ДОБАВЛЕНИЯ ОБЪЕКТА
    *********************************************************************************************************************/
   
+  
   PlaceVillage(coords: Coords, owner: Owner): void {
     this.undoVillages.push(coords);
     this.houses[coords.y][coords.x] = {owner: owner, type: houseType.village};
+    const port = this._CheckPort(coords);
+    if (port !== PortTypes.noPort) this.portsBuffer.push({port: port, owner: owner});
   }
   
   PlaceCity(coords: Coords, owner: Owner): void {
@@ -462,6 +487,14 @@ export class Gameboard {
   PlaceRoad(coords: Coords, owner: Owner): void {
     this.undoRoads.push(coords);
     this.roads[coords.y][coords.x] = owner;
+  }
+  
+  ApprovePorts(players: Player[]): void {
+    this.portsBuffer.forEach(p => {
+      const player = players.find(pl => pl.color === p.owner);
+      if (player) player.ports.push(p.port);
+    })
+    this.portsBuffer = [];
   }
   
   
@@ -477,6 +510,7 @@ export class Gameboard {
     });
     
     this.ClearUndo();
+    this.portsBuffer = [];
   }
   
   public ClearUndo(): void {

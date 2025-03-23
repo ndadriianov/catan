@@ -36,7 +36,7 @@ import updateProps from '../../../typesDefinitions/updateProps.ts';
 import house from '../../../typesDefinitions/house/house.ts';
 import houseType from '../../../typesDefinitions/house/houseType.ts';
 import globalClasses from '../../../styles.module.css';
-import Trade from './Trade.tsx';
+import Trade from './trade/Trade.tsx';
 
 
 type mapProps = {
@@ -86,6 +86,8 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       const isMyUpdateVillage: boolean = !!update.villages.find((village: Coords):boolean => village.x === x && village.y === y);
       const isMyCity: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.city;
       const isMyUpdateCity: boolean = !!update.cities.find((city: Coords): boolean => city.x === x && city.y === y);
+      
+      console.log(x, y);
       
       if (isMyTurnNow && (isNobodys || isMyVillage || isMyUpdateVillage) && !isMyCity) {
         setHouseCoords({y: y, x: x});
@@ -243,7 +245,7 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       </div>
       
       
-      <Trade room={room} color={owner}/>
+      <Trade room={room} color={owner} inventory={inventory}/>
       
       
       <div className={classes.container} style={{scale: '100%'}}>

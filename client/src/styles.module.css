@@ -27,6 +27,15 @@
   cursor: pointer;
 }
 
+.roundButton {
+  border: none;
+  color: #2c4fff;
+  border-radius: 50%;
+  aspect-ratio: 1/1;
+  height: 20px;
+  cursor: pointer;
+}
+
 .numberInput {
   width: 150px;
   font-size: 14px;
@@ -59,4 +68,24 @@
 
 .numberInput {
   -moz-appearance: textfield;
+}
+
+
+.OptionsInput {
+  width: 150px;
+  font-size: 14px;
+  color: #2c4fff;
+  border: 2px solid #01d9ff;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.OptionsInput:hover {
+  border-color: deeppink;
+}
+
+.OptionsInput:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }

@@ -35,25 +35,6 @@
   color: aliceblue;
 }
 
-.colorInput {
-  width: 150px;
-  font-size: 14px;
-  color: #2c4fff;
-  border: 2px solid #01d9ff;
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s, background-color 0.2s;
-}
-
-.colorInput:hover {
-  border-color: deeppink;
-}
-
-.colorInput:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-
 .roomList {
   background-color: lightsteelblue;
   border-radius: 8px;

@@ -24,6 +24,7 @@ const MovableModal: React.FC<ModalProps> = ({children, isOpen, onClose }) => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 9998
       }}
       onClick={onClose}
     >
@@ -34,6 +35,7 @@ const MovableModal: React.FC<ModalProps> = ({children, isOpen, onClose }) => {
             padding: '20px',
             borderRadius: '5px',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            zIndex: 9999,
           }}
           onClick={e => e.stopPropagation()}
         >

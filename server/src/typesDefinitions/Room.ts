@@ -3,6 +3,7 @@ import {ConnectionStatus} from './User';
 import {Gameboard, Owner} from './Gameboard';
 import {Player} from './Player';
 import {PriceCalculator} from './PriceCalculator';
+import {PurchaseService} from './Purchase';
 
 
 export class Room {
@@ -16,6 +17,7 @@ export class Room {
   private _hasStarted: boolean;
   private _eventEmitter: EventEmitter;
   gameboard?: Gameboard;
+  purchases?: PurchaseService;
   
   
   get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
@@ -170,6 +172,7 @@ export class Room {
     this._hasStarted = true;
     this.debutMode = true;
     this.gameboard = new Gameboard();
+    this.purchases = new PurchaseService(this._players, this._eventEmitter, this.id);
     
     this._players.forEach((player: Player): void => {
       this._eventEmitter.emit(`room-started-${player.username}`, this);

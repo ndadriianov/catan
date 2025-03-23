@@ -1,5 +1,6 @@
 import {ConnectionStatus} from './User';
 import {Owner} from './Gameboard';
+import {PortTypes} from './Ports';
 
 export class Player {
   username: string;
@@ -7,6 +8,7 @@ export class Player {
   status: ConnectionStatus;
   leftTheRoom: boolean;
   color: Owner;
+  ports: PortTypes[];
   
   
   constructor(username: string) {
@@ -15,6 +17,7 @@ export class Player {
     this.status = ConnectionStatus.Green;
     this.leftTheRoom = false;
     this.color = Owner.nobody;
+    this.ports = [];
   }
   
   
@@ -24,7 +27,8 @@ export class Player {
       inventory: this.inventory,
       status: this.status,
       leftTheRoom: this.leftTheRoom,
-      color: this.color
+      color: this.color,
+      ports: [... new Set(this.ports)],
     };
   }
 }

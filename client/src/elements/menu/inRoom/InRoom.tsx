@@ -68,14 +68,6 @@ const InRoom = () => {
     });
   }
   
-  
-  const colorOptions = [
-    { value: 'nobody', label: 'Не выбран'},
-    { value: 'black', label: 'Черный' },
-    { value: 'blue', label: 'Синий' },
-    { value: 'green', label: 'Зеленый' },
-    { value: 'orange', label: 'Оранжевый' },
-  ];
   const colors: string[] = [
     'не выбран',
     'черный',
@@ -138,7 +130,7 @@ const InRoom = () => {
                     </button>
 
                     <Select
-                      className={classes.colorInput}
+                      className={globalClasses.OptionsInput}
                       options={colors}
                       initial={colors[0]}
                       value={colors[me?.color || color]}

@@ -49,6 +49,10 @@ eventEmitter.on('update', (id: number): void => {
   //console.log(room?.toJSON());
   if (room) io.to(id.toString()).emit('room-update', room.toJSON());
 });
+eventEmitter.on('purchase-update', (id: number): void => {
+  const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
+  if (room) io.to(id.toString()).emit('purchase-update', room.purchases?.toJSON());
+})
 
 
 
@@ -178,7 +182,7 @@ io.on('connection', (socket: Socket): void => {
     if (!checkIsAuth({socket})) return;
     
     if (socket.data.user.activeRoom) socket.data.user.activeRoom.setColor(color, socket.data.user.username);
-  })
+  });
   
   
   // срабатывает когда пользователь(в будущем - только создатель комнаты) нажимает на кнопку начать игру
@@ -193,7 +197,7 @@ io.on('connection', (socket: Socket): void => {
         callback(false);
       }
     }
-  })
+  });
   
   
   socket.on('end-turn', (update: updateProps, callback: (succeed: boolean) => void): void => {
@@ -228,7 +232,7 @@ io.on('connection', (socket: Socket): void => {
       }
       
       if (room.gameboard.DebutCheckVillage(update.villages[0], color)) {
-        room.gameboard.PlaceVillage(update.villages[0], color);
+        room.gameboard.PlaceVillage(update.villages[0], player.color);
       } else {
         isSuccessful = false;
         console.log('ошибка при добавлении здания');
@@ -298,7 +302,7 @@ io.on('connection', (socket: Socket): void => {
       try {
         update.villages.forEach((village: Coords): void => {
           if (isSuccessful && gameboard.CheckVillage(village, color)) { // проверка room.gameboard есть раньше, здесь написал чтобы компилятор не ругался
-            gameboard.PlaceVillage(village, color);
+            gameboard.PlaceVillage(village, player.color);
           } else {
             throw new Error('village unavailable!');
           }
@@ -334,21 +338,83 @@ io.on('connection', (socket: Socket): void => {
     if (isSuccessful) {
       room.nextTurn();
       room.activePlayer = room.nextPlayer();
+      gameboard.ApprovePorts(room.playersByLink);
     }
     
     console.log(update);
     console.log(room.gameboard);
-    room.players.forEach((p: Player): void => {console.log(p.inventory)})
+    room.players.forEach((p: Player): void => {console.log(p.inventory); console.log(p.ports)})
     console.log(isSuccessful);
     
     callback(isSuccessful);
-  })
+  });
   
   
   
   socket.on('refresh-room', (id: number): void => {
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     if (room) socket.emit('room-update', room.toJSON());
+  });
+  
+  
+  socket.on('propose-deal', (purchase: number[], sellerName: string, customerName: string, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    
+    if (!socket.data.user.activeRoom) {
+      callback(false);
+      return;
+    }
+    
+    const room: Room = socket.data.user.activeRoom;
+    if (!room.purchases) {
+      callback(false);
+      return;
+    }
+    
+    callback(room.purchases.addPurchase(sellerName, customerName, purchase));
+  });
+  
+  
+  socket.on('accept-deal', (sellerName: string, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    
+    if (!socket.data.user.activeRoom) {
+      callback(false);
+      return;
+    }
+    const room: Room = socket.data.user.activeRoom;
+    if (!room.purchases) {
+      callback(false);
+      return;
+    }
+    const customerName: string = socket.data.user.username;
+    callback(room.purchases.makePurchase(sellerName, customerName));
+  });
+  
+  
+  socket.on('decline-deal', (sellerName: string, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    
+    if (!socket.data.user.activeRoom) {
+      callback(false);
+      return;
+    }
+    const room: Room = socket.data.user.activeRoom;
+    if (!room.purchases) {
+      callback(false);
+      return;
+    }
+    const customerName: string = socket.data.user.username;
+    callback(room.purchases.deletePurchase(sellerName, customerName));
+  })
+  
+  
+  socket.on('load-purchase', (callback: (jsonPurchases: any) => void): void => {
+    if (!checkIsAuth({socket}) || !socket.data.user.activeRoom.purchases) {
+      callback(undefined);
+      return;
+    }
+    callback(socket.data.user.activeRoom.purchases.toJSON());
   })
   
   
