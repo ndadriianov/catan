@@ -1,4 +1,107 @@
-.head {
+.dealsModal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  background-color: #ffffff; /* Замените на нужный цвет фона */
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),
+  0px 6px 10px 0px rgba(0,0,0,0.14),
+  0px 1px 18px 0px rgba(0,0,0,0.12);
+  padding: 24px;
+  border-radius: 12px;
+  border: none;
+}
+
+.dealsHeader {
+  margin-bottom: 16px;
+  text-align: center;
+  color: #1976d2; /* Основной цвет MUI по умолчанию */
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.dealsList {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.dealsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dealsList::-webkit-scrollbar-thumb {
+  background-color: #90caf9; /* Светло-голубой из палитры MUI */
+  border-radius: 3px;
+}
+
+.dealCard {
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12); /* Цвет разделителя */
+  background-color: #f5f5f5; /* Фоновый цвет по умолчанию */
+  transition: all 0.2s ease;
+}
+
+.dealCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),
+  0px 5px 8px 0px rgba(0,0,0,0.14),
+  0px 1px 14px 0px rgba(0,0,0,0.12);
+  border-color: #1976d2; /* Основной цвет */
+  cursor: pointer;
+}
+
+.dealHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.dealTitle {
+  font-weight: bold;
+}
+
+.resourceItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.resourceLabel {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.resourceColor {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+.resourceValue {
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.resourcePositive {
+  color: #4caf50; /* Цвет успеха MUI */
+}
+
+.resourceNegative {
+  color: #f44336; /* Цвет ошибки MUI */
+}
+
+
+/*.head {
   background-color: lightgray;
   display: flex;
   border-radius: 10px;
@@ -51,4 +154,4 @@
   border-radius: 10px;
   padding: 5px;
   margin: 5px 0;
-}
+}*/

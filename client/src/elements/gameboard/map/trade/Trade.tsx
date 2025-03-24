@@ -1,46 +1,41 @@
+import    { useContext, useEffect, useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Stack,
+} from '@mui/material';
 import Owner from '../../../../typesDefinitions/owner.ts';
 import Room from '../../../../typesDefinitions/room/room.ts';
-import Player, {PortTypes} from '../../../../typesDefinitions/room/player.ts';
-import {useContext, useEffect, useState} from 'react';
-import classes from './Trade.module.css';
-import globalClasses from '../../../../styles.module.css';
-import MovableModal from '../../../UI/movableModal/MovableModal.tsx';
+import Player, { PortTypes } from '../../../../typesDefinitions/room/player.ts';
 import socket from '../../../../socket.ts';
 import Inventory from '../../../../typesDefinitions/room/inventory.ts';
 import UserContext from '../../../../context/UserContext.ts';
-import Select from '../../../UI/select/Select.tsx';
-import clsx from 'clsx';
-
-type TradeProps = {
-  room: Room,
-  color: Owner,
-  inventory: Inventory
-}
-
-enum resourceTypes {
-  notChosen,
-  clay,
-  forrest,
-  sheep,
-  stone,
-  wheat
-}
-
-type Purchase = {
-  sellerName: string;
-  customerName: string;
-  resources: number[];
-}
-
-type Deal = {
-  partner: string;
-  succeed: boolean;
-}
+import classes from './Trade.module.css'
+import globalClasses from '../../../../styles.module.css';
+import MovableModal from '../../../UI/movableModal/MovableModal.tsx';
 
 
-const Trade = ({room, color, inventory}: TradeProps) => {
+type TradeProps = { room: Room, color: Owner, inventory: Inventory }
+
+enum resourceTypes {notChosen, clay, forrest, sheep, stone, wheat}
+
+type Purchase = { sellerName: string; customerName: string; resources: number[]; }
+
+type Deal = { partner: string; succeed: boolean; }
+
+
+const Trade = ({ room, color, inventory }: TradeProps) => {
   const options = ['не выбрано', 'глина', 'лес', 'овцы', 'камень', 'пшеница'];
   const portTypes = ['стандартный', 'глина', 'лес', 'овцы', 'камень', 'пшеница'];
+  
+  const [show, setShow] = useState(false);
   
   const [showTradeWithPlayers, setShowTradeWithPlayers] = useState(false);
   const [tradePartner, setTradePartner] = useState<string>('');
@@ -65,6 +60,7 @@ const Trade = ({room, color, inventory}: TradeProps) => {
   const [showDealDeclineFailed, setShowDealDeclineFailed] = useState<boolean>(false);
   const [showDealResult, setShowDealResult] = useState<boolean>(false);
   const [dealResultList, setDealResultList] = useState<Deal[]>([]);
+  const [showDeals, setShowDeals] = useState<boolean>(false);
   
   const [showBankTrade, setShowBankTrade] = useState<boolean>(false);
   const [resourceForSale, setResourceForSale] = useState<resourceTypes>(resourceTypes.notChosen);
@@ -80,7 +76,7 @@ const Trade = ({room, color, inventory}: TradeProps) => {
   const [dealSucceed, setDealSucceed] = useState<boolean>(false);
   const [dealFailed, setDealFailed] = useState<boolean>(false);
   
-  const {user} = useContext(UserContext)!;
+  const { user } = useContext(UserContext)!;
   
   useEffect(() => {
     const player = room.players.find(p => p.color === color);
@@ -97,12 +93,11 @@ const Trade = ({room, color, inventory}: TradeProps) => {
     socket.on('inform-about-deal', (partner: string, succeed: boolean): void => {
       setDealResultList((prev) => [...prev, { partner, succeed }]);
       setShowDealResult(true);
-    })
+    });
     return () => {
       socket.off('purchase-update');
-    }
+    };
   }, []);
-  
   
   function ChooseResource(input: string): resourceTypes {
     switch (input) {
@@ -195,296 +190,502 @@ const Trade = ({room, color, inventory}: TradeProps) => {
     socket.emit('deal-with-port', chosenPort - 1, chosenPortResource - 1, 2, (succeed: boolean) => {
       if (succeed) setDealSucceed(true);
       else setDealFailed(true);
-    })
+    });
     setChosenPort(resourceTypes.notChosen);
   }
   
+  function getResourceColor(index: number) {
+    const colors = [
+      '#8D6E63', // глина
+      '#689F38', // лес
+      '#AED581', // овцы
+      '#78909C', // камень
+      '#FFD54F'  // пшеница
+    ];
+    return colors[index] || '#9E9E9E';
+  }
+  
   return (
-    <div>
-      <div className={classes.wrapper1}>
-        <div className={classes.head}>Торговля</div>
-        
-        <div onClick={() => setShowBankTrade(true)} className={classes.wrapper2}>Через банк</div>
-        
-        <div className={classes.wrapper2}>
-          <div>С игроками</div>
-          <div>
-            {room.players
-              .filter((player: Player) => player.color !== color)
-              .map((player: Player, index: number) => (
-                <div key={index} className={classes.wrapper4} onClick={() => {
-                  setShowTradeWithPlayers(true);
-                  setTradePartner(player.username);
-                }}>
-                  {player.username}
-                </div>
-              ))}
-          </div>
-        </div>
-        
-        {ports.length > 0 &&
-          <div className={classes.wrapper2}>
-            <div>Через порт</div>
-            <div className={classes.wrapper4} style={{flexDirection: 'column'}}>
-              {ports.map((port, index) => (
-                <div
-                  key={index} className={classes.wrapper5}
-                  onClick={() => {
-                    const cr = ChooseResource(portTypes[port - 1]);
-                    if (cr !== resourceTypes.notChosen) setChosenPort(cr);
-                    else setShowUniversalPortTrade(true);
-                  }}
-                >
-                  {portTypes[port - 1]}
-                </div>
-              ))}
-            </div>
-          </div>
-        }
-      </div>
+    <Box>
+      <Button variant="contained" onClick={() => {setShow(true)}}>
+        Открыть меню торговли
+      </Button>
       
-      
-      <div className={classes.wrapper1}>
-        <div className={classes.head}>Предложения от игроков</div>
-        
-        <div className={classes.wrapper2} style={{alignItems: 'center'}}>
-          <div>Предложения мне</div>
-          
-          {purchases
-            .filter(p => p.customerName === user.username)
-            .map((p, index) => (
-              <div key={index} className={classes.wrapper4} style={{flexDirection: 'column'}}
-                   onClick={(): void => SelectDeal(p.sellerName)}
+      {/* главное модальное окно */}
+      <MovableModal isOpen={show} onClose={() => setShow(false)}>
+        <Box className={globalClasses.centeredModal}>
+          {/* Основная секция торговли */}
+          <Card style={{padding: '16px', minWidth: '250px'}}>
+            <Typography
+              variant="h6"
+              color="primary"
+              style={{marginBottom: '16px', textAlign: 'center'}}
+            >
+              Торговля
+            </Typography>
+            
+            <Button
+              variant="contained"
+              style={{width: '100%', marginBottom: '8px'}}
+              onClick={() => setShowBankTrade(true)}
+            >
+              Через банк
+            </Button>
+            
+            <Card
+              variant="outlined"
+              style={{padding: '16px', marginBottom: '8px'}}
+            >
+              <Typography variant="subtitle1">С игроками</Typography>
+              <Stack spacing={1} style={{marginTop: '8px'}}>
+                {room.players
+                  .filter((player: Player) => player.color !== color)
+                  .map((player: Player) => (
+                    <Button
+                      key={player.username}
+                      variant="outlined"
+                      onClick={() => {
+                        setShowTradeWithPlayers(true);
+                        setTradePartner(player.username);
+                      }}
+                    >
+                      {player.username}
+                    </Button>
+                  ))}
+              </Stack>
+            </Card>
+            
+            {ports.length > 0 && (
+              <Card
+                variant="outlined"
+                style={{padding: '16px'}}
               >
-                {p.resources
-                  .map((n, i) => ({n: n, i: i}))
-                  .filter(n => n.n !== 0)
-                  .map((p) => (
-                    <div key={p.i} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <div style={{marginRight: '5px'}}>{options[p.i + 1]}:</div>
-                      {p.n < 0 ?
-                        <div>получить {-p.n}</div>
-                        :
-                        <div style={{color: 'red'}}> отдать {p.n}</div>
-                      }
-                    </div>
-                  ))
-                }
-              </div>
-            ))
-          }
-        </div>
-        
-        <div className={classes.wrapper2} style={{alignItems: 'center'}}>
-          <div>Мои предложения</div>
+                <Typography variant="subtitle1">Через порт</Typography>
+                <Stack spacing={1} style={{marginTop: '8px'}}>
+                  {ports.map((port, index) => (
+                    <Button
+                      key={index}
+                      variant="outlined"
+                      onClick={() => {
+                        const cr = ChooseResource(portTypes[port - 1]);
+                        if (cr !== resourceTypes.notChosen) setChosenPort(cr);
+                        else setShowUniversalPortTrade(true);
+                      }}
+                    >
+                      {portTypes[port - 1]}
+                    </Button>
+                  ))}
+                </Stack>
+              </Card>
+            )}
+          </Card>
           
-          {purchases
-            .filter(p => p.sellerName === user.username)
-            .map((p, index) => (
-              <div key={index} className={classes.wrapper4} style={{flexDirection: 'column'}}>
-                {p.resources
-                  .map((n, i) => ({n: n, i: i}))
-                  .filter(n => n.n !== 0)
-                  .map((p) => (
-                    <div key={p.i} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <div style={{marginRight: '5px'}}>{options[p.i+1]}:</div>
-                      {p.n > 0 ?
-                        <div>получить {p.n}</div>
-                        :
-                        <div style={{color: 'red'}}> отдать {-p.n}</div>
-                      }
-                    </div>
-                  ))
-                }
-              </div>
-            ))
-          }
-        </div>
-      </div>
-      
-      
-      <MovableModal isOpen={showUniversalPortTrade} onClose={() => setShowUniversalPortTrade(false)}>
-        <div className={classes.wrapper1} style={{margin: 0}}>
-          <div className={classes.wrapper2}>
-            <div>продать 3</div>
-            <Select
-              options={options.slice(1)} initial={options[0]} value={options[upResourceForSale]}
-              onChange={(value: string): void => setUpResourceForSale(ChooseResource(value))}
-              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
-            />
-          </div>
-          
-          <div className={classes.wrapper2} style={{marginTop: '5px'}}>
-            <div>купить 1</div>
-            <Select
-              options={options.slice(1)} initial={options[0]} value={options[upResourceForPurchase]}
-              onChange={(value: string): void => setUpResourceForPurchase(ChooseResource(value))}
-              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
-            />
-          </div>
-          
-          <button className={globalClasses.button} onClick={DealWithUniversalPort}>подтвердить</button>
-        </div>
-      </MovableModal>
-      
-      
-      <MovableModal
-        isOpen={chosenPort !== resourceTypes.notChosen}
-        onClose={() => setChosenPort(resourceTypes.notChosen)}
-      >
-        <div className={classes.wrapper1} style={{margin: 0}}>
-          <div className={classes.head}>курс: 2 {options[chosenPort]} за 1 {options[chosenPortResource]}</div>
-          <div className={classes.wrapper2}>выберите ресурс для покупки</div>
-          <Select
-            options={options.slice(1)} initial={options[0]} value={options[chosenPortResource]}
-            className={globalClasses.OptionsInput}
-            onChange={(value: string) => setChosenPortResource(ChooseResource(value))}
-          />
-          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-            <button className={globalClasses.button} onClick={DealWithPort}>купить</button>
-            <button className={globalClasses.button} onClick={() => setChosenPort(resourceTypes.notChosen)}>отмена</button>
-          </div>
-        </div>
-      </MovableModal>
-      
-      
-      <MovableModal isOpen={showBankTrade} onClose={() => setShowBankTrade(false)}>
-        <div className={classes.wrapper1} style={{margin: 0}}>
-          <div className={classes.wrapper2}>
-            <div>продать 4</div>
-            <Select
-              options={options.slice(1)} initial={options[0]} value={options[resourceForSale]}
-              onChange={(value: string): void => setResourceForSale(ChooseResource(value))}
-              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
-            />
-          </div>
-          
-          <div className={classes.wrapper2} style={{marginTop: '5px'}}>
-            <div>купить 1</div>
-            <Select
-              options={options.slice(1)} initial={options[0]} value={options[resourceForPurchase]}
-              onChange={(value: string): void => setResourceForPurchase(ChooseResource(value))}
-              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
-            />
-          </div>
-          
-          <button className={globalClasses.button} onClick={DealWithBank}>подтвердить</button>
-        </div>
-      </MovableModal>
-      
-      
-      <MovableModal isOpen={showDealActions} onClose={() => setShowDealActions(false)}>
-        <div className={globalClasses.modal}>
-          <button className={globalClasses.button} onClick={AcceptDeal}>принять</button>
-          <button className={globalClasses.button} onClick={DeclineDeal}>отклонить</button>
-        </div>
-      </MovableModal>
-      
-      
-      <MovableModal isOpen={showTradeWithPlayers} onClose={() => setShowTradeWithPlayers(false)}>
-        <div className={classes.wrapper1} style={{margin: 0}}>
-          <div className={classes.head}>Предложение игроку {tradePartner} о сделке</div>
-          
-          {purchase.map((amount, index) => (
-            <div key={index} className={classes.wrapper2} style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-              <div>{options[index + 1]}: {amount}</div>
+          {/* Секция предложений */}
+          <Card style={{padding: '16px', minWidth: '250px'}}>
+            <Typography
+              variant="h6"
+              color="primary"
+              style={{marginBottom: '16px', textAlign: 'center'}}
+            >
+              Предложения от игроков
+            </Typography>
+            
+            <Card
+              variant="outlined"
+              style={{padding: '16px', marginBottom: '8px'}}
+            >
+              <Typography variant="subtitle1">{room.activePlayer !== user.username
+                ?
+                `Предложения мне: ${purchases.filter(p => (p.customerName === user.username)).length}`
+                :
+                `Мои предложения: ${purchases.filter(p => (p.sellerName === user.username)).length}`
+              }</Typography>
               
-              <div style={{display: 'flex', alignItems: 'center', gap: '3px'}}>
-                <button className={globalClasses.roundButton} onClick={() => {
-                  setPurchase(prev => {
-                    const newPurchase = [...prev];
-                    newPurchase[index]++;
-                    return newPurchase;
-                  });
-                }}>
-                  +
-                </button>
-                
-                <button className={globalClasses.roundButton} onClick={() => {
-                  setPurchase(prev => {
-                    const newPurchase = [...prev];
-                    newPurchase[index]--;
-                    return newPurchase;
-                  });
-                }}>
-                  -
-                </button>
-              </div>
-            </div>
-          ))}
+              <Button onClick={() => {setShowDeals(true)}} variant="contained" style={{width:'100%', marginTop: '15px'}}>
+                показать
+              </Button>
+            </Card>
+          </Card>
+        </Box>
+      </MovableModal>
+      
+      <MovableModal isOpen={showDeals} onClose={() => setShowDeals(false)}>
+        <Card className={classes.dealsModal}>
+          <Typography variant="h6" className={classes.dealsHeader}>
+            {room.activePlayer !== user.username ? 'Предложения вам' : 'Ваши предложения'}
+          </Typography>
           
-          <button onClick={ProposeDeal} className={globalClasses.button}>Предложить сделку</button>
-        </div>
+          <Box className={classes.dealsList}>
+            {purchases
+              .filter(p => room.activePlayer !== user.username
+                ? (p.customerName === user.username)
+                : (p.sellerName === user.username))
+              .map((p, index) => (
+                <Card
+                  key={index}
+                  className={classes.dealCard}
+                  onClick={() => SelectDeal(p.sellerName)}
+                >
+                  <Stack spacing={1.5}>
+                    <Box className={classes.dealHeader}>
+                      <Typography variant="subtitle2" className={classes.dealTitle}>
+                        {room.activePlayer !== user.username
+                          ? `От: ${p.sellerName}`
+                          : `Для: ${p.customerName}`}
+                      </Typography>
+                    </Box>
+                    
+                    {p.resources
+                      .map((n, i) => ({n, i}))
+                      .filter(n => n.n !== 0)
+                      .map((item) => (
+                        <Box key={item.i} className={classes.resourceItem}>
+                          <Box className={classes.resourceLabel}>
+                            <Box
+                              className={classes.resourceColor}
+                              style={{ backgroundColor: getResourceColor(item.i) }}
+                            />
+                            <Typography>{options[item.i + 1]}</Typography>
+                          </Box>
+                          <Typography
+                            className={`${classes.resourceValue} ${
+                              (room.activePlayer !== user.username
+                                ? (item.n < 0)
+                                : (item.n > 0))
+                                ? classes.resourcePositive
+                                : classes.resourceNegative
+                            }`}
+                          >
+                            {(room.activePlayer !== user.username ?
+                              (item.n < 0) ? `+${-item.n}` : `${-item.n}`
+                              :
+                              (item.n > 0) ? `+${item.n}` : `${item.n}`)
+                            }
+                          </Typography>
+                        </Box>
+                      ))}
+                  </Stack>
+                </Card>
+              ))}
+          </Box>
+        </Card>
       </MovableModal>
       
       
+      {/* Модальное окно для универсального порта */}
+      <MovableModal isOpen={showUniversalPortTrade} onClose={() => setShowUniversalPortTrade(false)}>
+        <Card className={globalClasses.centeredModal}>
+          <CardContent>
+            <FormControl
+              style={{width: '100%'}}
+            >
+              <InputLabel>Продать 3</InputLabel>
+              <Select
+                value={options[upResourceForSale]}
+                onChange={(e) => setUpResourceForSale(ChooseResource(e.target.value))}
+                label={'Продать 3'}
+                MenuProps={{style: { zIndex: 9999 }}}
+              >
+                {options.slice(1).map(opt => (
+                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl
+              style={{width: '100%', marginTop: '8px'}}
+            >
+              <InputLabel>Купить 1</InputLabel>
+              <Select
+                value={options[upResourceForPurchase]}
+                onChange={(e) => setUpResourceForPurchase(ChooseResource(e.target.value))}
+                label={'Купить 1'}
+                MenuProps={{style: { zIndex: 9999 }}}
+              >
+                {options.slice(1).map(opt => (
+                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <Button
+              variant="contained"
+              style={{width: '100%', marginTop: '16px'}}
+              onClick={DealWithUniversalPort}
+            >
+              Подтвердить
+            </Button>
+          </CardContent>
+        </Card>
+      </MovableModal>
+      
+      {/* Модальное окно для порта */}
+      <MovableModal isOpen={chosenPort !== resourceTypes.notChosen} onClose={() => setChosenPort(resourceTypes.notChosen)}>
+        <Card className={globalClasses.centeredModal}>
+          <CardContent>
+            <Typography variant="h6" color={'primary'} style={{ whiteSpace: "nowrap", marginBottom: '16px' }}>
+              Курс: 2 {options[chosenPort]} за 1 {options[chosenPortResource]}
+            </Typography>
+            <FormControl
+              style={{ width: '100%', marginTop: '8px' }}
+            >
+              <InputLabel>Выберите ресурс для покупки</InputLabel>
+              <Select
+                value={options[chosenPortResource]}
+                onChange={(e) => setChosenPortResource(ChooseResource(e.target.value))}
+                label={"Выберите ресурс для покупки"}
+                MenuProps={{style: { zIndex: 9999 }}}
+              >
+                {options.slice(1).map(opt => (
+                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack
+              direction="row"
+              spacing={2}
+              style={{ marginTop: '16px' }}
+            >
+              <Button
+                variant="contained"
+                onClick={DealWithPort}
+              >
+                Купить
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setChosenPort(resourceTypes.notChosen)}
+              >
+                Отмена
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+      </MovableModal>
+      
+      {/* Модальное окно для торговли с банком */}
+      <MovableModal isOpen={showBankTrade} onClose={() => setShowBankTrade(false)}>
+        <Card className={globalClasses.centeredModal}>
+          <CardContent>
+            <FormControl fullWidth>
+              <InputLabel>Продать 4</InputLabel>
+              <Select
+                value={options[resourceForSale]}
+                onChange={(e) => setResourceForSale(ChooseResource(e.target.value as string))}
+                label="Продать 4"
+                MenuProps={{style: { zIndex: 9999 }}}
+              >
+                {options.slice(1).map((opt) => (
+                  <MenuItem key={opt} value={opt}>
+                    {opt}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl
+              style={{ width: '100%', marginTop: '8px' }}
+            >
+              <InputLabel>Купить 1</InputLabel>
+              <Select
+                value={options[resourceForPurchase]}
+                onChange={(e) => setResourceForPurchase(ChooseResource(e.target.value))}
+                label="Купить 1"
+                MenuProps={{style: { zIndex: 9999 }}}
+              >
+                {options.slice(1).map(opt => (
+                  <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <Button
+              variant="contained"
+              style={{ width: '100%', marginTop: '16px' }}
+              onClick={DealWithBank}
+            >
+              Подтвердить
+            </Button>
+          </CardContent>
+        </Card>
+      </MovableModal>
+      
+      {/* Модальное окно для действий со сделкой */}
+      <MovableModal isOpen={showDealActions} onClose={() => setShowDealActions(false)}>
+        <Card className={globalClasses.centeredModal}>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              onClick={AcceptDeal}
+            >
+              Принять
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={DeclineDeal}
+            >
+              Отклонить
+            </Button>
+          </Stack>
+        </Card>
+      </MovableModal>
+      
+      {/* Модальное окно для торговли с игроками */}
+      <MovableModal isOpen={showTradeWithPlayers} onClose={() => setShowTradeWithPlayers(false)}>
+        <Card className={globalClasses.centeredModal}>
+          <CardContent sx={{
+            minWidth: '170px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
+            <Typography variant="h6" sx={{ marginBottom: '16px', textAlign: 'center' }} color="primary">
+              Предложение игроку {tradePartner} о сделке
+            </Typography>
+            
+            {purchase.map((amount, index) => (
+              <Box
+                key={index}
+                sx={{marginBottom: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}
+              >
+                <Typography sx={{ whiteSpace: 'nowrap', mb: 1 }}>
+                  {options[index + 1]}: {amount === 0 ? '0' : amount > 0 ? `купить ${amount}` : `продать ${-amount}`}
+                </Typography>
+                
+                <Stack direction="row" spacing={1} justifyContent="center" sx={{ width: '100%' }}>
+                  <Button variant="outlined" size="small"
+                    onClick={() => {
+                      setPurchase(prev => {
+                        const newPurchase = [...prev];
+                        newPurchase[index]++;
+                        return newPurchase;
+                      });
+                    }}
+                  >
+                    +
+                  </Button>
+                  
+                  <Button variant="outlined" size="small"
+                    onClick={() => {
+                      setPurchase(prev => {
+                        const newPurchase = [...prev];
+                        newPurchase[index]--;
+                        return newPurchase;
+                      });
+                    }}
+                  >
+                    -
+                  </Button>
+                </Stack>
+              </Box>
+            ))}
+            
+            <Button
+              variant="contained"
+              sx={{ width: '100%', marginTop: '16px' }}
+              onClick={ProposeDeal}
+            >
+              Предложить сделку
+            </Button>
+          </CardContent>
+        </Card>
+      </MovableModal>
+      
+      
+      {/* Модальные окна для ошибок и успехов */}
       <MovableModal isOpen={incorrect} onClose={() => setIncorrect(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Нельзя дарить или просить подарок</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Нельзя дарить или просить подарок</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughClay} onClose={() => setDontHaveEnoughClay(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно глины</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Недостаточно глины</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughForrest} onClose={() => setDontHaveEnoughForrest(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно леса</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Недостаточно леса</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughSheep} onClose={() => setDontHaveEnoughSheep(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно овец</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Недостаточно овец</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughStone} onClose={() => setDontHaveEnoughStone(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно камня</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Недостаточно камня</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughWheat} onClose={() => setDontHaveEnoughWheat(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно пшеницы</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Недостаточно пшеницы</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={unsuccessful} onClose={() => setUnsuccessful(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Не удалось отправить предложение</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Не удалось отправить предложение</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={showDealAcceptationSucceed} onClose={() => setShowDealAcceptationSucceed(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Сделка состоялась</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Сделка состоялась</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={showDealAcceptationFailed} onClose={() => setShowDealAcceptationFailed(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Не удалось заключить сделку</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Не удалось заключить сделку</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={showDealDeclineSucceed} onClose={() => setShowDealDeclineSucceed(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Сделка отклонена</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Сделка отклонена</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={showDealDeclineFailed} onClose={() => setShowDealDeclineFailed(false)}>
-        <div>Не удалось отклонить сделку</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Не удалось отклонить сделку</Typography>
+        </Card>
       </MovableModal>
-
-      
       
       <MovableModal isOpen={dealSucceed} onClose={() => setDealSucceed(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Сделка заключена</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Сделка заключена</Typography>
+        </Card>
       </MovableModal>
       
       <MovableModal isOpen={dealFailed} onClose={() => setDealFailed(false)}>
-        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Не удалось заключить сделку</div>
+        <Card className={globalClasses.centeredModal}>
+          <Typography>Не удалось заключить сделку</Typography>
+        </Card>
       </MovableModal>
-      
       
       <MovableModal isOpen={showDealResult} onClose={() => {
-        setShowDealResult(false);
         setDealResultList([]);
-      }}
-        >
-        {dealResultList.map((item, index) => (
-          <div key={index} className={clsx(globalClasses.modal, globalClasses.shortContent)}>
-            {item.succeed ? `сделка с игроком ${item.partner} заключена` : `не удалось заключить сделку с игроком ${item.partner}`}
-          </div>
-        ))}
+        setShowDealResult(false);
+      }}>
+        <Card className={globalClasses.centeredModal}>
+          <Stack spacing={1}>
+            {dealResultList.map((item, index) => (
+              <Typography key={index}>
+                {item.succeed ? `Сделка с игроком ${item.partner} заключена` : `Не удалось заключить сделку с игроком ${item.partner}`}
+              </Typography>
+            ))}
+          </Stack>
+        </Card>
       </MovableModal>
-    </div>
+    </Box>
   );
 };
 
