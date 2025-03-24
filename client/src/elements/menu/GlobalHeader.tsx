@@ -39,7 +39,7 @@ const GlobalHeader = () => {
       const storagePassword = sessionStorage.getItem('password');
       
       if (storageUsername && storagePassword) {
-        socket.emit('login', storageUsername, storageUsername, (status: LoginStatus): void => {
+        socket.emit('login', storageUsername, storagePassword, (status: LoginStatus): void => {
           if (status == LoginStatus.Success) {
             setUser({username: storageUsername, password: storagePassword});
           } else {

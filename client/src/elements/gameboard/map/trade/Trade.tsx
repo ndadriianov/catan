@@ -8,6 +8,8 @@ import MovableModal from '../../../UI/movableModal/MovableModal.tsx';
 import socket from '../../../../socket.ts';
 import Inventory from '../../../../typesDefinitions/room/inventory.ts';
 import UserContext from '../../../../context/UserContext.ts';
+import Select from '../../../UI/select/Select.tsx';
+import clsx from 'clsx';
 
 type TradeProps = {
   room: Room,
@@ -28,6 +30,11 @@ type Purchase = {
   sellerName: string;
   customerName: string;
   resources: number[];
+}
+
+type Deal = {
+  partner: string;
+  succeed: boolean;
 }
 
 
@@ -56,7 +63,22 @@ const Trade = ({room, color, inventory}: TradeProps) => {
   const [showDealAcceptationFailed, setShowDealAcceptationFailed] = useState<boolean>(false);
   const [showDealDeclineSucceed, setShowDealDeclineSucceed] = useState<boolean>(false);
   const [showDealDeclineFailed, setShowDealDeclineFailed] = useState<boolean>(false);
+  const [showDealResult, setShowDealResult] = useState<boolean>(false);
+  const [dealResultList, setDealResultList] = useState<Deal[]>([]);
   
+  const [showBankTrade, setShowBankTrade] = useState<boolean>(false);
+  const [resourceForSale, setResourceForSale] = useState<resourceTypes>(resourceTypes.notChosen);
+  const [resourceForPurchase, setResourceForPurchase] = useState<resourceTypes>(resourceTypes.notChosen);
+  
+  const [chosenPort, setChosenPort] = useState<resourceTypes>(resourceTypes.notChosen);
+  const [chosenPortResource, setChosenPortResource] = useState<resourceTypes>(resourceTypes.notChosen);
+  
+  const [showUniversalPortTrade, setShowUniversalPortTrade] = useState<boolean>(false);
+  const [upResourceForSale, setUpResourceForSale] = useState<resourceTypes>(resourceTypes.notChosen);
+  const [upResourceForPurchase, setUpResourceForPurchase] = useState<resourceTypes>(resourceTypes.notChosen);
+  
+  const [dealSucceed, setDealSucceed] = useState<boolean>(false);
+  const [dealFailed, setDealFailed] = useState<boolean>(false);
   
   const {user} = useContext(UserContext)!;
   
@@ -72,6 +94,10 @@ const Trade = ({room, color, inventory}: TradeProps) => {
     socket.on('purchase-update', (jsonPurchases: Purchase[]): void => {
       setPurchases(jsonPurchases);
     });
+    socket.on('inform-about-deal', (partner: string, succeed: boolean): void => {
+      setDealResultList((prev) => [...prev, { partner, succeed }]);
+      setShowDealResult(true);
+    })
     return () => {
       socket.off('purchase-update');
     }
@@ -149,12 +175,36 @@ const Trade = ({room, color, inventory}: TradeProps) => {
     });
   }
   
+  function DealWithBank(): void {
+    socket.emit('deal-with-port', resourceForSale - 1, resourceForPurchase - 1, 4, (succeed: boolean) => {
+      if (succeed) setDealSucceed(true);
+      else setDealFailed(true);
+    });
+    setShowBankTrade(false);
+  }
+  
+  function DealWithUniversalPort(): void {
+    socket.emit('deal-with-port', upResourceForSale - 1, upResourceForPurchase - 1, 3, (succeed: boolean) => {
+      if (succeed) setDealSucceed(true);
+      else setDealFailed(true);
+    });
+    setShowUniversalPortTrade(false);
+  }
+  
+  function DealWithPort(): void {
+    socket.emit('deal-with-port', chosenPort - 1, chosenPortResource - 1, 2, (succeed: boolean) => {
+      if (succeed) setDealSucceed(true);
+      else setDealFailed(true);
+    })
+    setChosenPort(resourceTypes.notChosen);
+  }
+  
   return (
     <div>
       <div className={classes.wrapper1}>
         <div className={classes.head}>Торговля</div>
         
-        <div className={classes.wrapper2}>Через банк</div>
+        <div onClick={() => setShowBankTrade(true)} className={classes.wrapper2}>Через банк</div>
         
         <div className={classes.wrapper2}>
           <div>С игроками</div>
@@ -175,9 +225,16 @@ const Trade = ({room, color, inventory}: TradeProps) => {
         {ports.length > 0 &&
           <div className={classes.wrapper2}>
             <div>Через порт</div>
-            <div className={classes.wrapper4}>
+            <div className={classes.wrapper4} style={{flexDirection: 'column'}}>
               {ports.map((port, index) => (
-                <div key={index}>
+                <div
+                  key={index} className={classes.wrapper5}
+                  onClick={() => {
+                    const cr = ChooseResource(portTypes[port - 1]);
+                    if (cr !== resourceTypes.notChosen) setChosenPort(cr);
+                    else setShowUniversalPortTrade(true);
+                  }}
+                >
                   {portTypes[port - 1]}
                 </div>
               ))}
@@ -246,14 +303,86 @@ const Trade = ({room, color, inventory}: TradeProps) => {
       </div>
       
       
+      <MovableModal isOpen={showUniversalPortTrade} onClose={() => setShowUniversalPortTrade(false)}>
+        <div className={classes.wrapper1} style={{margin: 0}}>
+          <div className={classes.wrapper2}>
+            <div>продать 3</div>
+            <Select
+              options={options.slice(1)} initial={options[0]} value={options[upResourceForSale]}
+              onChange={(value: string): void => setUpResourceForSale(ChooseResource(value))}
+              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
+            />
+          </div>
+          
+          <div className={classes.wrapper2} style={{marginTop: '5px'}}>
+            <div>купить 1</div>
+            <Select
+              options={options.slice(1)} initial={options[0]} value={options[upResourceForPurchase]}
+              onChange={(value: string): void => setUpResourceForPurchase(ChooseResource(value))}
+              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
+            />
+          </div>
+          
+          <button className={globalClasses.button} onClick={DealWithUniversalPort}>подтвердить</button>
+        </div>
+      </MovableModal>
+      
+      
+      <MovableModal
+        isOpen={chosenPort !== resourceTypes.notChosen}
+        onClose={() => setChosenPort(resourceTypes.notChosen)}
+      >
+        <div className={classes.wrapper1} style={{margin: 0}}>
+          <div className={classes.head}>курс: 2 {options[chosenPort]} за 1 {options[chosenPortResource]}</div>
+          <div className={classes.wrapper2}>выберите ресурс для покупки</div>
+          <Select
+            options={options.slice(1)} initial={options[0]} value={options[chosenPortResource]}
+            className={globalClasses.OptionsInput}
+            onChange={(value: string) => setChosenPortResource(ChooseResource(value))}
+          />
+          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+            <button className={globalClasses.button} onClick={DealWithPort}>купить</button>
+            <button className={globalClasses.button} onClick={() => setChosenPort(resourceTypes.notChosen)}>отмена</button>
+          </div>
+        </div>
+      </MovableModal>
+      
+      
+      <MovableModal isOpen={showBankTrade} onClose={() => setShowBankTrade(false)}>
+        <div className={classes.wrapper1} style={{margin: 0}}>
+          <div className={classes.wrapper2}>
+            <div>продать 4</div>
+            <Select
+              options={options.slice(1)} initial={options[0]} value={options[resourceForSale]}
+              onChange={(value: string): void => setResourceForSale(ChooseResource(value))}
+              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
+            />
+          </div>
+          
+          <div className={classes.wrapper2} style={{marginTop: '5px'}}>
+            <div>купить 1</div>
+            <Select
+              options={options.slice(1)} initial={options[0]} value={options[resourceForPurchase]}
+              onChange={(value: string): void => setResourceForPurchase(ChooseResource(value))}
+              className={globalClasses.OptionsInput} style={{marginTop: '3px'}}
+            />
+          </div>
+          
+          <button className={globalClasses.button} onClick={DealWithBank}>подтвердить</button>
+        </div>
+      </MovableModal>
+      
+      
       <MovableModal isOpen={showDealActions} onClose={() => setShowDealActions(false)}>
-        <div onClick={AcceptDeal}>принять</div>
-        <div onClick={DeclineDeal}>отклонить</div>
+        <div className={globalClasses.modal}>
+          <button className={globalClasses.button} onClick={AcceptDeal}>принять</button>
+          <button className={globalClasses.button} onClick={DeclineDeal}>отклонить</button>
+        </div>
       </MovableModal>
       
       
       <MovableModal isOpen={showTradeWithPlayers} onClose={() => setShowTradeWithPlayers(false)}>
-        <div className={classes.wrapper1}>
+        <div className={classes.wrapper1} style={{margin: 0}}>
           <div className={classes.head}>Предложение игроку {tradePartner} о сделке</div>
           
           {purchase.map((amount, index) => (
@@ -290,50 +419,71 @@ const Trade = ({room, color, inventory}: TradeProps) => {
       
       
       <MovableModal isOpen={incorrect} onClose={() => setIncorrect(false)}>
-        <div>Нельзя дарить или просить подарок</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Нельзя дарить или просить подарок</div>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughClay} onClose={() => setDontHaveEnoughClay(false)}>
-        <div>Недостаточно глины</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно глины</div>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughForrest} onClose={() => setDontHaveEnoughForrest(false)}>
-        <div>Недостаточно леса</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно леса</div>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughSheep} onClose={() => setDontHaveEnoughSheep(false)}>
-        <div>Недостаточно овец</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно овец</div>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughStone} onClose={() => setDontHaveEnoughStone(false)}>
-        <div>Недостаточно камня</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно камня</div>
       </MovableModal>
       
       <MovableModal isOpen={dontHaveEnoughWheat} onClose={() => setDontHaveEnoughWheat(false)}>
-        <div>Недостаточно пшеницы</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Недостаточно пшеницы</div>
       </MovableModal>
       
       <MovableModal isOpen={unsuccessful} onClose={() => setUnsuccessful(false)}>
-        <div>Не удалось отправить предложение</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Не удалось отправить предложение</div>
       </MovableModal>
       
       <MovableModal isOpen={showDealAcceptationSucceed} onClose={() => setShowDealAcceptationSucceed(false)}>
-        <div>Сделка состоялась</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Сделка состоялась</div>
       </MovableModal>
       
       <MovableModal isOpen={showDealAcceptationFailed} onClose={() => setShowDealAcceptationFailed(false)}>
-        <div>Не удалось заключить сделку</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Не удалось заключить сделку</div>
       </MovableModal>
       
       <MovableModal isOpen={showDealDeclineSucceed} onClose={() => setShowDealDeclineSucceed(false)}>
-        <div>Сделка отклонена</div>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Сделка отклонена</div>
       </MovableModal>
       
       <MovableModal isOpen={showDealDeclineFailed} onClose={() => setShowDealDeclineFailed(false)}>
         <div>Не удалось отклонить сделку</div>
       </MovableModal>
+
       
-      <button onClick={() => console.log(purchases)}>вывести в консоль сделки</button>
+      
+      <MovableModal isOpen={dealSucceed} onClose={() => setDealSucceed(false)}>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Сделка заключена</div>
+      </MovableModal>
+      
+      <MovableModal isOpen={dealFailed} onClose={() => setDealFailed(false)}>
+        <div className={clsx(globalClasses.modal, globalClasses.shortContent)}>Не удалось заключить сделку</div>
+      </MovableModal>
+      
+      
+      <MovableModal isOpen={showDealResult} onClose={() => {
+        setShowDealResult(false);
+        setDealResultList([]);
+      }}
+        >
+        {dealResultList.map((item, index) => (
+          <div key={index} className={clsx(globalClasses.modal, globalClasses.shortContent)}>
+            {item.succeed ? `сделка с игроком ${item.partner} заключена` : `не удалось заключить сделку с игроком ${item.partner}`}
+          </div>
+        ))}
+      </MovableModal>
     </div>
   );
 };

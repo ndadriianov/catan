@@ -32,8 +32,7 @@ const MovableModal: React.FC<ModalProps> = ({children, isOpen, onClose }) => {
         <div
           style={{
             backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '5px',
+            borderRadius: '15px',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
             zIndex: 9999,
           }}

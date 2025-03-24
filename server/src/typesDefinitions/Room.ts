@@ -61,6 +61,11 @@ export class Room {
     return true;
   }
   
+  checkPlayersResources(username: string, priceCalculator: PriceCalculator): boolean {
+    const player: Player|undefined = this._players.find((player: Player): boolean => player.username === username);
+    return (!!player && priceCalculator.IsDealPossible(player));
+  }
+  
   borrowResourcesFromPlayer(username: string, priceCalculator: PriceCalculator): boolean {
     const player: Player|undefined = this._players.find((player: Player): boolean => player.username === username);
     if (!player) return false;
@@ -71,6 +76,7 @@ export class Room {
     player.inventory.stone -= priceCalculator.stone;
     player.inventory.wheat -= priceCalculator.wheat;
     
+    this._eventEmitter.emit('update', this.id);
     return true;
   }
   
@@ -134,6 +140,22 @@ export class Room {
     }
     this.start();
     this.gameboard?.PREPARE();
+    this.debutMode = false;
+  }
+  
+  public PREPARE2() {
+    this._counter = 10;
+    this.lastNumber = 10;
+    this._players[0].color = Owner.black;
+    this._players[1].color = Owner.blue;
+    this._players[0].inventory = {
+      clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5, roads: 0, cities: 0, villages: 0
+    }
+    this._players[1].inventory = {
+      clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5, roads: 0, cities: 0, villages: 0
+    }
+    this.start();
+    this.gameboard?.PREPARE2(this._players);
     this.debutMode = false;
   }
   

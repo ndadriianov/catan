@@ -128,6 +128,29 @@ export class Gameboard {
   }
   
   
+  public PREPARE2(players: Player[]): void {
+    this.PlaceVillage({x: 4, y: 3}, Owner.black);
+    this.PlaceVillage({x: 3, y: 2}, Owner.black);
+    this.PlaceVillage({x: 1, y: 2}, Owner.black);
+    this.ApprovePorts(players);
+    this.roads[5][2] = Owner.black;
+    this.roads[4][3] = Owner.black;
+    this.roads[4][2] = Owner.black;
+    this.roads[4][1] = Owner.black;
+    
+    this.PlaceVillage({x: 8, y: 3}, Owner.blue);
+    this.PlaceVillage({x: 7, y: 2}, Owner.blue);
+    this.PlaceVillage({x: 8, y: 1}, Owner.blue);
+    this.PlaceVillage({x: 10, y: 2}, Owner.blue);
+    this.ApprovePorts(players);
+    this.roads[5][4] = Owner.blue;
+    this.roads[4][7] = Owner.blue;
+    this.roads[4][8] = Owner.blue;
+    this.roads[3][4] = Owner.blue;
+    this.roads[4][9] = Owner.blue;
+  }
+  
+  
   private _Coords(pos: number): {x: number, y: number} {
     if (pos <= 3) return {x: 1, y: pos};
     if (pos <= 7) return {x: 2, y: pos - 3};

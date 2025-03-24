@@ -8,6 +8,7 @@ import {EventEmitter} from 'node:events';
 import {updateProps, Player, Coords} from './typesDefinitions/Player';
 import {Gameboard, Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
+import {resourceTypes} from './typesDefinitions/Purchase';
 
 
 const PORT = 4000;
@@ -38,7 +39,7 @@ rooms[0].addPlayer(users[1].username);
 users[0].activeRoom = rooms[0];
 users[1].activeRoom = rooms[0];
 
-rooms[0].PREPARE();
+rooms[0].PREPARE2();
 
 //////////
 
@@ -73,6 +74,9 @@ io.on('connection', (socket: Socket): void => {
       const user: User = new User(username, password, eventEmitter);
       users.push(user);
       socket.data.user = user;
+      eventEmitter.on(`inform-about-deal-${user.username}`, (partner: string, succeed: boolean): void => {
+        socket.emit('inform-about-deal', partner, succeed);
+      });
       callback(true);
     } else {
       callback(false);
@@ -86,6 +90,9 @@ io.on('connection', (socket: Socket): void => {
       if (user.status !== ConnectionStatus.Green) { // пользователь не должен иметь текущей активности
         user.status = ConnectionStatus.Green; // восстановление соединения и подключение после долгой паузы
         socket.data.user = user;
+        eventEmitter.on(`inform-about-deal-${user.username}`, (partner: string, succeed: boolean): void => {
+          socket.emit('inform-about-deal', partner, succeed);
+        });
         callback(LoginStatus.Success);
       } else {
         callback(LoginStatus.Duplicate)
@@ -98,6 +105,7 @@ io.on('connection', (socket: Socket): void => {
   // срабатывает когда пользователь выходит из аккаунта
   socket.on('logout', () => {
     if (socket.data.user) {
+      eventEmitter.removeAllListeners(`inform-about-deal-${socket.data.user.username}`)
       socket.data.user.status = ConnectionStatus.Red;
       socket.data.user = null;
     }
@@ -339,6 +347,7 @@ io.on('connection', (socket: Socket): void => {
       room.nextTurn();
       room.activePlayer = room.nextPlayer();
       gameboard.ApprovePorts(room.playersByLink);
+      room.purchases?.endTurn();
     }
     
     console.log(update);
@@ -366,7 +375,7 @@ io.on('connection', (socket: Socket): void => {
     }
     
     const room: Room = socket.data.user.activeRoom;
-    if (!room.purchases) {
+    if (!room.purchases || room.activePlayer?.username !== sellerName) {
       callback(false);
       return;
     }
@@ -388,7 +397,9 @@ io.on('connection', (socket: Socket): void => {
       return;
     }
     const customerName: string = socket.data.user.username;
-    callback(room.purchases.makePurchase(sellerName, customerName));
+    const status: boolean = room.purchases.makePurchase(sellerName, customerName)
+    callback(status);
+    eventEmitter.emit(`inform-about-deal-${sellerName}`, socket.data.user.username, status);
   });
   
   
@@ -406,6 +417,24 @@ io.on('connection', (socket: Socket): void => {
     }
     const customerName: string = socket.data.user.username;
     callback(room.purchases.deletePurchase(sellerName, customerName));
+    eventEmitter.emit(`inform-about-deal-${sellerName}`, socket.data.user.username, false);
+  })
+  
+  
+  socket.on('deal-with-port', (resourceForSale: resourceTypes, resourceForPurchase: resourceTypes, amount: number, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    if (!socket.data.user.activeRoom || !socket.data.user.username
+      || socket.data.user.username !== socket.data.user.activeRoom.activePlayer.username) {
+      callback(false);
+      return;
+    }
+    
+    const username: string = socket.data.user.username;
+    const room: Room = socket.data.user.activeRoom;
+    const pc: PriceCalculator = new PriceCalculator();
+    pc.DealWithPort(resourceForSale, resourceForPurchase, amount);
+    
+    callback(room.checkPlayersResources(username, pc) && room.borrowResourcesFromPlayer(username, pc));
   })
   
   
@@ -457,6 +486,7 @@ io.on('connection', (socket: Socket): void => {
     console.log(`Socket disconnected: ${socket.id}, reason: ${reason}`);
     if (socket.data.user) {
       socket.data.user.status = ConnectionStatus.Yellow;
+      eventEmitter.removeAllListeners(`inform-about-deal-${socket.data.user.username}`);
     }
   });
   

@@ -1,4 +1,5 @@
 import {Player} from './Player';
+import {resourceTypes} from './Purchase';
 
 export class PriceCalculator {
   private _clay: number;
@@ -51,5 +52,29 @@ export class PriceCalculator {
     if (player.inventory.stone < this._stone) return false;
     if (player.inventory.wheat < this._wheat) return false;
     return true;
+  }
+  
+  public IsDealPossible(player: Player): boolean {
+    const resources = [this._clay, this._forrest, this._sheep, this._stone, this._wheat];
+    if (!(resources.filter(value => value > 0).length === 1
+      && resources.filter(value => value < 0).length === 1)) return false;
+    return this.DoesPlayerHaveEnoughResources(player);
+  }
+  
+  public DealWithPort(buy: resourceTypes, sell: resourceTypes, amount: number): void {
+    switch (buy) {
+      case resourceTypes.clay: this._clay += amount; break;
+      case resourceTypes.forrest: this._forrest += amount; break;
+      case resourceTypes.sheep: this._sheep += amount; break;
+      case resourceTypes.stone: this._stone += amount; break;
+      case resourceTypes.wheat: this._wheat += amount; break;
+    }
+    switch (sell) {
+      case resourceTypes.clay: this._clay -= 1; break;
+      case resourceTypes.forrest: this._forrest -= 1; break;
+      case resourceTypes.sheep: this._sheep -= 1; break;
+      case resourceTypes.stone: this._stone -= 1; break;
+      case resourceTypes.wheat: this._wheat -= 1; break;
+    }
   }
 }

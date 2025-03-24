@@ -71,6 +71,8 @@ const Map = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     function roadHandler(y: number, x: number, isMyTurnNow: boolean, owner: Owner): void {
       const isNobodys: boolean = room.gameboard?.roads[y][x] === Owner.nobody;
       
+      console.log(x, y)
+      
       if (isMyTurnNow && isNobodys) {
         setRoadCoords({x: x, y: y});
         setIsRoadNobodys(isNobodys);

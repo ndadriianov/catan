@@ -1,7 +1,7 @@
 import {Inventory, Player} from './Player';
 import {EventEmitter} from 'node:events';
 
-enum resourceTypes {
+export enum resourceTypes {
   clay,
   forrest,
   sheep,
@@ -62,7 +62,7 @@ export class PurchaseService {
     }
   }
   
-  public makePurchase(sellerName: string, customerName: string): boolean {
+  private _makePurchase(sellerName: string, customerName: string): boolean {
     const purchase = this._getPurchase(sellerName, customerName)
     
     if (!purchase) return false;
@@ -72,6 +72,7 @@ export class PurchaseService {
       if (!(index in resourceTypes)) return false;
       const resType = index as resourceTypes;
       const playerAmount: number = this._getPlayerAmount(purchase.seller, purchase.customer, resType, resourceAmount);
+      if (resourceAmount > 0 && playerAmount < resourceAmount) return false;
       if (resourceAmount < 0 && playerAmount < -resourceAmount) return false;
     }
     
@@ -90,17 +91,27 @@ export class PurchaseService {
         purchase.seller.inventory[key] += resourceAmount;
       }
     }
+    return true;
+  }
+  
+  public makePurchase(sellerName: string, customerName: string): boolean {
+    const status: boolean = this._makePurchase(sellerName, customerName)
     this.deletePurchase(sellerName, customerName);
     this._eventEmitter.emit('update', this._roomId);
     this._eventEmitter.emit('purchase-update', this._roomId);
-    return true;
+    return status;
   }
   
   public deletePurchase(seller: string, customer: string): boolean {
     const lastLength = this._purchases.length;
-    this._purchases = this._purchases.filter(p => (p.seller.username !== seller && p.customer.username !== customer));
+    this._purchases = this._purchases.filter(p => (p.seller.username !== seller || p.customer.username !== customer));
     this._eventEmitter.emit('purchase-update', this._roomId);
     return this._purchases.length < lastLength;
+  }
+  
+  public endTurn(): void {
+    this._purchases = [];
+    this._eventEmitter.emit('purchase-update', this._roomId);
   }
   
   toJSON(): any {
