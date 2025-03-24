@@ -82,3 +82,30 @@ h4 {
   margin: 0;
   border: 5px solid lightslategrey;
 }
+
+.createRoomButton {
+  margin-left: 20px !important;
+}
+
+
+@media (max-width: 1200px) {
+  .chooseRoomContainer > div:not(:last-child)::after {
+    display: none;
+  }
+
+  .chooseRoomContainer {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .chooseRoomContent {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .createRoomButton {
+    display: block !important;
+    margin: 0 auto !important;
+  }
+}
