@@ -239,17 +239,14 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   
   return (
     <div className={classes.wrapper}>
-      <div className={classes.turnActionsContainer}>
+      <div>
         <div className={classes.counter}>{room.counter}</div>
         <button onClick={endTurn} className={globalClasses.button} disabled={!isMyTurnNow}>завершить ход</button>
+        <PlayersList players={room.players}/>
+        <Trade room={room} color={owner} inventory={inventory}/>
       </div>
       
       
-      <div>
-      <PlayersList players={room.players}/>
-      
-      <Trade room={room} color={owner} inventory={inventory}/>
-      </div>
       
       <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
            houseCoords={houseCoords} owner={owner} update={update} isMyTurnNow={isMyTurnNow}/>

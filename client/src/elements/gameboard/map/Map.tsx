@@ -11,7 +11,7 @@ import TurnedRoadsRow from '../buildings/TurnedRoadsRow.tsx';
 import VertRoadsRow from '../buildings/VertRoadsRow.tsx';
 import HousesRow from '../buildings/HousesRow.tsx';
 import NumbersRow from '../number/NumbersRow.tsx';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 
 
 type mapNewProps = {
@@ -28,8 +28,33 @@ type mapNewProps = {
 
 
 const Map = ({tiles, roads, houses, numbers, roadCoords, houseCoords, owner, update, isMyTurnNow}: mapNewProps) => {
+  const [zoomLevel, setZoomLevel] = useState(1);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 200;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      if (isSquare) setZoomLevel(0.001 * (width < height ? width : height));
+      else if (isPortrait) setZoomLevel(0.0015 * width);
+      else setZoomLevel(0.0017 * height);
+    };
+    
+    // Первоначальная настройка
+    handleResize();
+    
+    // Слушатель изменения размера
+    window.addEventListener('resize', handleResize);
+    
+    // Очистка
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   return (
-    <div className={classes.container} style={{scale: '100%'}}>
+    <div className={classes.container} style={{zoom: zoomLevel}}>
       <img src={frame} alt={'frame'} className={classes.frame}/>
       
       <div className={classes.grid}>
