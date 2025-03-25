@@ -8,6 +8,8 @@ import GlobalHeader from './elements/menu/GlobalHeader.tsx';
 import UserContext, {User} from './context/UserContext.ts';
 import Modal from 'react-modal';
 import {CSSProperties} from 'react';
+import {ThemeProvider} from '@mui/material';
+import {theme} from './Theme.ts';
 
 
 function App() {
@@ -34,20 +36,21 @@ function App() {
   
   return (
     <div style={appStyle}>
-      <UserContext.Provider value={{user, setUser}}>
-        <BrowserRouter>
-          <GlobalHeader/>
-          
-          <Routes>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/register" element={<Register/>}/>
-            <Route path="/choose-room" element={<ChooseRoom/>}/>
-            <Route path="/room" element={<InRoom/>}/>
+      <ThemeProvider theme={theme}>
+        <UserContext.Provider value={{user, setUser}}>
+          <BrowserRouter>
+            <GlobalHeader/>
             
-            <Route path="*" element={<Navigate to={'/login'} replace/>}/>
-          </Routes>
-        </BrowserRouter>
-      </UserContext.Provider>
+            <Routes>
+              <Route path="/login" element={<Login/>}/>
+              <Route path="/register" element={<Register/>}/>
+              <Route path="/choose-room" element={<ChooseRoom/>}/>
+              <Route path="/room" element={<InRoom/>}/>
+              
+              <Route path="*" element={<Navigate to={'/login'} replace/>}/>
+            </Routes>
+          </BrowserRouter>
+        </UserContext.Provider></ThemeProvider>
     </div>
   );
 }
