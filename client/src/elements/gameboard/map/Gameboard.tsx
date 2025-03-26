@@ -123,6 +123,7 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     if (room.gameboard) {
       setRoads(getRoads(room.gameboard.roads));
       setHouses(getHouses(room.gameboard.houses));
+      setUpdate({villages: [], cities: [], roads: []});
     }
   }, [room.gameboard]);
   
@@ -236,6 +237,7 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     });
   }
   
+  
   const isSmallMobile = useMediaQuery('(max-height: 890px) and (orientation: portrait)');
   const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
   const isTablet = useMediaQuery('(min-width: 600px) and (max-width: 1199px)');
@@ -295,66 +297,73 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       }
       
       
-      
-      <MovableModal
-        isOpen={isConfirmationRequiredRoad}
-        onClose={closeRoadModal}
-      >
-        {!isSelectedRoadInUpdate(update, roadCoords) ?
-          <div>
-            <button onClick={buyRoad}>
-              подтвердить
-            </button>
-            <button onClick={cancelRoadPurchase}>
-              отмена
-            </button>
-          </div>
-          :
-          <div>
-            <button onClick={deleteRoad}>
-              удалить
-            </button>
-            <button onClick={cancelRoadDeletion}>
-              отмена
-            </button>
-          </div>
-        }
+      <MovableModal isOpen={isConfirmationRequiredRoad} onClose={closeRoadModal}>
+        <Box className={classes.buttonGroup}>
+          {!isSelectedRoadInUpdate(update, roadCoords) ? (
+            <>
+              <Button variant="contained" color="primary" size="small" onClick={buyRoad}>
+                Подтвердить
+              </Button>
+              <Button variant="outlined" size="small" onClick={cancelRoadPurchase}>
+                Отмена
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="contained" color="error" size="small" onClick={deleteRoad}>
+                Удалить
+              </Button>
+              <Button variant="outlined" size="small" onClick={cancelRoadDeletion}>
+                Отмена
+              </Button>
+            </>
+          )}
+        </Box>
       </MovableModal>
       
       
-      <MovableModal
-        isOpen={isConfirmationRequiredHouse}
-        onClose={closeHouseModal}
-      >
-        {(isMyVillage || isMyUpdateVillage) && !isMyUpdateCity ?
-          <div>
-            <button onClick={buyCity}>
-              купить город
-            </button>
-            {isHouseNobodys && <button onClick={deleteVillage}>удалить деревню</button>}
-            <button onClick={cancelCityPurchase}>
-              отмена
-            </button>
-          </div>
-          :
-          isMyUpdateCity ?
-            <div>
-              <button onClick={degradeToVillage}>понизить до деревни</button>
-              <button onClick={cancelCityPurchase}>отмена</button>
-            </div>
-            :
-            <div>
-              <button onClick={buyVillage}>купить деревню</button>
-              <button onClick={cancelVillagePurchase}>отмена</button>
-            </div>
-        }
+      <MovableModal isOpen={isConfirmationRequiredHouse} onClose={closeHouseModal}>
+        <Box className={classes.buttonGroup}>
+          {(isMyVillage || isMyUpdateVillage) && !isMyUpdateCity ? (
+            <>
+              <Button variant="contained" color="primary" size="small" onClick={buyCity}>
+                купить город
+              </Button>
+              {isHouseNobodys && (
+                <Button variant="contained" color="error" size="small" onClick={deleteVillage}>
+                  удалить деревню
+                </Button>
+              )}
+              <Button variant="outlined" size="small" onClick={cancelCityPurchase}>
+                отмена
+              </Button>
+            </>
+          ) : isMyUpdateCity ? (
+            <>
+              <Button variant="contained" color="secondary" size="small" onClick={degradeToVillage}>
+                понизить до деревни
+              </Button>
+              <Button variant="outlined" size="small" onClick={cancelCityPurchase}>
+                отмена
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="contained" color="primary" size="small" onClick={buyVillage}>
+                купить деревню
+              </Button>
+              <Button variant="outlined" size="small" onClick={cancelVillagePurchase}>
+                отмена
+              </Button>
+            </>
+          )}
+        </Box>
       </MovableModal>
       
-      <MovableModal
-        isOpen={isTurnIncorrect}
-        onClose={() => setIsTurnIncorrect(false)}
-      >
-        Такой ход невозможен. Попробуйте снова
+      <MovableModal isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
+        <Box className={classes.buttonGroup}>
+          Такой ход невозможен. Попробуйте снова
+        </Box>
       </MovableModal>
     </div>
   );

@@ -130,3 +130,9 @@
   border-radius: 10px;
   color: #2c4fff;
 }
+
+.buttonGroup {
+  display: flex;
+  gap: 8px;
+  margin: 10px;
+}
