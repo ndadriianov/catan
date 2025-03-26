@@ -197,12 +197,17 @@ io.on('connection', (socket: Socket): void => {
   socket.on('start-room', (id: number, callback: (succeed: boolean) => void): void => {
     if (!checkIsAuth({socket})) return;
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
+    
     if (room) {
-      if (!room.players.find((p: Player): boolean => p.color === Owner.nobody)) {
+      const colorCounts = new Map<Owner, number>();
+      room.players.forEach((player: Player) => {
+        colorCounts.set(player.color, (colorCounts.get(player.color) || 0) + 1);
+      });
+      if (Array.from(colorCounts.values()).some(count => count > 1)) callback(false)
+      else if (room.players.some((p: Player): boolean => p.color === Owner.nobody)) callback(false)
+      else {
         callback(true);
         room.start();
-      } else {
-        callback(false);
       }
     }
   });
