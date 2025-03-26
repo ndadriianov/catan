@@ -32,7 +32,7 @@ const Map = ({tiles, roads, houses, numbers, roadCoords, houseCoords, owner, upd
   
   useEffect(() => {
     const handleResize = () => {
-      const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 200;
+      const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 320;
       const isPortrait = window.innerHeight > window.innerWidth;
       
       const width = window.innerWidth;

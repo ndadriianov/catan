@@ -1,7 +1,7 @@
 .wrapper {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  gap: 10px;
+  gap: 5px;
   justify-content: center;
 
   @media (orientation: portrait) {
@@ -11,13 +11,20 @@
   }
 }
 
+.upperCard {
+  @media (orientation: portrait) {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
 .container {
   display: flex;
   justify-content: center;
   position: relative;
   height: 500px;
   width: 600px;
-  background-color: lightsteelblue;
+  /*background-color: lightsteelblue;*/
   transform-origin: top left;
   margin: auto;
 }

@@ -10,6 +10,16 @@ type inventoryAndCostsProps = {
 }
 
 const InventoryAndCosts = ({inventory, costs, lastNumber}: inventoryAndCostsProps) => {
+  const styles = {
+    card: {
+      flex: 1,
+      padding: 2,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center'
+    }
+  }
+  
   return (
     <Box>
       <Card>
@@ -24,13 +34,7 @@ const InventoryAndCosts = ({inventory, costs, lastNumber}: inventoryAndCostsProp
         
         
         <Box display="flex" flexDirection={{ md: 'column', xl: 'row' }} justifyContent="space-between" gap={2} margin={1}>
-          <Card sx={{
-            flex: 1,
-            padding: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
+          <Card sx={styles.card}>
             <Typography variant="h6" color="primary" gutterBottom>
               ресурсы
             </Typography>
@@ -54,13 +58,7 @@ const InventoryAndCosts = ({inventory, costs, lastNumber}: inventoryAndCostsProp
             </Box>
           </Card>
           
-          <Card sx={{
-            flex: 1,
-            padding: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
+          <Card sx={styles.card}>
             <Typography variant="h6" color="primary" gutterBottom>
               цена покупок
             </Typography>

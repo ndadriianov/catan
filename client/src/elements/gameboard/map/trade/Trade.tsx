@@ -35,8 +35,6 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
   const options = ['не выбрано', 'глина', 'лес', 'овцы', 'камень', 'пшеница'];
   const portTypes = ['стандартный', 'глина', 'лес', 'овцы', 'камень', 'пшеница'];
   
-  const [show, setShow] = useState(false);
-  
   const [showTradeWithPlayers, setShowTradeWithPlayers] = useState(false);
   const [tradePartner, setTradePartner] = useState<string>('');
   const [ports, setPorts] = useState<PortTypes[]>([]);
@@ -207,107 +205,102 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
   
   return (
     <Box>
-      <Button variant="contained" onClick={() => {setShow(true)}}>
-        Открыть меню торговли
-      </Button>
-      
-      {/* главное модальное окно */}
-      <MovableModal isOpen={show} onClose={() => setShow(false)}>
-        <Box className={globalClasses.centeredModal}>
-          {/* Основная секция торговли */}
-          <Card style={{padding: '16px', minWidth: '250px'}}>
-            <Typography
-              variant="h6"
-              color="primary"
-              style={{marginBottom: '16px', textAlign: 'center'}}
-            >
-              Торговля
-            </Typography>
-            
-            <Button
-              variant="contained"
-              style={{width: '100%', marginBottom: '8px'}}
-              onClick={() => setShowBankTrade(true)}
-            >
-              Через банк
-            </Button>
-            
-            <Card
-              variant="outlined"
-              style={{padding: '16px', marginBottom: '8px'}}
-            >
-              <Typography variant="subtitle1">С игроками</Typography>
-              <Stack spacing={1} style={{marginTop: '8px'}}>
-                {room.players
-                  .filter((player: Player) => player.color !== color)
-                  .map((player: Player) => (
-                    <Button
-                      key={player.username}
-                      variant="outlined"
-                      onClick={() => {
-                        setShowTradeWithPlayers(true);
-                        setTradePartner(player.username);
-                      }}
-                    >
-                      {player.username}
-                    </Button>
-                  ))}
-              </Stack>
-            </Card>
-            
-            {ports.length > 0 && (
-              <Card
-                variant="outlined"
-                style={{padding: '16px'}}
-              >
-                <Typography variant="subtitle1">Через порт</Typography>
-                <Stack spacing={1} style={{marginTop: '8px'}}>
-                  {ports.map((port, index) => (
-                    <Button
-                      key={index}
-                      variant="outlined"
-                      onClick={() => {
-                        const cr = ChooseResource(portTypes[port - 1]);
-                        if (cr !== resourceTypes.notChosen) setChosenPort(cr);
-                        else setShowUniversalPortTrade(true);
-                      }}
-                    >
-                      {portTypes[port - 1]}
-                    </Button>
-                  ))}
-                </Stack>
-              </Card>
-            )}
+      <Box>
+        {/* Основная секция торговли */}
+        <Card style={{padding: '16px', minWidth: '250px'}}>
+          <Typography
+            variant="h6"
+            color="primary"
+            style={{marginBottom: '16px', textAlign: 'center'}}
+          >
+            Торговля
+          </Typography>
+          
+          <Button
+            variant="contained"
+            style={{width: '100%', marginBottom: '8px'}}
+            onClick={() => setShowBankTrade(true)}
+          >
+            Через банк
+          </Button>
+          
+          <Card
+            variant="outlined"
+            style={{padding: '16px', marginBottom: '8px'}}
+          >
+            <Typography variant="subtitle1">С игроками</Typography>
+            <Stack spacing={1} style={{marginTop: '8px'}}>
+              {room.players
+                .filter((player: Player) => player.color !== color)
+                .map((player: Player) => (
+                  <Button
+                    key={player.username}
+                    variant="outlined"
+                    onClick={() => {
+                      setShowTradeWithPlayers(true);
+                      setTradePartner(player.username);
+                    }}
+                  >
+                    {player.username}
+                  </Button>
+                ))}
+            </Stack>
           </Card>
           
-          {/* Секция предложений */}
-          <Card style={{padding: '16px', minWidth: '250px'}}>
-            <Typography
-              variant="h6"
-              color="primary"
-              style={{marginBottom: '16px', textAlign: 'center'}}
-            >
-              Предложения от игроков
-            </Typography>
-            
+          {ports.length > 0 && (
             <Card
               variant="outlined"
-              style={{padding: '16px', marginBottom: '8px'}}
+              style={{padding: '16px'}}
             >
-              <Typography variant="subtitle1">{room.activePlayer !== user.username
-                ?
-                `Предложения мне: ${purchases.filter(p => (p.customerName === user.username)).length}`
-                :
-                `Мои предложения: ${purchases.filter(p => (p.sellerName === user.username)).length}`
-              }</Typography>
-              
-              <Button onClick={() => {setShowDeals(true)}} variant="contained" style={{width:'100%', marginTop: '15px'}}>
-                показать
-              </Button>
+              <Typography variant="subtitle1">Через порт</Typography>
+              <Stack spacing={1} style={{marginTop: '8px'}}>
+                {ports.map((port, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => {
+                      const cr = ChooseResource(portTypes[port - 1]);
+                      if (cr !== resourceTypes.notChosen) setChosenPort(cr);
+                      else setShowUniversalPortTrade(true);
+                    }}
+                  >
+                    {portTypes[port - 1]}
+                  </Button>
+                ))}
+              </Stack>
             </Card>
+          )}
+        </Card>
+        
+        {/* Секция предложений */}
+        <Card style={{padding: '16px', minWidth: '250px'}}>
+          <Typography
+            variant="h6"
+            color="primary"
+            style={{marginBottom: '16px', textAlign: 'center'}}
+          >
+            Предложения от игроков
+          </Typography>
+          
+          <Card
+            variant="outlined"
+            style={{padding: '16px', marginBottom: '8px'}}
+          >
+            <Typography variant="subtitle1">{room.activePlayer !== user.username
+              ?
+              `Предложения мне: ${purchases.filter(p => (p.customerName === user.username)).length}`
+              :
+              `Мои предложения: ${purchases.filter(p => (p.sellerName === user.username)).length}`
+            }</Typography>
+            
+            <Button onClick={() => {
+              setShowDeals(true);
+            }} variant="contained" style={{width: '100%', marginTop: '15px'}}>
+              показать
+            </Button>
           </Card>
-        </Box>
-      </MovableModal>
+        </Card>
+      </Box>
       
       <MovableModal isOpen={showDeals} onClose={() => setShowDeals(false)}>
         <Card className={classes.dealsModal}>

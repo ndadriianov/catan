@@ -20,7 +20,7 @@ function App() {
   const [user, setUser] = useState<User>({username: undefined, password: undefined});
   
   const appStyle: CSSProperties = {
-    backgroundColor: 'gray', // Цвет фона
+    backgroundColor: 'cadetblue', // Цвет фона
     backgroundImage: 'url("your-image-url.jpg")', // Изображение на фоне
     backgroundSize: 'cover', // Покрывает весь экран
     backgroundPosition: 'center', // Центрирует изображение

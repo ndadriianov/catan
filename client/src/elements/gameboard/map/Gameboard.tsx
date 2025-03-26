@@ -29,12 +29,12 @@ import Inventory from '../../../typesDefinitions/room/inventory.ts';
 import updateProps from '../../../typesDefinitions/updateProps.ts';
 import house from '../../../typesDefinitions/house/house.ts';
 import houseType from '../../../typesDefinitions/house/houseType.ts';
-import globalClasses from '../../../styles.module.css';
 import Trade from './trade/Trade.tsx';
 import {Tile} from '../../../typesDefinitions/tiles.ts';
 import Map from './Map.tsx';
 import InventoryAndCosts from './InventoryAndCosts.tsx';
 import PlayersList from './PlayersList.tsx';
+import {Box, Button, Card, Typography, useMediaQuery} from '@mui/material';
 
 
 type mapProps = {
@@ -63,6 +63,8 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   const [roadCoords, setRoadCoords] = useState<Coords>({x: -1, y: -1});
   const [update, setUpdate] = useState<updateProps>({villages: [], cities: [], roads: []});
   const [costs, setCosts] = useState<Costs>({clay: 0, forrest: 0, sheep: 0, stone: 0, wheat: 0});
+  const [showResourceModal, setShowResourceModal] = useState(false);
+  const [showTradeModal, setShowTradeModal] = useState(false);
   
   
   useEffect(() => {
@@ -234,24 +236,64 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
     });
   }
   
+  const isSmallMobile = useMediaQuery('(max-height: 890px) and (orientation: portrait)');
+  const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
+  const isTablet = useMediaQuery('(min-width: 600px) and (max-width: 1199px)');
+  const haveEnoughSpace = useMediaQuery('(min-height: 1000px) and (orientation: landscape) and (min-width: 1536px)');
   
   if (isLoading) return <Loader/>;
   
+  // если высота хотя бы 1000 при горизонтальной ориентации, то можно отображать Trade
+  
   return (
     <div className={classes.wrapper}>
-      <div>
-        <div className={classes.counter}>{room.counter}</div>
-        <button onClick={endTurn} className={globalClasses.button} disabled={!isMyTurnNow}>завершить ход</button>
-        <PlayersList players={room.players}/>
-        <Trade room={room} color={owner} inventory={inventory}/>
-      </div>
-      
+      <Box>
+        <Card className={classes.upperCard}>
+          <Card sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '5px' }}>
+            <Typography margin={1} variant="h6" color="primary" textTransform='uppercase'>ход {room.counter}</Typography>
+            <Button onClick={endTurn} variant='contained' disabled={!isMyTurnNow}>завершить ход</Button>
+          </Card>
+          
+          <PlayersList players={room.players}/>
+        </Card>
+      </Box>
       
       
       <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
            houseCoords={houseCoords} owner={owner} update={update} isMyTurnNow={isMyTurnNow}/>
       
-      <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
+      <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2}}>
+          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            {(isSmallMobile || isTablet || strangeMobile) &&
+              <Button variant="contained" onClick={() => setShowResourceModal(true)}>Показать ресурсы</Button>
+            }
+            {haveEnoughSpace ||
+              <Button variant="contained" onClick={() => setShowTradeModal(true)}>Открыть меню торговли</Button>
+            }
+          </Box>
+          <Box>
+            {(isSmallMobile || isTablet || strangeMobile) ||
+              <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
+            }
+            {haveEnoughSpace &&
+              <Trade room={room} color={owner} inventory={inventory}/>
+            }
+          </Box>
+      </Box>
+      
+      
+      {(isSmallMobile || isTablet || strangeMobile) &&
+        <MovableModal isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
+          <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
+        </MovableModal>
+      }
+      
+      {haveEnoughSpace ||
+        <MovableModal isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
+          <Trade room={room} color={owner} inventory={inventory}/>
+        </MovableModal>
+      }
+      
       
       
       <MovableModal
