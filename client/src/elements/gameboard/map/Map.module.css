@@ -12,6 +12,7 @@
 }
 
 .upperCard {
+  margin-top: 10px;
   @media (orientation: portrait) {
     display: flex;
     flex-direction: row;

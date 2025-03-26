@@ -34,12 +34,14 @@ const Map = ({tiles, roads, houses, numbers, roadCoords, houseCoords, owner, upd
     const handleResize = () => {
       const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 320;
       const isPortrait = window.innerHeight > window.innerWidth;
+      const isLow = window.innerHeight < 620;
       
       const width = window.innerWidth;
       const height = window.innerHeight;
       
       if (isSquare) setZoomLevel(0.001 * (width < height ? width : height));
       else if (isPortrait) setZoomLevel(0.0015 * width);
+      else if (isLow) setZoomLevel(0.0015 * height);
       else setZoomLevel(0.0017 * height);
     };
     

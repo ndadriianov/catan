@@ -4,15 +4,27 @@ import socket from '../../../socket.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
 import MyModal from '../../UI/modal/MyModal.tsx';
 import Gameboard from '../../gameboard/map/Gameboard.tsx';
-import Select from '../../UI/select/Select.tsx';
 import UserContext from '../../../context/UserContext.ts';
 import Player from '../../../typesDefinitions/room/player.ts';
 import Owner from '../../../typesDefinitions/owner.ts';
-import globalClasses from '../../../styles.module.css';
-import classes from './InRoom.module.css';
-import MovableModal from '../../UI/movableModal/MovableModal.tsx';
 import PlayersList from '../../gameboard/map/PlayersList.tsx';
+import {
+  Box,
+  Button,
+  Container,
+  Divider,
+  Paper,
+  Stack,
+  Typography,
+  Select,
+  FormControl,
+  InputLabel, MenuItem
+} from '@mui/material';
 
+
+function ReplayIcon() {
+  return null;
+}
 
 const InRoom = () => {
   const [room, setRoom] = useState<Room | undefined | null>(undefined);
@@ -21,7 +33,6 @@ const InRoom = () => {
   const [unsuccessful, setUnsuccessful] = useState<boolean>(false);
   const [color, setColor] = useState<Owner>(Owner.nobody);
   const [isMyTurnNow, setIsMyTurnNow] = useState<boolean>(false);
-  const [isAdditionalButtonsOpen, setIsAdditionalButtonsOpen] = useState<boolean>(false);
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -39,6 +50,7 @@ const InRoom = () => {
     socket.emit('join-room', roomId, (succeed: boolean): void => {
       if (!succeed) setUnsuccessful(true);
     });
+    socket.emit('apply-color', color);
   }
   
   function chooseColor(input: string): Owner {
@@ -72,6 +84,11 @@ const InRoom = () => {
     });
   }
   
+  function handleBackToChoose():void {
+    socket.emit('go-back-to-choose', roomId);
+    navigate('/choose-room');
+  }
+  
   const colors: string[] = [
     'не выбран',
     'черный',
@@ -101,75 +118,114 @@ const InRoom = () => {
   
   return (
     <div>
-      <div className={classes.roomHeader}>
-        <div className={classes.roomName}>комната {roomId}</div>
-        
-        <button className={globalClasses.button} onClick={() => {
-          socket.emit('go-back-to-choose', roomId);
-          navigate('/choose-room');
-        }}>
-          вернуться к выбору комнаты
-        </button>
-        
-        <button onClick={() => setIsAdditionalButtonsOpen(true)}>tmp</button>
-      </div>
+      <Box display="flex" justifyContent="space-between" alignItems="center" p={0.2} sx={{ backgroundColor: '#2c4fff', borderRadius: 1 }}>
+        <Typography variant="h5" component="h1" sx={{color: 'white'}}>
+          Комната {roomId}
+        </Typography>
+        <Button variant='contained' color="primary" onClick={handleBackToChoose}>
+          Вернуться к выбору комнаты
+        </Button>
+      </Box>
       
       
-      {
-        room
-          ?
-          <div>
-            {room.haveStarted && me
-              ?
-              <Gameboard owner={me.color || color} room={room} isMyTurnNow={isMyTurnNow} inventory={me.inventory}/>
-              :
-              <div>
-                <button onClick={joinRoom} className={globalClasses.button}>
-                  присоединиться
-                </button>
+      {room ? (
+        <Container maxWidth="md">
+          {room.haveStarted && me ? (
+            <Gameboard
+              owner={me.color || color}
+              room={room}
+              isMyTurnNow={isMyTurnNow}
+              inventory={me.inventory}
+            />
+          ) : (
+            <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+              <Typography variant="h5" gutterBottom align="center">
+                Настройки комнаты
+              </Typography>
+              
+              <Stack spacing={2} alignItems="center">
+                <Box sx={{ width: '100%', maxWidth: 400 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={joinRoom}
+                    size="large"
+                    sx={{ mb: 2 }}
+                  >
+                    Присоединиться
+                  </Button>
+                </Box>
                 
-                <Select
-                  className={globalClasses.OptionsInput}
-                  options={colors}
-                  initial={colors[0]}
-                  value={colors[me?.color || color]}
-                  onChange={(value: string): void => applyColor(value)}
-                />
+                <Divider sx={{ width: '100%', my: 2 }} />
                 
-                <button onClick={start} className={globalClasses.button}>начать</button>
+                <Box sx={{width: '100%', maxWidth: 400}}>
+                  <FormControl fullWidth>
+                    <InputLabel id="color-select-label">Выберите цвет</InputLabel>
+                    <Select
+                      labelId="color-select-label"
+                      id="color-select"
+                      value={(me && colors[me?.color]) || colors[0]}
+                      label="Выберите цвет"
+                      onChange={(e) => applyColor(e.target.value as string)}
+                      renderValue={(selected) => selected === "не выбран" ? "не выбран" : selected}
+                      disabled={!me}
+                    >
+                      <MenuItem value="не выбран" disabled>
+                        не выбран
+                      </MenuItem>
+                      {colors.slice(1).map((colorOption) => (
+                        <MenuItem key={colorOption} value={colorOption}>
+                          {colorOption}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
                 
-                <PlayersList players={room.players}/>
-              </div>
-            }
-          </div>
-          :
-          <div>
-            <h2>Не удалось получить данные о комнате</h2>
+                <Box sx={{ width: '100%', maxWidth: 400 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="success"
+                    onClick={start}
+                    size="large"
+                    disabled={!me}
+                  >
+                    Начать игру
+                  </Button>
+                </Box>
+                
+                <Box sx={{ width: '100%', mt: 3 }}>
+                  <PlayersList players={room.players} />
+                </Box>
+              </Stack>
+            </Paper>
+          )}
+        </Container>
+      ) : (
+        <Container maxWidth="sm" sx={{ textAlign: 'center', mt: 4 }}>
+          <Paper elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Не удалось получить данные о комнате
+            </Typography>
             
-            <button
+            <Button
+              variant="contained"
+              color="primary"
               onClick={() => {
-                socket.emit('load-room', roomId, (roomJ: jsonRoom | null): void => { SetUpRoom(roomJ); });
+                socket.emit('load-room', roomId, (roomJ: jsonRoom | null) => {
+                  SetUpRoom(roomJ);
+                });
               }}
+              sx={{ mt: 2 }}
+              startIcon={<ReplayIcon />}
             >
-              попробовать загрузить снова
-            </button>
-          </div>
-      }
-      
-      
-      <MovableModal isOpen={isAdditionalButtonsOpen} onClose={(): void => setIsAdditionalButtonsOpen(false)}>
-        <button onClick={() => console.log(room)}>
-          вывести в консоль комнату
-        </button>
-        
-        <button onClick={() => console.log(me)}>
-          вывести в консоль себя
-        </button>
-        
-        <button onClick={() => socket.emit('log-room', roomId)}> {/*временная кнопка*/}
-          Вывести в консоль на сервере состояние комнаты
-        </button>
-      </MovableModal>
+              Попробовать загрузить снова
+            </Button>
+          </Paper>
+        </Container>
+      )}
       
       <MyModal visible={unsuccessful} setVisible={setUnsuccessful}>
         Не удалось подключиться к комнате

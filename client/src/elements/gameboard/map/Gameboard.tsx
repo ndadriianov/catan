@@ -242,6 +242,8 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
   const isTablet = useMediaQuery('(min-width: 600px) and (max-width: 1199px)');
   const haveEnoughSpace = useMediaQuery('(min-height: 1000px) and (orientation: landscape) and (min-width: 1536px)');
+  const isColumnLayout = useMediaQuery('(max-width: 1536px)');
+  const isLowScreen = useMediaQuery('(max-height: 880px)');
   
   if (isLoading) return <Loader/>;
   
@@ -266,7 +268,7 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       
       <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2}}>
           <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-            {(isSmallMobile || isTablet || strangeMobile) &&
+            {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
               <Button variant="contained" onClick={() => setShowResourceModal(true)}>Показать ресурсы</Button>
             }
             {haveEnoughSpace ||
@@ -274,7 +276,7 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
             }
           </Box>
           <Box>
-            {(isSmallMobile || isTablet || strangeMobile) ||
+            {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) ||
               <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
             }
             {haveEnoughSpace &&
@@ -284,7 +286,7 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       </Box>
       
       
-      {(isSmallMobile || isTablet || strangeMobile) &&
+      {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
         <MovableModal isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
           <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
         </MovableModal>
