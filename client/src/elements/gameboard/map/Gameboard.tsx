@@ -340,13 +340,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
             {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) ||
               <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved}/>
             }
-            <VictoryPointsAndDevelopmentCards
-              victoryPoints={me.victoryPoints}
-              knightAmount={{current: me.knights, add: me.addedKnights}}
-              roadBuildingAmount={{current: me.roadBuildings, add: me.addedRoadBuildings}}
-              inventionAmount={{current: me.inventions, add: me.addedInventions}}
-              monopolyAmount={{current: me.monopolies, add: me.addedMonopolies}}
-            />
+            <VictoryPointsAndDevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
           </Box>
         </Box>
         

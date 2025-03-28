@@ -1,7 +1,7 @@
 import {ConnectionStatus} from './User';
 import {Owner} from './Gameboard';
 import {PortTypes} from './Ports';
-import {DevelopmentCard} from './DevelopmentCard';
+import {DevelopmentCard, DevelopmentCards} from './DevelopmentCard';
 
 export class Player {
   username: string;
@@ -10,9 +10,10 @@ export class Player {
   leftTheRoom: boolean;
   color: Owner;
   ports: PortTypes[];
-  developmentCards: DevelopmentCard[];
-  addedDevelopmentCards: DevelopmentCard[];
+  developmentCards: DevelopmentCards;
+  addedDevelopmentCards: DevelopmentCards;
   threwTheDice: boolean;
+  usedKnightThisTurn: boolean;
   
   
   constructor(username: string) {
@@ -22,9 +23,10 @@ export class Player {
     this.leftTheRoom = false;
     this.color = Owner.nobody;
     this.ports = [];
-    this.developmentCards = [];
-    this.addedDevelopmentCards = [];
+    this.developmentCards = new DevelopmentCards();
+    this.addedDevelopmentCards = new DevelopmentCards();
     this.threwTheDice = false;
+    this.usedKnightThisTurn = false;
   }
   
   
@@ -37,24 +39,28 @@ export class Player {
       color: this.color,
       ports: [... new Set(this.ports)],
       threwTheDice: this.threwTheDice,
+      usedKnightThisTurn: this.usedKnightThisTurn,
       
-      knights: this.developmentCards.filter(card => card === DevelopmentCard.Knight).length,
-      victoryPoints: this.developmentCards.filter(card => card === DevelopmentCard.VictoryPoint).length
-        + this.addedDevelopmentCards.filter(card => card === DevelopmentCard.VictoryPoint).length,
-      roadBuildings: this.developmentCards.filter(card => card === DevelopmentCard.RoadBuilding).length,
-      inventions: this.developmentCards.filter(card => card === DevelopmentCard.Invention).length,
-      monopolies: this.developmentCards.filter(card => card === DevelopmentCard.Monopoly).length,
+      knights: this.developmentCards.Knights,
+      victoryPoints: this.developmentCards.VictoryPoints + this.addedDevelopmentCards.VictoryPoints,
+      roadBuildings: this.developmentCards.RoadBuildings,
+      inventions: this.developmentCards.Inventions,
+      monopolies: this.developmentCards.Monopolies,
       
-      addedKnights: this.addedDevelopmentCards.filter(card => card === DevelopmentCard.Knight).length,
-      addedRoadBuildings: this.addedDevelopmentCards.filter(card => card === DevelopmentCard.RoadBuilding).length,
-      addedInventions: this.addedDevelopmentCards.filter(card => card === DevelopmentCard.Invention).length,
-      addedMonopolies: this.addedDevelopmentCards.filter(card => card === DevelopmentCard.Monopoly).length
+      addedKnights: this.addedDevelopmentCards.Knights,
+      addedRoadBuildings: this.addedDevelopmentCards.RoadBuildings,
+      addedInventions: this.addedDevelopmentCards.Inventions,
+      addedMonopolies: this.addedDevelopmentCards.Monopolies
     };
   }
   
   ApplyAdditionDevCards(): void {
-    this.developmentCards = this.addedDevelopmentCards;
-    this.addedDevelopmentCards = [];
+    this.developmentCards.Knights += this.addedDevelopmentCards.Knights;
+    this.developmentCards.VictoryPoints += this.addedDevelopmentCards.VictoryPoints;
+    this.developmentCards.RoadBuildings += this.addedDevelopmentCards.RoadBuildings;
+    this.developmentCards.Inventions += this.addedDevelopmentCards.Inventions;
+    this.developmentCards.Monopolies += this.addedDevelopmentCards.Monopolies;
+    this.addedDevelopmentCards = new DevelopmentCards();
   }
   
   GettingRobed(): void {

@@ -157,6 +157,7 @@ export class Room {
   }
   
   public PREPARE2() {
+    this.playWithRobber = true;
     this._counter = 9;
     this.lastNumber = 10;
     this._players[0].color = Owner.black;
@@ -206,7 +207,13 @@ export class Room {
     const card = this._developmentCardDeck.pop();
     console.log(card);
     if (player !== this.activePlayer || card === undefined) return false;
-    player.addedDevelopmentCards.push(card)
+    switch (card) {
+      case DevelopmentCard.Knight: player.addedDevelopmentCards.Knights++; break;
+      case DevelopmentCard.VictoryPoint: player.addedDevelopmentCards.VictoryPoints++; break;
+      case DevelopmentCard.RoadBuilding: player.addedDevelopmentCards.RoadBuildings++; break;
+      case DevelopmentCard.Invention: player.addedDevelopmentCards.Inventions++; break;
+      case DevelopmentCard.Monopoly: player.addedDevelopmentCards.Monopolies++; break;
+    }
     return true;
   }
   

@@ -459,15 +459,13 @@ io.on('connection', (socket: Socket): void => {
   
   
   socket.on('buy-dev-card', (callback: (succeed: boolean) => void): void => {
-    if (!checkIsAuth({socket, callback})) return;
-    const user: User = socket.data.user;
-    
-    if (!user.activeRoom || !user.activeRoom.hasStarted) {
+    const data = GetAndCheckUserActivePlayerRoom({socket, callback});
+    if (!data || !data.room.hasStarted || !data.player.threwTheDice) {
       callback(false);
       return;
     }
-    const room: Room = socket.data.user.activeRoom;
-    callback(room.GiveDevelopmentCardToPlayer(user.username));
+    
+    callback(data.room.GiveDevelopmentCardToPlayer(data.user.username))
   })
   
   
@@ -526,6 +524,18 @@ io.on('connection', (socket: Socket): void => {
     if (!room.hasStarted) {
       room.playWithRobber = playWithRobber;
       eventEmitter.emit('update', room.id);
+    }
+  })
+  
+  
+  socket.on('activate-knight', (): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket});
+    if (!data) return;
+    
+    if (!data.player.usedKnightThisTurn && data.room.playWithRobber && data.player.developmentCards.Knights > 0) {
+      data.room.robberShouldBeMoved = true;
+      data.player.developmentCards.Knights--;
+      eventEmitter.emit('update', data.room.id);
     }
   })
   
@@ -611,4 +621,41 @@ function prepareRoomIdLists(user: User): {currentRoomIds: number[], otherRoomIds
     return !currentRoomIds.some((otherId: number): boolean => id === otherId);
   })
   return {currentRoomIds, otherRoomIds};
+}
+
+
+type _ = {
+  user: User;
+  room: Room;
+  player: Player;
+}
+
+function GetAndCheckUserActivePlayerRoom({socket, callback}: checkIsAuthProps): _|undefined {
+  if (!checkIsAuth({socket, callback})) return undefined;
+  
+  const user: User = socket.data.user;
+  const room: Room = socket.data.user.activeRoom;
+  const player = room.activePlayer;
+  
+  if (player === undefined || player.username !== user.username) return undefined;
+  return {
+    user: user,
+    room: room,
+    player: player,
+  }
+}
+
+function GetAndCheckUserPlayerRoom({socket, callback}: checkIsAuthProps): _|undefined {
+  if (!checkIsAuth({socket, callback})) return undefined;
+  
+  const user: User = socket.data.user;
+  const room: Room = socket.data.user.activeRoom;
+  const player = room.activePlayer;
+  
+  if (player === undefined) return undefined;
+  return {
+    user: user,
+    room: room,
+    player: player,
+  }
 }

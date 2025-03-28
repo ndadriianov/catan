@@ -3,13 +3,11 @@ import socket from '../../../socket.ts';
 import {useState} from 'react';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
 import classes from '../../../styles.module.css';
+import player from '../../../typesDefinitions/room/player.ts';
 
 type Props = {
-  victoryPoints: number;
-  knightAmount: {current: number; add: number};
-  roadBuildingAmount: {current: number; add: number};
-  inventionAmount: {current: number; add: number};
-  monopolyAmount: {current: number; add: number};
+  me: player;
+  isMyTurnNow: boolean;
 }
 
 type CardItemProps = {
@@ -17,9 +15,10 @@ type CardItemProps = {
   value: number;
   addValue: number;
   onApply: () => void;
+  disabled: boolean;
 }
 
-const DevCardItem = ({name, value, addValue, onApply}: CardItemProps) => (
+const DevCardItem = ({name, value, addValue, onApply, disabled}: CardItemProps) => (
   <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2}}>
     <Typography variant="body1" sx={{minWidth: 120 }}>
       {name}:
@@ -30,13 +29,13 @@ const DevCardItem = ({name, value, addValue, onApply}: CardItemProps) => (
     <Typography variant="body1" sx={{fontWeight: 'bold', minWidth: 30, textAlign: 'center'}} color={addValue > 0 ? 'green' : 'orange'}>
       (+{addValue})
     </Typography>
-    <Button variant="outlined" size="small" onClick={onApply} sx={{ml: 'auto', px: 2}}>
+    <Button variant="outlined" size="small" onClick={onApply} sx={{ml: 'auto', px: 2}} disabled={disabled}>
       Применить
     </Button>
   </Box>
 );
 
-const VictoryPointsAndDevelopmentCards = ({victoryPoints, knightAmount, roadBuildingAmount, inventionAmount, monopolyAmount}: Props) => {
+const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
   const [showPurchaseSucceed, setShowPurchaseSucceed] = useState(false);
   const [showPurchaseFailed, setShowPurchaseFailed] = useState(false);
   
@@ -46,6 +45,18 @@ const VictoryPointsAndDevelopmentCards = ({victoryPoints, knightAmount, roadBuil
       if (succeed) setShowPurchaseSucceed(true);
       else setShowPurchaseFailed(true);
     })
+  }
+  function ActivateKnight(): void {
+    socket.emit('activate-knight');
+  }
+  function ActivateRoadBuilding(): void {
+  
+  }
+  function ActivateInvention(): void {
+  
+  }
+  function ActivateMonopoly(): void {
+  
   }
   
   return (
@@ -57,7 +68,7 @@ const VictoryPointsAndDevelopmentCards = ({victoryPoints, knightAmount, roadBuil
             <Typography variant="h6" component="div" sx={{mb: 2, color: 'primary.main', fontWeight: 'bold', textAlign: 'center'}}>
               Победные очки:
               <Box component="span" sx={{ml: 1, fontSize: '1.5rem', color: 'success.main'}}>
-                {victoryPoints}
+                {me.victoryPoints}
               </Box>
             </Typography>
             
@@ -66,7 +77,7 @@ const VictoryPointsAndDevelopmentCards = ({victoryPoints, knightAmount, roadBuil
                 Карты развития
               </Typography>
               
-              <Button variant="outlined" size="small" onClick={BuyDevCard} sx={{mr: 1}}>
+              <Button variant="outlined" size="small" onClick={BuyDevCard} sx={{mr: 1}} disabled={!isMyTurnNow || !me.threwTheDice}>
                 купить
               </Button>
             </Card>
@@ -76,27 +87,31 @@ const VictoryPointsAndDevelopmentCards = ({victoryPoints, knightAmount, roadBuil
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <DevCardItem
                   name="Рыцарь"
-                  value={knightAmount.current}
-                  addValue={knightAmount.add}
-                  onApply={() => {}}
+                  value={me.knights}
+                  addValue={me.addedKnights}
+                  onApply={ActivateKnight}
+                  disabled={!(isMyTurnNow && (!me.threwTheDice && !me.usedKnightThisTurn) && me.knights > 0)}
                 />
                 <DevCardItem
                   name="Строительство дорог"
-                  value={roadBuildingAmount.current}
-                  addValue={roadBuildingAmount.add}
-                  onApply={() => {}}
+                  value={me.roadBuildings}
+                  addValue={me.addedRoadBuildings}
+                  onApply={ActivateRoadBuilding}
+                  disabled={!(isMyTurnNow && me.roadBuildings > 0)}
                 />
                 <DevCardItem
                   name="Изобретение"
-                  value={inventionAmount.current}
-                  addValue={inventionAmount.add}
-                  onApply={() => {}}
+                  value={me.inventions}
+                  addValue={me.addedInventions}
+                  onApply={ActivateInvention}
+                  disabled={!(isMyTurnNow && me.inventions > 0)}
                 />
                 <DevCardItem
                   name="Монополия"
-                  value={monopolyAmount.current}
-                  addValue={monopolyAmount.add}
-                  onApply={() => {}}
+                  value={me.monopolies}
+                  addValue={me.addedMonopolies}
+                  onApply={ActivateMonopoly}
+                  disabled={!(isMyTurnNow && me.monopolies > 0)}
                 />
               </Box>
             </Card>
