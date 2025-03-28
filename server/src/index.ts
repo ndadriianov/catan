@@ -5,8 +5,8 @@ import cors from 'cors';
 import {ConnectionStatus, LoginStatus, User} from './typesDefinitions/User';
 import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
-import {updateProps, Player, Coords} from './typesDefinitions/Player';
-import {Gameboard, Owner} from './typesDefinitions/Gameboard';
+import {Coords, Player, updateProps} from './typesDefinitions/Player';
+import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
 
@@ -542,8 +542,51 @@ io.on('connection', (socket: Socket): void => {
   })
   
   
-  socket.on('activate-invention', (): void => {
+  socket.on('activate-invention', (resource1: resourceTypes, resource2: resourceTypes): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket});
+    if (!data) return;
+    
+    if (data.player.threwTheDice && data.player.developmentCards.Inventions > 0) {
+      data.player.developmentCards.Inventions--;
+      switch (resource1) {
+        case resourceTypes.clay: data.player.inventory.clay++; break;
+        case resourceTypes.forrest: data.player.inventory.forrest++; break;
+        case resourceTypes.sheep: data.player.inventory.sheep++; break;
+        case resourceTypes.stone: data.player.inventory.stone++; break;
+        case resourceTypes.wheat: data.player.inventory.wheat++; break;
+      }
+      switch (resource2) {
+        case resourceTypes.clay: data.player.inventory.clay++; break;
+        case resourceTypes.forrest: data.player.inventory.forrest++; break;
+        case resourceTypes.sheep: data.player.inventory.sheep++; break;
+        case resourceTypes.stone: data.player.inventory.stone++; break;
+        case resourceTypes.wheat: data.player.inventory.wheat++; break;
+      }
+      
+      eventEmitter.emit('update', data.room.id);
+    }
+  })
   
+  
+  socket.on('activate-monopoly', (resource: resourceTypes): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket});
+    if (!data) return;
+    
+    if (data.player.threwTheDice && data.player.developmentCards.Monopolies > 0) {
+      data.player.developmentCards.Monopolies--;
+      data.room.playersByLink.forEach((player: Player): void => {
+        if (player.username !== data.player.username) {
+          switch (resource) {
+            case resourceTypes.clay: data.player.inventory.clay += player.inventory.clay; player.inventory.clay = 0; break;
+            case resourceTypes.forrest: data.player.inventory.forrest += player.inventory.forrest; player.inventory.forrest = 0; break;
+            case resourceTypes.sheep: data.player.inventory.sheep += player.inventory.sheep; player.inventory.sheep = 0; break;
+            case resourceTypes.stone: data.player.inventory.stone += player.inventory.stone; player.inventory.stone = 0; break;
+            case resourceTypes.wheat: data.player.inventory.wheat += player.inventory.wheat; player.inventory.wheat = 0; break;
+          }
+        }
+      });
+      eventEmitter.emit('update', data.room.id);
+    }
   })
   
   

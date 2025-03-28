@@ -1,9 +1,10 @@
-import {Box, Button, Card, Typography} from '@mui/material';
+import {Box, Button, Card, FormControl, InputLabel, MenuItem, Select, Typography} from '@mui/material';
 import socket from '../../../socket.ts';
 import {useState} from 'react';
 import MovableModal from '../../UI/movableModal/MovableModal.tsx';
 import classes from '../../../styles.module.css';
 import player from '../../../typesDefinitions/room/player.ts';
+import {resourceTypes} from '../../../typesDefinitions/resourceTypes.ts';
 
 type Props = {
   me: player;
@@ -38,6 +39,19 @@ const DevCardItem = ({name, value, addValue, onApply, disabled}: CardItemProps) 
 const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
   const [showPurchaseSucceed, setShowPurchaseSucceed] = useState(false);
   const [showPurchaseFailed, setShowPurchaseFailed] = useState(false);
+  const [showInventionModal, setShowInventionModal] = useState(false);
+  const [showMonopolyModal, setShowMonopolyModal] = useState(false);
+  const [inventionResource1, setInventionResource1] = useState<resourceTypes>(resourceTypes.clay);
+  const [inventionResource2, setInventionResource2] = useState<resourceTypes>(resourceTypes.clay);
+  const [monopolyResource, setMonopolyResource] = useState<resourceTypes>(resourceTypes.clay);
+  
+  const resourceOptions = [
+    { value: resourceTypes.clay, label: 'Глина' },
+    { value: resourceTypes.forrest, label: 'Дерево' },
+    { value: resourceTypes.sheep, label: 'Овцы' },
+    { value: resourceTypes.stone, label: 'Камень' },
+    { value: resourceTypes.wheat, label: 'Пшеница' }
+  ];
   
   
   function BuyDevCard(): void {
@@ -53,10 +67,10 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
     socket.emit('activate-road-building');
   }
   function ActivateInvention(): void {
-  
+    socket.emit('activate-invention', inventionResource1, inventionResource2);
   }
   function ActivateMonopoly(): void {
-  
+    socket.emit('activate-monopoly', monopolyResource);
   }
   
   return (
@@ -103,14 +117,14 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
                   name="Изобретение"
                   value={me.inventions}
                   addValue={me.addedInventions}
-                  onApply={ActivateInvention}
+                  onApply={() => setShowInventionModal(true)}
                   disabled={!(isMyTurnNow && me.inventions > 0 && me.threwTheDice)}
                 />
                 <DevCardItem
                   name="Монополия"
                   value={me.monopolies}
                   addValue={me.addedMonopolies}
-                  onApply={ActivateMonopoly}
+                  onApply={() => setShowMonopolyModal(true)}
                   disabled={!(isMyTurnNow && me.monopolies > 0 && me.threwTheDice)}
                 />
               </Box>
@@ -129,6 +143,86 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
       <MovableModal id={'vpadc-pf'} isOpen={showPurchaseFailed} onClose={() => setShowPurchaseFailed(false)}>
         <Card className={classes.centeredModal}>
           <Typography whiteSpace={'nowrap'}>покупка карты развития не состоялась</Typography>
+        </Card>
+      </MovableModal>
+      
+      
+      <MovableModal id={'invention-modal'} isOpen={showInventionModal} onClose={() => setShowInventionModal(false)}>
+        <Card sx={{ p: 3, minWidth: 300 }}>
+          <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>Выберите 2 ресурса которые вы хотите получить за изобретение</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Первый ресурс</InputLabel>
+              <Select
+                value={inventionResource1}
+                onChange={(e) => setInventionResource1(e.target.value as resourceTypes)}
+                label="Первый ресурс"
+              >
+                {resourceOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <FormControl fullWidth>
+              <InputLabel>Второй ресурс</InputLabel>
+              <Select
+                value={inventionResource2}
+                onChange={(e) => setInventionResource2(e.target.value as resourceTypes)}
+                label="Второй ресурс"
+              >
+                {resourceOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <Button
+              variant="contained"
+              onClick={() => {
+                ActivateInvention();
+                setShowInventionModal(false);
+              }}
+            >
+              Подтвердить
+            </Button>
+          </Box>
+        </Card>
+      </MovableModal>
+      
+      <MovableModal id={'monopoly-modal'} isOpen={showMonopolyModal} onClose={() => setShowMonopolyModal(false)}>
+        <Card sx={{ p: 3, minWidth: 300 }}>
+          <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>Выберите ресурс для монополии</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Ресурс</InputLabel>
+              <Select
+                value={monopolyResource}
+                onChange={(e) => setMonopolyResource(e.target.value as resourceTypes)}
+                label="Ресурс"
+              >
+                {resourceOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <Button
+              variant="contained"
+              onClick={() => {
+                ActivateMonopoly();
+                setShowMonopolyModal(false);
+              }}
+            >
+              Подтвердить
+            </Button>
+          </Box>
         </Card>
       </MovableModal>
     </Box>
