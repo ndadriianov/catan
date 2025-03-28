@@ -214,52 +214,41 @@ io.on('connection', (socket: Socket): void => {
   
   
   socket.on('end-turn', (update: updateProps, callback: (succeed: boolean) => void): void => {
-    if (!checkIsAuth({socket, callback})) return;
-    
-    if (!socket.data.user.activeRoom) {
+    const data = GetAndCheckUserActivePlayerRoom({socket, callback});
+    if (!data || !data.room.gameboard) {
       callback(false);
       return;
     }
-    
-    const room: Room = socket.data.user.activeRoom;
-    const player: Player|undefined = room.players.find(p => p.username === socket.data.user.username);
-    const color: Owner|undefined = player?.color;
-    
-    if (!player || !color || !room.hasStarted || !room.gameboard || room.activePlayer?.username !== socket.data.user.username) {
-      callback(false);
-      return;
-    }
-    const gameboard: Gameboard = room.gameboard;
-    
+    const gameboard = data.room.gameboard;
     let isSuccessful: boolean = true;
     
     
     /*********
      * ДЕБЮТ *
      *********/
-    if (room.debutMode) {
+    if (data.room.debutMode) {
       if (!(update.roads.length === 1 && update.villages.length === 1 && update.cities.length === 0)) {
         console.log('несоответствие параметров');
         callback(false);
         return;
       }
       
-      if (room.gameboard.DebutCheckVillage(update.villages[0], color)) {
-        room.gameboard.PlaceVillage(update.villages[0], player.color);
+      if (data.room.gameboard.DebutCheckVillage(update.villages[0], data.player.color)) {
+        gameboard.PlaceVillage(update.villages[0], data.player.color);
       } else {
         isSuccessful = false;
         console.log('ошибка при добавлении здания');
       }
       
-      if (isSuccessful && room.gameboard.CheckRoad(update.roads[0], color)) {
-        room.gameboard.PlaceRoad(update.roads[0], color);
+      if (isSuccessful && gameboard.CheckRoad(update.roads[0], data.player.color)) {
+        gameboard.PlaceRoad(update.roads[0], data.player.color);
       } else {
         console.log('ошибка при добавлении дороги');
-        room.gameboard.Undo();
+        gameboard.Undo();
         isSuccessful = false;
       }
       
-      room.gameboard.ClearUndo();
+      gameboard.ClearUndo();
       
       
       /*****************
@@ -267,19 +256,7 @@ io.on('connection', (socket: Socket): void => {
        *****************/
     }
     else {
-      if (room.robberShouldBeMoved || !room.activePlayer?.threwTheDice || room.debtors.length > 0) {
-        callback(false);
-        return;
-      }
-      
-      const priceCalculator: PriceCalculator = new PriceCalculator();
-      priceCalculator.AddRoad(update.roads.length);
-      priceCalculator.AddVillage(update.villages.length);
-      priceCalculator.AddCity(update.cities.length);
-      
-      if (!priceCalculator.DoesPlayerHaveEnoughResources(player)
-        || !room.borrowResourcesFromPlayer(player.username, priceCalculator)) {
-        console.log('пользователю нехватает ресурсов');
+      if (data.room.robberShouldBeMoved || !data.room.activePlayer?.threwTheDice || data.room.debtors.length > 0) {
         callback(false);
         return;
       }
@@ -293,8 +270,8 @@ io.on('connection', (socket: Socket): void => {
         do {
           update.roads.forEach((road: Coords, index: number): void => {
             prevProcessedRoadsCounter = processedRoadsCounter;
-            if (!processedRoads[index] && gameboard.CheckRoad(road, color)) {
-              gameboard.PlaceRoad(road, color);
+            if (!processedRoads[index] && gameboard.CheckRoad(road, data.player.color)) {
+              gameboard.PlaceRoad(road, data.player.color);
               processedRoads[index] = true;
               processedRoadsCounter++;
             }
@@ -315,8 +292,8 @@ io.on('connection', (socket: Socket): void => {
       // добавление поселений
       try {
         update.villages.forEach((village: Coords): void => {
-          if (isSuccessful && gameboard.CheckVillage(village, color)) { // проверка room.gameboard есть раньше, здесь написал чтобы компилятор не ругался
-            gameboard.PlaceVillage(village, player.color);
+          if (isSuccessful && gameboard.CheckVillage(village, data.player.color)) {
+            gameboard.PlaceVillage(village, data.player.color);
           } else {
             throw new Error('village unavailable!');
           }
@@ -331,8 +308,8 @@ io.on('connection', (socket: Socket): void => {
       // добавление городов
       try {
         update.cities.forEach((city: Coords): void => {
-          if (isSuccessful && gameboard.CheckCity(city, color)) {
-            gameboard.PlaceCity(city, color);
+          if (isSuccessful && gameboard.CheckCity(city, data.player.color)) {
+            gameboard.PlaceCity(city, data.player.color);
           } else {
             throw new Error('city unavailable!');
           }
@@ -343,19 +320,31 @@ io.on('connection', (socket: Socket): void => {
         isSuccessful = false;
         gameboard.Undo();
       }
-      
-      gameboard.ClearUndo();
     }
     
     
     if (isSuccessful) {
-      room.nextTurn();
-      room.activePlayer?.ApplyAdditionDevCards();
-      room.activePlayer = room.nextPlayer();
-      room.activePlayer.threwTheDice = false;
-      gameboard.ApprovePorts(room.playersByLink);
-      room.purchases?.endTurn();
-      eventEmitter.emit('update', room.id);
+      const priceCalculator: PriceCalculator = new PriceCalculator();
+      priceCalculator.AddRoad(update.roads.length - data.player.freeRoads > 0 ? update.roads.length - data.player.freeRoads : 0);
+      priceCalculator.AddVillage(update.villages.length);
+      priceCalculator.AddCity(update.cities.length);
+      
+      if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
+        || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
+        console.log('пользователю нехватает ресурсов');
+        gameboard.Undo();
+        callback(false);
+        return;
+      }
+      
+      data.player.freeRoads = 0;
+      data.room.nextTurn();
+      data.room.activePlayer?.ApplyAdditionDevCards();
+      data.room.activePlayer = data.room.nextPlayer();
+      data.room.activePlayer.threwTheDice = false;
+      gameboard.ApprovePorts(data.room.playersByLink);
+      data.room.purchases?.endTurn();
+      eventEmitter.emit('update', data.room.id);
     }
     
     
@@ -366,6 +355,7 @@ io.on('connection', (socket: Socket): void => {
     console.log(isSuccessful);
      */
     
+    gameboard.ClearUndo()
     callback(isSuccessful);
   });
   
@@ -532,11 +522,28 @@ io.on('connection', (socket: Socket): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket});
     if (!data) return;
     
-    if (!data.player.usedKnightThisTurn && data.room.playWithRobber && data.player.developmentCards.Knights > 0) {
+    if (!data.player.usedKnightThisTurn && !data.player.threwTheDice && data.room.playWithRobber && data.player.developmentCards.Knights > 0) {
       data.room.robberShouldBeMoved = true;
       data.player.developmentCards.Knights--;
       eventEmitter.emit('update', data.room.id);
     }
+  })
+  
+  
+  socket.on('activate-road-building', (): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket});
+    if (!data) return;
+    
+    if (data.player.threwTheDice && data.player.developmentCards.RoadBuildings > 0) {
+      data.player.freeRoads = 2;
+      data.player.developmentCards.RoadBuildings--;
+      eventEmitter.emit('update', data.room.id);
+    }
+  })
+  
+  
+  socket.on('activate-invention', (): void => {
+  
   })
   
   
@@ -650,7 +657,7 @@ function GetAndCheckUserPlayerRoom({socket, callback}: checkIsAuthProps): _|unde
   
   const user: User = socket.data.user;
   const room: Room = socket.data.user.activeRoom;
-  const player = room.activePlayer;
+  const player = room.playersByLink.find(p => p.username === user.username);
   
   if (player === undefined) return undefined;
   return {

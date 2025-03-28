@@ -18,6 +18,7 @@ type Player = {
   ports: PortTypes[];
   threwTheDice: boolean;
   usedKnightThisTurn: boolean;
+  freeRoads: number;
   
   knights: number;
   victoryPoints: number;
@@ -45,6 +46,7 @@ export function parsePlayer(playerJSON: jsonPlayer): Player {
     ports: playerJSON.ports,
     threwTheDice: playerJSON.threwTheDice,
     usedKnightThisTurn: playerJSON.usedKnightThisTurn,
+    freeRoads: playerJSON.freeRoads,
     
     knights: playerJSON.knights,
     victoryPoints: playerJSON.victoryPoints,

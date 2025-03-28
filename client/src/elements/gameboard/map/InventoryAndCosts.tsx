@@ -8,9 +8,10 @@ type inventoryAndCostsProps = {
   costs: Costs;
   lastNumber: number;
   robberShouldBeMoved: boolean;
+  isMyTurnNow: boolean;
 }
 
-const InventoryAndCosts = ({inventory, costs, lastNumber, robberShouldBeMoved}: inventoryAndCostsProps) => {
+const InventoryAndCosts = ({inventory, costs, lastNumber, robberShouldBeMoved, isMyTurnNow}: inventoryAndCostsProps) => {
   const styles = {
     card: {
       flex: 1,
@@ -36,7 +37,7 @@ const InventoryAndCosts = ({inventory, costs, lastNumber, robberShouldBeMoved}: 
             <Typography
               variant="body1"
               sx={{m: 1, textAlign: 'center'}}
-              color={robberShouldBeMoved ? 'red' : 'transparent'}
+              color={robberShouldBeMoved && isMyTurnNow ? 'red' : 'transparent'}
             >
               необходимо передвинуть разбойника
             </Typography>

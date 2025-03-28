@@ -37,6 +37,7 @@ import PlayersList from './PlayersList.tsx';
 import {Box, Button, Card, Typography, useMediaQuery} from '@mui/material';
 import VictoryPointsAndDevelopmentCards from './VictoryPointsAndDevelopmentCards.tsx';
 import player from '../../../typesDefinitions/room/player.ts';
+import UnclosablePopup from '../../UI/UnclosablePopup.tsx';
 
 
 type mapProps = {
@@ -149,7 +150,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
     setRoadCoords({y: -1, x: -1});
   }
   function buyRoad(): void {
-    if (!isSelectedRoadInUpdate(update, roadCoords)) {
+    if (!isSelectedRoadInUpdate(update, roadCoords) && update.roads.length >= me.freeRoads) {
       costs.clay++;
       costs.forrest++;
     }
@@ -163,7 +164,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
     setIsConfirmationRequiredRoad(false);
   }
   function deleteRoad(): void {
-    if (isSelectedRoadInUpdate(update, roadCoords)) {
+    if (isSelectedRoadInUpdate(update, roadCoords) && update.roads.length > me.freeRoads) {
       costs.clay--;
       costs.forrest--;
     }
@@ -338,7 +339,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
           {/* Основные компоненты */}
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) ||
-              <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved}/>
+              <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved} isMyTurnNow={isMyTurnNow}/>
             }
             <VictoryPointsAndDevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
           </Box>
@@ -360,7 +361,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
       
       {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
         <MovableModal id={'inventory'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
-          <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved}/>
+          <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved} isMyTurnNow={isMyTurnNow}/>
         </MovableModal>
       }
       
@@ -468,6 +469,9 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
           Не удалось украсть ресурс у игрока
         </Box>
       </MovableModal>
+      
+      
+      <UnclosablePopup message={`У вас осталось ${me.freeRoads - update.roads.length} неиспользованных бесплатных дороги! Если их не использовать за этот ход, то они исчезнут!`} visible={me.freeRoads - update.roads.length > 0}/>
       
       
       <MovableModal id={'incorrect-turn'} isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>

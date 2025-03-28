@@ -14,6 +14,7 @@ export class Player {
   addedDevelopmentCards: DevelopmentCards;
   threwTheDice: boolean;
   usedKnightThisTurn: boolean;
+  freeRoads: number;
   
   
   constructor(username: string) {
@@ -27,6 +28,7 @@ export class Player {
     this.addedDevelopmentCards = new DevelopmentCards();
     this.threwTheDice = false;
     this.usedKnightThisTurn = false;
+    this.freeRoads = 0;
   }
   
   
@@ -40,6 +42,7 @@ export class Player {
       ports: [... new Set(this.ports)],
       threwTheDice: this.threwTheDice,
       usedKnightThisTurn: this.usedKnightThisTurn,
+      freeRoads: this.freeRoads,
       
       knights: this.developmentCards.Knights,
       victoryPoints: this.developmentCards.VictoryPoints + this.addedDevelopmentCards.VictoryPoints,

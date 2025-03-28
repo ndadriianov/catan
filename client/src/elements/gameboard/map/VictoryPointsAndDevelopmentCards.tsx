@@ -50,7 +50,7 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
     socket.emit('activate-knight');
   }
   function ActivateRoadBuilding(): void {
-  
+    socket.emit('activate-road-building');
   }
   function ActivateInvention(): void {
   
@@ -97,21 +97,21 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
                   value={me.roadBuildings}
                   addValue={me.addedRoadBuildings}
                   onApply={ActivateRoadBuilding}
-                  disabled={!(isMyTurnNow && me.roadBuildings > 0)}
+                  disabled={!(isMyTurnNow && me.roadBuildings > 0 && me.threwTheDice)}
                 />
                 <DevCardItem
                   name="Изобретение"
                   value={me.inventions}
                   addValue={me.addedInventions}
                   onApply={ActivateInvention}
-                  disabled={!(isMyTurnNow && me.inventions > 0)}
+                  disabled={!(isMyTurnNow && me.inventions > 0 && me.threwTheDice)}
                 />
                 <DevCardItem
                   name="Монополия"
                   value={me.monopolies}
                   addValue={me.addedMonopolies}
                   onApply={ActivateMonopoly}
-                  disabled={!(isMyTurnNow && me.monopolies > 0)}
+                  disabled={!(isMyTurnNow && me.monopolies > 0 && me.threwTheDice)}
                 />
               </Box>
             </Card>

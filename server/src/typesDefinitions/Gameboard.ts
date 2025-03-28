@@ -151,6 +151,8 @@ export class Gameboard {
     this.roads[4][8] = Owner.blue;
     this.roads[3][4] = Owner.blue;
     this.roads[4][9] = Owner.blue;
+    
+    this.ClearUndo();
   }
   
   
