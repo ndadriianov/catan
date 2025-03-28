@@ -135,6 +135,7 @@ const InRoom = () => {
               owner={me.color || color}
               room={room}
               isMyTurnNow={isMyTurnNow}
+              me={me}
               inventory={me.inventory}
             />
           ) : (

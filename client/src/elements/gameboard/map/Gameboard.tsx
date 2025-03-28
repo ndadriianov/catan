@@ -35,17 +35,20 @@ import Map from './Map.tsx';
 import InventoryAndCosts from './InventoryAndCosts.tsx';
 import PlayersList from './PlayersList.tsx';
 import {Box, Button, Card, Typography, useMediaQuery} from '@mui/material';
+import VictoryPointsAndDevelopmentCards from './VictoryPointsAndDevelopmentCards.tsx';
+import player from '../../../typesDefinitions/room/player.ts';
 
 
 type mapProps = {
   owner: Owner;
   room: Room;
   isMyTurnNow: boolean;
+  me: player;
   inventory: Inventory;
 }
 
 
-const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
+const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [tiles, setTiles] = useState<Tile[][]>(initialTiles);
   const [numbers, setNumbers] = useState<number[][]>(initialNumbers);
@@ -65,6 +68,12 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   const [costs, setCosts] = useState<Costs>({clay: 0, forrest: 0, sheep: 0, stone: 0, wheat: 0});
   const [showResourceModal, setShowResourceModal] = useState(false);
   const [showTradeModal, setShowTradeModal] = useState(false);
+  const [robberPosition, setRobberPosition] = useState<Coords>({x: -1, y: -1});
+  const [showNumbersModal, setShowNumbersModal] = useState(false);
+  const [newRobberPosition, setNewRobberPosition] = useState<Coords>({x: -1, y: -1});
+  const [showChooseVictim, setShowChooseVictim] = useState<boolean>(false);
+  const [showTheftSucceed, setShowTheftSucceed] = useState<boolean>(false);
+  const [showTheftFailed, setShowTheftFailed] = useState<boolean>(false);
   
   
   useEffect(() => {
@@ -124,8 +133,13 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       setRoads(getRoads(room.gameboard.roads));
       setHouses(getHouses(room.gameboard.houses));
       setUpdate({villages: [], cities: [], roads: []});
+      setRobberPosition(room.gameboard.robberPosition)
     }
   }, [room.gameboard]);
+  
+  useEffect(() => {
+    if (room && room.debtors.length > 0) setShowChooseVictim(true);
+  }, [room])
   
   function closeRoadModal(): void {
     if (!isSelectedRoadInUpdate(update, roadCoords) && isRoadNobodys) {
@@ -238,12 +252,37 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
   }
   
   
+  function onNumberClick(coords: Coords): void {
+    if (isMyTurnNow) {
+      setNewRobberPosition(coords);
+      setShowNumbersModal(true);
+    }
+  }
+  function moveRobber(): void {
+    if (isMyTurnNow) {
+      setShowNumbersModal(false);
+      socket.emit('move-robber', newRobberPosition);
+    }
+  }
+  function throwTheDice(): void {
+    if (isMyTurnNow) socket.emit('throw-the-dice');
+  }
+  function stealResource(victimName: string): void {
+    socket.emit('steal-resource', victimName, (succeed: boolean) => {
+      if (succeed) setShowTheftSucceed(true);
+      else setShowTheftFailed(true);
+    });
+  }
+  
+  
   const isSmallMobile = useMediaQuery('(max-height: 890px) and (orientation: portrait)');
   const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
   const isTablet = useMediaQuery('(min-width: 600px) and (max-width: 1199px)');
   const haveEnoughSpace = useMediaQuery('(min-height: 1000px) and (orientation: landscape) and (min-width: 1536px)');
   const isColumnLayout = useMediaQuery('(max-width: 1536px)');
   const isLowScreen = useMediaQuery('(max-height: 880px)');
+  
+  console.log(room.debtors);
   
   if (isLoading) return <Loader/>;
   
@@ -263,43 +302,82 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       </Box>
       
       
-      <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
-           houseCoords={houseCoords} owner={owner} update={update} isMyTurnNow={isMyTurnNow}/>
+      <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords} robberPosition={robberPosition}
+           houseCoords={houseCoords} owner={owner} update={update} isMyTurnNow={isMyTurnNow} onNumberClick={onNumberClick}/>
       
-      <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2}}>
-          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: 2,
+        alignItems: 'flex-start'
+      }}>
+        {/* Левый столбец (основной контент) */}
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2,
+          flex: 1,
+          width: { xs: '100%', md: 'auto' }
+        }}>
+          {/* Кнопки для мобильных */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
-              <Button variant="contained" onClick={() => setShowResourceModal(true)}>Показать ресурсы</Button>
+              <Button variant="contained" onClick={() => setShowResourceModal(true)}>
+                Показать ресурсы
+              </Button>
             }
             {haveEnoughSpace ||
-              <Button variant="contained" onClick={() => setShowTradeModal(true)}>Открыть меню торговли</Button>
+              <Button variant="contained" onClick={() => setShowTradeModal(true)}>
+                Открыть меню торговли
+              </Button>
             }
+            <Button variant="contained" onClick={throwTheDice} disabled={!isMyTurnNow || me.threwTheDice}>Бросить кубики</Button>
           </Box>
-          <Box>
+          
+          {/* Основные компоненты */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) ||
-              <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
+              <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved}/>
             }
-            {haveEnoughSpace &&
-              <Trade room={room} color={owner} inventory={inventory}/>
-            }
+            <VictoryPointsAndDevelopmentCards
+              victoryPoints={me.victoryPoints}
+              knightAmount={{current: me.knights, add: me.addedKnights}}
+              roadBuildingAmount={{current: me.roadBuildings, add: me.addedRoadBuildings}}
+              inventionAmount={{current: me.inventions, add: me.addedInventions}}
+              monopolyAmount={{current: me.monopolies, add: me.addedMonopolies}}
+            />
           </Box>
+        </Box>
+        
+        {/* Правый столбец (только Trade, если есть место) */}
+        {haveEnoughSpace && (
+          <Box sx={{
+            position: { xs: 'static', md: 'sticky' },
+            marginTop: 2,
+            width: { xs: '100%', md: '300px' },
+            ml: { md: 0.5 }
+          }}>
+            <Trade room={room} color={owner} inventory={inventory} />
+          </Box>
+        )}
       </Box>
       
       
       {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
-        <MovableModal isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
-          <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber}/>
+        <MovableModal id={'inventory'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
+          <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved}/>
         </MovableModal>
       }
       
       {haveEnoughSpace ||
-        <MovableModal isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
+        <MovableModal id={'trade'} isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
           <Trade room={room} color={owner} inventory={inventory}/>
         </MovableModal>
       }
       
       
-      <MovableModal isOpen={isConfirmationRequiredRoad} onClose={closeRoadModal}>
+      <MovableModal id={'roads'} isOpen={isConfirmationRequiredRoad} onClose={closeRoadModal}>
         <Box className={classes.buttonGroup}>
           {!isSelectedRoadInUpdate(update, roadCoords) ? (
             <>
@@ -324,7 +402,7 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
       </MovableModal>
       
       
-      <MovableModal isOpen={isConfirmationRequiredHouse} onClose={closeHouseModal}>
+      <MovableModal id={'houses'} isOpen={isConfirmationRequiredHouse} onClose={closeHouseModal}>
         <Box className={classes.buttonGroup}>
           {(isMyVillage || isMyUpdateVillage) && !isMyUpdateCity ? (
             <>
@@ -362,7 +440,43 @@ const Gameboard = ({owner, room, isMyTurnNow, inventory}: mapProps) => {
         </Box>
       </MovableModal>
       
-      <MovableModal isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
+      
+      <MovableModal id={'numbers'} isOpen={showNumbersModal} onClose={() => setShowNumbersModal(false)}>
+        <Box className={classes.buttonGroup}>
+          <Button variant="contained" color="primary" size="small" onClick={moveRobber}>
+            переместить разбойника сюда
+          </Button>
+          <Button  variant="contained" color="secondary" size="small" onClick={() => setShowNumbersModal(false)}>
+            отмена
+          </Button>
+        </Box>
+      </MovableModal>
+      
+      
+      <MovableModal id={'victim'} isOpen={showChooseVictim} onClose={() => setShowChooseVictim(false)}>
+        <Box className={classes.buttonGroup}>
+          {room.debtors.map((debtor, index) => (
+            <Button key={index} sx={{m: 1, textAlign: 'center'}} onClick={() => stealResource(debtor)}>{debtor}</Button>
+          ))}
+        </Box>
+      </MovableModal>
+      
+      
+      <MovableModal id={'theft-s'} isOpen={showTheftSucceed} onClose={() => setShowTheftSucceed(false)}>
+        <Box className={classes.buttonGroup}>
+          Ресурс украден у игрока
+        </Box>
+      </MovableModal>
+      
+      
+      <MovableModal id={'theft-f'} isOpen={showTheftFailed} onClose={() => setShowTheftFailed(false)}>
+        <Box className={classes.buttonGroup}>
+          Не удалось украсть ресурс у игрока
+        </Box>
+      </MovableModal>
+      
+      
+      <MovableModal id={'incorrect-turn'} isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
         <Box className={classes.buttonGroup}>
           Такой ход невозможен. Попробуйте снова
         </Box>

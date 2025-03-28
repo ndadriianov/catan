@@ -47,6 +47,7 @@ export class Gameboard {
   private undoCities: Coords[];
   private undoVillages: Coords[];
   private portsBuffer: {port: PortTypes, owner: Owner}[];
+  private robberPosition: Coords;
   
   
   constructor() {
@@ -63,12 +64,14 @@ export class Gameboard {
     this.tiles = [[], [], [], [], []];
     this.numbers = [[], [], [], [], []];
     this.portsBuffer = [];
+    this.robberPosition = {x: -1, y: -1};
     
     
     const place = (i: number)=>  {
       const tileId: number = this.getRandomInt(0, tilesCollection.length - 1);
       if (tilesCollection[tileId] === Tile.wasteland) {
         this.numbers[i].push(7);
+        this.robberPosition = {y: i, x: this.numbers[i].length - 1};
         
       } else {
         const numberId: number = this.getRandomInt(0, numbersCollection.length - 1);
@@ -168,7 +171,8 @@ export class Gameboard {
       tiles: this.tiles,
       houses: this.houses,
       roads: this.roads,
-      numbers: this.numbers
+      numbers: this.numbers,
+      robberPosition: this.robberPosition
     };
   }
   
@@ -365,6 +369,28 @@ export class Gameboard {
   
   
   /*********************************************************************************************************************
+   * ВСПОМОГАТЕЛЬНЫЕ ДЛЯ РАЗБОЙНИКА
+   *********************************************************************************************************************/
+  
+  private _isHexCoordsValid(coords: Coords): boolean {
+    return coords.y >= 0 && coords.y < this.numbers.length && coords.x >= 0 && coords.x < this.numbers[coords.y].length;
+  }
+  
+  private _isHexUpper(coords: Coords): boolean {
+    return coords.y < 2;
+  }
+  
+  private _isHexCentral(coords: Coords): boolean {
+    return coords.y === 2;
+  }
+  
+  private _isHexBottom(coords: Coords): boolean {
+    return coords.y > 2;
+  }
+  
+  
+  
+  /*********************************************************************************************************************
    * ПОСЕЛЕНИЯ
    *********************************************************************************************************************/
   
@@ -518,6 +544,55 @@ export class Gameboard {
       if (player) player.ports.push(p.port);
     })
     this.portsBuffer = [];
+  }
+  
+  
+  MoveRobber(coords: Coords): boolean {
+    if (coords.y >= 0 && coords.y < this.numbers.length && coords.x >= 0 && coords.x < this.numbers[coords.y].length) {
+      this.robberPosition = coords;
+      return true;
+    }
+    return false;
+  }
+  
+  public PlayersAtRobbersPosition(players: Player[]): string[] {
+    /*
+    по вертикали нужны дома y и y + 1
+    
+    в верхней половине:
+      сверху:
+        x * 2, x * 2 + 1, x * 2 + 2
+      снизу:
+        x * 2 + 1, x * 2 + 2, x * 2 + 3
+    
+    в нижней половине наоборот
+    */
+    
+    const coords = this.robberPosition;
+    if (!this._isHexCoordsValid(coords)) return [];
+    
+    const owners: Owner[] = [];
+    if (this._isHexUpper(coords)) {
+      owners.push(this.houses[coords.y][coords.x * 2].owner);
+      owners.push(this.houses[coords.y + 1][coords.x * 2 + 3].owner);
+      
+    } else if (this._isHexCentral(coords)) {
+      owners.push(this.houses[coords.y][coords.x * 2].owner);
+      owners.push(this.houses[coords.y + 1][coords.x * 2].owner);
+      
+    } else {
+      owners.push(this.houses[coords.y][coords.x * 2 + 3].owner);
+      owners.push(this.houses[coords.y + 1][coords.x * 2].owner);
+    }
+    owners.push(this.houses[coords.y][coords.x * 2 + 1].owner);
+    owners.push(this.houses[coords.y][coords.x * 2 + 2].owner);
+    owners.push(this.houses[coords.y + 1][coords.x * 2 + 1].owner);
+    owners.push(this.houses[coords.y + 1][coords.x * 2 + 2].owner);
+    
+    return [...new Set(owners)].map(color => {
+      const player = players.find(p => p.color === color);
+      return player ? player.username : '';
+    }).filter(a => a !== '');
   }
   
   

@@ -6,10 +6,11 @@ import React from 'react';
 type inventoryAndCostsProps = {
   inventory: Inventory;
   costs: Costs;
-  lastNumber: number
+  lastNumber: number;
+  robberShouldBeMoved: boolean;
 }
 
-const InventoryAndCosts = ({inventory, costs, lastNumber}: inventoryAndCostsProps) => {
+const InventoryAndCosts = ({inventory, costs, lastNumber, robberShouldBeMoved}: inventoryAndCostsProps) => {
   const styles = {
     card: {
       flex: 1,
@@ -24,13 +25,23 @@ const InventoryAndCosts = ({inventory, costs, lastNumber}: inventoryAndCostsProp
     <Box>
       <Card>
         {lastNumber > 0 &&
-          <Typography
-            variant="h6"
-            color="primary"
-            style={{margin: '16px', textAlign: 'center', textTransform: 'uppercase'}}
-          >
-            выпало число {lastNumber}
-          </Typography>}
+          <Card sx={{m: 1}}>
+            <Typography
+              variant="h6"
+              color="primary"
+              style={{margin: '16px', textAlign: 'center', textTransform: 'uppercase'}}
+            >
+              выпало число {lastNumber}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{m: 1, textAlign: 'center'}}
+              color={robberShouldBeMoved ? 'red' : 'transparent'}
+            >
+              необходимо передвинуть разбойника
+            </Typography>
+          </Card>
+        }
         
         
         <Box display="flex" flexDirection={{ md: 'column', xl: 'row' }} justifyContent="space-between" gap={2} margin={1}>

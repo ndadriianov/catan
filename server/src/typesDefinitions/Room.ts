@@ -1,9 +1,10 @@
 import {EventEmitter} from 'node:events';
 import {ConnectionStatus} from './User';
 import {Gameboard, Owner} from './Gameboard';
-import {Player} from './Player';
+import {Coords, Inventory, Player} from './Player';
 import {PriceCalculator} from './PriceCalculator';
 import {PurchaseService} from './Purchase';
+import {DevelopmentCard, InitialDevelopmentCards} from './DevelopmentCard';
 
 
 export class Room {
@@ -16,8 +17,11 @@ export class Room {
   private _players: Array<Player>;
   private _hasStarted: boolean;
   private _eventEmitter: EventEmitter;
+  private _developmentCardDeck: DevelopmentCard[];
   gameboard?: Gameboard;
   purchases?: PurchaseService;
+  robberShouldBeMoved: boolean;
+  debtors: string[];
   
   
   get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
@@ -89,7 +93,9 @@ export class Room {
       counter: this._counter,
       lastNumber: this.lastNumber,
       haveStarted: this._hasStarted,
-      gameboard: this.gameboard ? this.gameboard.toGSON() : undefined
+      gameboard: this.gameboard ? this.gameboard.toGSON() : undefined,
+      robberShouldBeMoved: this.robberShouldBeMoved,
+      debtors: this.debtors
     };
   }
   
@@ -104,6 +110,9 @@ export class Room {
     this._hasStarted = false;
     this._eventEmitter = eventEmitter;
     this.lastNumber = 0;
+    this._developmentCardDeck = [...InitialDevelopmentCards].sort(() => Math.random() - 0.5);
+    this.robberShouldBeMoved = false;
+    this.debtors = [];
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {
@@ -133,10 +142,10 @@ export class Room {
     this._players[0].color = Owner.black;
     this._players[1].color = Owner.blue;
     this._players[0].inventory = {
-      clay: 3, forrest: 3, stone: 3, sheep: 3, wheat: 3, roads: 0, cities: 0, villages: 0
+      clay: 3, forrest: 3, stone: 3, sheep: 3, wheat: 3
     }
     this._players[1].inventory = {
-      clay: 3, forrest: 3, stone: 3, sheep: 3, wheat: 3, roads: 0, cities: 0, villages: 0
+      clay: 3, forrest: 3, stone: 3, sheep: 3, wheat: 3
     }
     this.start();
     this.gameboard?.PREPARE();
@@ -144,15 +153,15 @@ export class Room {
   }
   
   public PREPARE2() {
-    this._counter = 10;
+    this._counter = 9;
     this.lastNumber = 10;
     this._players[0].color = Owner.black;
     this._players[1].color = Owner.blue;
     this._players[0].inventory = {
-      clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5, roads: 0, cities: 0, villages: 0
+      clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5
     }
     this._players[1].inventory = {
-      clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5, roads: 0, cities: 0, villages: 0
+      clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5
     }
     this.start();
     this.gameboard?.PREPARE2(this._players);
@@ -188,6 +197,66 @@ export class Room {
   }
   
   
+  // выдать игроку по имени случайным образом карту развития
+  private _giveDevelopmentCardToPlayer(player: Player): boolean {
+    const card = this._developmentCardDeck.pop();
+    console.log(card);
+    if (player !== this.activePlayer || card === undefined) return false;
+    player.addedDevelopmentCards.push(card)
+    return true;
+  }
+  
+  GiveDevelopmentCardToPlayer(playerName: string): boolean {
+    const player = this._players.find((player: Player): boolean => player.username === playerName);
+    if (!player) return false;
+    
+    const priceCalculator: PriceCalculator = new PriceCalculator();
+    priceCalculator.AddDevelopmentCard(1);
+    if (priceCalculator.DoesPlayerHaveEnoughResources(player) && this._giveDevelopmentCardToPlayer(player)) {
+      this.borrowResourcesFromPlayer(playerName, priceCalculator)
+      this._eventEmitter.emit('update', this.id);
+      return true;
+    }
+    return false;
+  }
+  
+  MoveRobber(coords: Coords, playerName: string): void {
+    if (!this.robberShouldBeMoved) return;
+    const player = this._players.find((player: Player): boolean => player.username === playerName);
+    if (!player || player !== this._activePlayer) return;
+    
+    if (this.gameboard?.MoveRobber(coords)) {
+      this.robberShouldBeMoved = false;
+      this.debtors = this.gameboard?.PlayersAtRobbersPosition(this.players);
+      if (this.debtors.length === 1) {
+        this.TransferOneRandomResource(playerName, this.debtors[0]);
+        this.debtors = [];
+      }
+      this._eventEmitter.emit('update', this.id);
+    }
+  }
+  
+  TransferOneRandomResource(playerName1: string, playerName2: string): boolean {
+    const player1 = this._players.find(p => p.username === playerName1);
+    const player2 = this._players.find(p => p.username === playerName2);
+    if (!player1 || !player2) return false;
+    
+    const availableResources: (keyof Inventory)[] = [];
+    (['clay', 'forrest', 'sheep', 'stone', 'wheat'] as (keyof Inventory)[]).forEach(resource => {
+      if (player2.inventory[resource] > 0) availableResources.push(resource);
+    });
+    
+    if (availableResources.length === 0) return true;
+    
+    const randomIndex = Math.floor(Math.random() * availableResources.length);
+    const stolenResource = availableResources[randomIndex];
+    
+    player2.inventory[stolenResource]--;
+    player1.inventory[stolenResource]++;
+    return true;
+  }
+  
+  
   start(): void {
     if (this._hasStarted) return;
     
@@ -204,5 +273,12 @@ export class Room {
     // дебют
     this._activePlayer = this._players[0];
     this._eventEmitter.emit('update', this.id);
+  }
+  
+  
+  GettingRobed(): void {
+    this._players.forEach((player: Player): void => {
+      player.GettingRobed();
+    })
   }
 }

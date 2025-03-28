@@ -24,10 +24,12 @@ type mapNewProps = {
   owner: Owner;
   update: updateProps;
   isMyTurnNow: boolean;
+  robberPosition: Coords;
+  onNumberClick: (coords: Coords) => void;
 }
 
 
-const Map = ({tiles, roads, houses, numbers, roadCoords, houseCoords, owner, update, isMyTurnNow}: mapNewProps) => {
+const Map = ({tiles, roads, houses, numbers, roadCoords, houseCoords, owner, update, isMyTurnNow, robberPosition, onNumberClick}: mapNewProps) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   
   useEffect(() => {
@@ -107,12 +109,13 @@ const Map = ({tiles, roads, houses, numbers, roadCoords, houseCoords, owner, upd
                    isMyTurnNow={isMyTurnNow} owner={owner} update={update}/>
       </div>
       
+      
       <div className={classes.numbersContainer}>
-        <NumbersRow numbers={numbers[0]}/>
-        <NumbersRow numbers={numbers[1]}/>
-        <NumbersRow numbers={numbers[2]}/>
-        <NumbersRow numbers={numbers[3]}/>
-        <NumbersRow numbers={numbers[4]}/>
+        <NumbersRow numbers={numbers[0]} y={0} robberPosition={robberPosition} onClick={onNumberClick}/>
+        <NumbersRow numbers={numbers[1]} y={1} robberPosition={robberPosition} onClick={onNumberClick}/>
+        <NumbersRow numbers={numbers[2]} y={2} robberPosition={robberPosition} onClick={onNumberClick}/>
+        <NumbersRow numbers={numbers[3]} y={3} robberPosition={robberPosition} onClick={onNumberClick}/>
+        <NumbersRow numbers={numbers[4]} y={4} robberPosition={robberPosition} onClick={onNumberClick}/>
       </div>
     </div>
   );

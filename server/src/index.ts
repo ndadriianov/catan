@@ -9,6 +9,7 @@ import {updateProps, Player, Coords} from './typesDefinitions/Player';
 import {Gameboard, Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
+import {DevelopmentCard} from './typesDefinitions/DevelopmentCard';
 
 
 const PORT = 4000;
@@ -261,15 +262,16 @@ io.on('connection', (socket: Socket): void => {
       
       room.gameboard.ClearUndo();
       
-      // если последний ход в дебюте, то бросается кубик
-      if (isSuccessful && room.counter === room.players.length * 2) room.gameboard.GiveResources(room.players);
       
       /*****************
        * ОСНОВНАЯ ИГРА *
        *****************/
     }
     else {
-      room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
+      if (room.robberShouldBeMoved || !room.activePlayer?.threwTheDice || room.debtors.length > 0) {
+        callback(false);
+        return;
+      }
       
       const priceCalculator: PriceCalculator = new PriceCalculator();
       priceCalculator.AddRoad(update.roads.length);
@@ -344,21 +346,26 @@ io.on('connection', (socket: Socket): void => {
       }
       
       gameboard.ClearUndo();
-      if (isSuccessful) gameboard.GiveResources(room.playersByLink);
     }
     
     
     if (isSuccessful) {
       room.nextTurn();
+      room.activePlayer?.ApplyAdditionDevCards();
       room.activePlayer = room.nextPlayer();
+      room.activePlayer.threwTheDice = false;
       gameboard.ApprovePorts(room.playersByLink);
       room.purchases?.endTurn();
+      eventEmitter.emit('update', room.id);
     }
     
+    
+    /*
     console.log(update);
     console.log(room.gameboard);
     room.players.forEach((p: Player): void => {console.log(p.inventory); console.log(p.ports)})
     console.log(isSuccessful);
+     */
     
     callback(isSuccessful);
   });
@@ -451,6 +458,67 @@ io.on('connection', (socket: Socket): void => {
     callback(socket.data.user.activeRoom.purchases.toJSON());
   })
   
+  
+  socket.on('buy-dev-card', (callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket, callback})) return;
+    const user: User = socket.data.user;
+    
+    if (!user.activeRoom || !user.activeRoom.hasStarted) {
+      callback(false);
+      return;
+    }
+    const room: Room = socket.data.user.activeRoom;
+    callback(room.GiveDevelopmentCardToPlayer(user.username));
+  })
+  
+  
+  socket.on('move-robber', (coords: Coords): void => {
+    if (!checkIsAuth({socket})) return;
+    const user: User = socket.data.user;
+    
+    if (!user.activeRoom || !user.activeRoom.hasStarted) return;
+    const room: Room = user.activeRoom;
+    room.MoveRobber(coords, user.username);
+  })
+  
+  
+  socket.on('throw-the-dice', (): void => {
+    if (!checkIsAuth({socket}) || !socket.data.user.activeRoom) return;
+    const user: User = socket.data.user;
+    const room: Room = socket.data.user.activeRoom;
+    const player = room.playersByLink.find(p => p.username === user.username);
+    
+    if (!user.activeRoom || !room.hasStarted || room.activePlayer?.username !== user.username || !room.gameboard || !player || player.threwTheDice) return;
+    room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
+    player.threwTheDice = true;
+    
+    if (room.lastNumber === 7) {
+      room.robberShouldBeMoved = true;
+      room.GettingRobed();
+    }
+    
+    eventEmitter.emit('update', room.id);
+  })
+  
+  
+  socket.on('steal-resource', (victimName: string, callback: (succeed: boolean) => void): void => {
+    if (!checkIsAuth({socket}) || !socket.data.user.activeRoom) {
+      callback(false);
+      return;
+    }
+    const user: User = socket.data.user;
+    const room: Room = socket.data.user.activeRoom;
+    
+    if (!user.activeRoom || !room.hasStarted || room.activePlayer?.username !== user.username || !room.gameboard) {
+      callback(false);
+      return;
+    }
+    if (room.TransferOneRandomResource(user.username, victimName)) {
+      room.debtors = [];
+      eventEmitter.emit('update', room.id);
+      callback(true);
+    } else callback(false);
+  })
   
   
   /*socket.on('debut-end-turn', (debutData: any, callback: (succeed: boolean) => void): void => {

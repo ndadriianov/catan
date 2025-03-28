@@ -5,14 +5,16 @@
   flex-wrap: nowrap;
   gap: 33%;
   margin-bottom: 18%;
-  z-index: 10;
+  z-index: 4;
+  pointer-events: none;
 }
 
 .house {
   height: 30%;
   width: 30%;
-  z-index: 10;
+  z-index: 4;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 .lower {
@@ -26,8 +28,8 @@
   flex-wrap: nowrap;
   gap: 22.5%;
   margin-bottom: 14.5%;
-  pointer-events: auto;
-  z-index: 10;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .vertRoadsRow {
@@ -37,22 +39,24 @@
   flex-wrap: nowrap;
   gap: 115%;
   margin-bottom: 15%;
-  pointer-events: auto;
-  z-index: 10;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .turned {
   height: 40%;
   width: 40%;
-  z-index: 10;
+  z-index: 5;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 .vert {
   height: 10%;
   width: 10%;
-  z-index: 10;
+  z-index: 5;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 @keyframes pulse {
