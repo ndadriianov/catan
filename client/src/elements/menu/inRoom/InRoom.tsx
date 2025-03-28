@@ -33,6 +33,7 @@ const InRoom = () => {
   const [unsuccessful, setUnsuccessful] = useState<boolean>(false);
   const [color, setColor] = useState<Owner>(Owner.nobody);
   const [isMyTurnNow, setIsMyTurnNow] = useState<boolean>(false);
+  const [robberEnabled, setRobberEnabled] = useState<boolean>(false);
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -113,6 +114,7 @@ const InRoom = () => {
   useEffect(() => {
     setMe(room?.players.find((player: Player): boolean => player.username === user.username));
     if (user.username && room) setIsMyTurnNow(room?.activePlayer === user.username);
+    if (room) setRobberEnabled(room.playWithRobber);
   }, [user, room]);
   
   
@@ -180,6 +182,23 @@ const InRoom = () => {
                           {colorOption}
                         </MenuItem>
                       ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+                
+                <Box sx={{ width: '100%', maxWidth: 400 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="robber-mode-label">Режим разбойника</InputLabel>
+                    <Select
+                      labelId="robber-mode-label"
+                      id="robber-mode-select"
+                      value={robberEnabled ? "enabled" : "disabled"}
+                      label="Режим разбойника"
+                      onChange={(e) => socket.emit('change-robber-mode', e.target.value === "enabled")}
+                      disabled={!me}
+                    >
+                      <MenuItem value="enabled">включен</MenuItem>
+                      <MenuItem value="disabled">выключен</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>

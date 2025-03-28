@@ -596,6 +596,11 @@ export class Gameboard {
   }
   
   
+  public TurnRobberOff(): void {
+    this.robberPosition = {x: -1, y: -1};
+  }
+  
+  
   Undo(): void {
     this.undoRoads.forEach((coords: Coords): void => {
       this.roads[coords.y][coords.x] = Owner.nobody;
@@ -666,7 +671,7 @@ export class Gameboard {
     if (roll === 7) console.log('разбойник');
     this.numbers.forEach((nums: number[], yIndex: number): void => {
       nums.forEach((num: number, xIndex: number): void => {
-        if (num === roll) {
+        if (num === roll && (!(xIndex === this.robberPosition.x && yIndex === this.robberPosition.y))) {
           const resource: Tile = this.tiles[yIndex][xIndex];
           const houses: House[] = this._HousesAroundTheTile({x: xIndex, y: yIndex});
           houses.forEach(house => {

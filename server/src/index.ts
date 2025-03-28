@@ -9,7 +9,6 @@ import {updateProps, Player, Coords} from './typesDefinitions/Player';
 import {Gameboard, Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
-import {DevelopmentCard} from './typesDefinitions/DevelopmentCard';
 
 
 const PORT = 4000;
@@ -488,11 +487,11 @@ io.on('connection', (socket: Socket): void => {
     const room: Room = socket.data.user.activeRoom;
     const player = room.playersByLink.find(p => p.username === user.username);
     
-    if (!user.activeRoom || !room.hasStarted || room.activePlayer?.username !== user.username || !room.gameboard || !player || player.threwTheDice) return;
+    if (!user.activeRoom || !room.hasStarted || room.activePlayer?.username !== user.username || !room.gameboard || !player || player.threwTheDice || room.debutMode) return;
     room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
     player.threwTheDice = true;
     
-    if (room.lastNumber === 7) {
+    if (room.lastNumber === 7 && room.playWithRobber) {
       room.robberShouldBeMoved = true;
       room.GettingRobed();
     }
@@ -518,6 +517,16 @@ io.on('connection', (socket: Socket): void => {
       eventEmitter.emit('update', room.id);
       callback(true);
     } else callback(false);
+  })
+  
+  
+  socket.on('change-robber-mode', (playWithRobber: boolean): void => {
+    if (!checkIsAuth({socket}) || !socket.data.user.activeRoom) return;
+    const room: Room = socket.data.user.activeRoom;
+    if (!room.hasStarted) {
+      room.playWithRobber = playWithRobber;
+      eventEmitter.emit('update', room.id);
+    }
   })
   
   

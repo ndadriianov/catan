@@ -22,6 +22,7 @@ export class Room {
   purchases?: PurchaseService;
   robberShouldBeMoved: boolean;
   debtors: string[];
+  playWithRobber: boolean;
   
   
   get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
@@ -95,7 +96,9 @@ export class Room {
       haveStarted: this._hasStarted,
       gameboard: this.gameboard ? this.gameboard.toGSON() : undefined,
       robberShouldBeMoved: this.robberShouldBeMoved,
-      debtors: this.debtors
+      debtors: this.debtors,
+      playWithRobber: this.playWithRobber,
+      debutMode: this.debutMode,
     };
   }
   
@@ -113,6 +116,7 @@ export class Room {
     this._developmentCardDeck = [...InitialDevelopmentCards].sort(() => Math.random() - 0.5);
     this.robberShouldBeMoved = false;
     this.debtors = [];
+    this.playWithRobber = false;
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {
@@ -264,6 +268,8 @@ export class Room {
     this.debutMode = true;
     this.gameboard = new Gameboard();
     this.purchases = new PurchaseService(this._players, this._eventEmitter, this.id);
+    
+    if (!this.playWithRobber) this.gameboard.TurnRobberOff();
     
     this._players.forEach((player: Player): void => {
       this._eventEmitter.emit(`room-started-${player.username}`, this);

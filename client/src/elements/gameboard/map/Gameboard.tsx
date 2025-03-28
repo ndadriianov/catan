@@ -332,7 +332,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
                 Открыть меню торговли
               </Button>
             }
-            <Button variant="contained" onClick={throwTheDice} disabled={!isMyTurnNow || me.threwTheDice}>Бросить кубики</Button>
+            <Button variant="contained" onClick={throwTheDice} disabled={!isMyTurnNow || me.threwTheDice || room.debutMode}>Бросить кубики</Button>
           </Box>
           
           {/* Основные компоненты */}
