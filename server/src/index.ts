@@ -337,6 +337,7 @@ io.on('connection', (socket: Socket): void => {
         return;
       }
       
+      data.player.victoryPoints += update.villages.length + update.cities.length;
       data.player.freeRoads = 0;
       data.room.nextTurn();
       data.room.activePlayer?.ApplyAdditionDevCards();

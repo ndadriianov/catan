@@ -162,6 +162,8 @@ export class Room {
     this.lastNumber = 10;
     this._players[0].color = Owner.black;
     this._players[1].color = Owner.blue;
+    this._players[0].victoryPoints = 3;
+    this._players[1].victoryPoints = 4;
     this._players[0].inventory = {
       clay: 5, forrest: 5, stone: 5, sheep: 5, wheat: 5
     }
@@ -209,7 +211,7 @@ export class Room {
     if (player !== this.activePlayer || card === undefined) return false;
     switch (card) {
       case DevelopmentCard.Knight: player.addedDevelopmentCards.Knights++; break;
-      case DevelopmentCard.VictoryPoint: player.addedDevelopmentCards.VictoryPoints++; break;
+      case DevelopmentCard.VictoryPoint: player.victoryPoints++; break;
       case DevelopmentCard.RoadBuilding: player.addedDevelopmentCards.RoadBuildings++; break;
       case DevelopmentCard.Invention: player.addedDevelopmentCards.Inventions++; break;
       case DevelopmentCard.Monopoly: player.addedDevelopmentCards.Monopolies++; break;

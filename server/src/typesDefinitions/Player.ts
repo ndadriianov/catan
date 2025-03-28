@@ -15,6 +15,7 @@ export class Player {
   threwTheDice: boolean;
   usedKnightThisTurn: boolean;
   freeRoads: number;
+  victoryPoints: number;
   
   
   constructor(username: string) {
@@ -29,6 +30,7 @@ export class Player {
     this.threwTheDice = false;
     this.usedKnightThisTurn = false;
     this.freeRoads = 0;
+    this.victoryPoints = 0;
   }
   
   
@@ -43,9 +45,10 @@ export class Player {
       threwTheDice: this.threwTheDice,
       usedKnightThisTurn: this.usedKnightThisTurn,
       freeRoads: this.freeRoads,
+      victoryPoints: this.victoryPoints,
       
       knights: this.developmentCards.Knights,
-      victoryPoints: this.developmentCards.VictoryPoints + this.addedDevelopmentCards.VictoryPoints,
+      
       roadBuildings: this.developmentCards.RoadBuildings,
       inventions: this.developmentCards.Inventions,
       monopolies: this.developmentCards.Monopolies,
@@ -59,7 +62,6 @@ export class Player {
   
   ApplyAdditionDevCards(): void {
     this.developmentCards.Knights += this.addedDevelopmentCards.Knights;
-    this.developmentCards.VictoryPoints += this.addedDevelopmentCards.VictoryPoints;
     this.developmentCards.RoadBuildings += this.addedDevelopmentCards.RoadBuildings;
     this.developmentCards.Inventions += this.addedDevelopmentCards.Inventions;
     this.developmentCards.Monopolies += this.addedDevelopmentCards.Monopolies;
