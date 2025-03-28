@@ -133,8 +133,10 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
     if (room.gameboard) {
       setRoads(getRoads(room.gameboard.roads));
       setHouses(getHouses(room.gameboard.houses));
-      setUpdate({villages: [], cities: [], roads: []});
       setRobberPosition(room.gameboard.robberPosition)
+      update.roads.forEach(r => changeColorRoad({coords: r, owner: owner, setRoads: setRoads}));
+      update.villages.forEach(v => changeColorHouse({coords: v, owner: owner, toCity: false, setHouses: setHouses}));
+      update.cities.forEach(c => changeColorHouse({coords: c, owner: owner, toCity: true, setHouses: setHouses}));
     }
   }, [room.gameboard]);
   
