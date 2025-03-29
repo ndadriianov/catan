@@ -339,19 +339,7 @@ io.on('connection', (socket: Socket): void => {
     
     
     if (isSuccessful) {
-      const longestRoad = data.room.gameboard.LongestRoad(data.player.color);
-      if (longestRoad > data.room.longestRoad) {
-        data.room.longestRoad = longestRoad;
-        if (longestRoad >= 5) {
-          if (data.room.playerWithTheLongestRoad) {
-            data.room.playerWithTheLongestRoad.hasLongestRoad = false;
-            data.room.playerWithTheLongestRoad.victoryPoints -= 2;
-          }
-          data.room.playerWithTheLongestRoad = data.player;
-          data.player.victoryPoints += 2;
-          data.player.hasLongestRoad = true;
-        }
-      }
+      UpdateLongestRoad(data);
       data.player.victoryPoints += update.villages.length + update.cities.length;
       data.player.freeRoads = 0;
       data.room.nextTurn();
@@ -621,6 +609,79 @@ io.on('connection', (socket: Socket): void => {
   })
   
   
+  socket.on('buy-road', (coords: Coords, callback: (succeed: boolean) => void): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket, callback});
+    if (!data) return;
+    
+    if (!data.room.gameboard || !data.room.gameboard.CheckRoad(coords, data.player.color)) {
+      callback(false);
+      return;
+    }
+    
+    if (data.player.freeRoads > 0) data.player.freeRoads--;
+    else {
+      const priceCalculator: PriceCalculator = new PriceCalculator();
+      priceCalculator.AddRoad(1);
+      if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
+        || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
+        callback(false);
+        return;
+      }
+    }
+    
+    data.room.gameboard.PlaceRoad(coords, data.player.color);
+    callback(true);
+    UpdateLongestRoad(data);
+    eventEmitter.emit('update', data.room.id);
+  });
+  
+  
+  socket.on('buy-village', (coords: Coords, callback: (succeed: boolean) => void): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket, callback});
+    if (!data) return;
+    
+    if (!data.room.gameboard || !data.room.gameboard.CheckVillage(coords, data.player.color)) {
+      callback(false);
+      return;
+    }
+    
+    const priceCalculator: PriceCalculator = new PriceCalculator();
+    priceCalculator.AddVillage(1);
+    if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
+      || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
+      callback(false);
+      return;
+    }
+    
+    data.room.gameboard.PlaceVillage(coords, data.player.color);
+    callback(true);
+    eventEmitter.emit('update', data.room.id);
+  });
+  
+  
+  socket.on('buy-city', (coords: Coords, callback: (succeed: boolean) => void): void => {
+    const data = GetAndCheckUserActivePlayerRoom({socket, callback});
+    if (!data) return;
+    
+    if (!data.room.gameboard || !data.room.gameboard.CheckCity(coords, data.player.color)) {
+      callback(false);
+      return;
+    }
+    
+    const priceCalculator: PriceCalculator = new PriceCalculator();
+    priceCalculator.AddCity(1);
+    if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
+      || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
+      callback(false);
+      return;
+    }
+    
+    data.room.gameboard.PlaceCity(coords, data.player.color);
+    callback(true);
+    eventEmitter.emit('update', data.room.id);
+  })
+  
+  
   /*socket.on('debut-end-turn', (debutData: any, callback: (succeed: boolean) => void): void => {
     if (!checkIsAuth({socket, callback})) {
       callback(false);
@@ -718,7 +779,10 @@ function GetAndCheckUserActivePlayerRoom({socket, callback}: checkIsAuthProps): 
   const room: Room = socket.data.user.activeRoom;
   const player = room.activePlayer;
   
-  if (player === undefined || player.username !== user.username) return undefined;
+  if (player === undefined || player.username !== user.username) {
+    if (callback) callback(false);
+    return undefined;
+  }
   return {
     user: user,
     room: room,
@@ -738,5 +802,22 @@ function GetAndCheckUserPlayerRoom({socket, callback}: checkIsAuthProps): _|unde
     user: user,
     room: room,
     player: player,
+  }
+}
+
+function UpdateLongestRoad(data: _): void {
+  if (!data.room.gameboard) return;
+  const longestRoad = data.room.gameboard.LongestRoad(data.player.color);
+  if (longestRoad > data.room.longestRoad) {
+    data.room.longestRoad = longestRoad;
+    if (longestRoad >= 5) {
+      if (data.room.playerWithTheLongestRoad) {
+        data.room.playerWithTheLongestRoad.hasLongestRoad = false;
+        data.room.playerWithTheLongestRoad.victoryPoints -= 2;
+      }
+      data.room.playerWithTheLongestRoad = data.player;
+      data.player.victoryPoints += 2;
+      data.player.hasLongestRoad = true;
+    }
   }
 }

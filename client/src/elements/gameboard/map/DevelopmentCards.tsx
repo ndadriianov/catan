@@ -36,7 +36,7 @@ const DevCardItem = ({name, value, addValue, onApply, disabled}: CardItemProps) 
   </Box>
 );
 
-const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
+const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
   const [showPurchaseSucceed, setShowPurchaseSucceed] = useState(false);
   const [showPurchaseFailed, setShowPurchaseFailed] = useState(false);
   const [showInventionModal, setShowInventionModal] = useState(false);
@@ -76,16 +76,9 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
   return (
     <Box>
       <Box
-        sx={{display: 'flex', justifyContent: 'center', p: 2, bgcolor: '#f5f5f5', borderRadius: 2,}}>
+        sx={{display: 'flex', justifyContent: 'center', bgcolor: '#f5f5f5', borderRadius: 2,}}>
         <Card sx={{minWidth: 300, boxShadow: 3, bgcolor: 'background.paper',}}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" component="div" sx={{mb: 2, color: 'primary.main', fontWeight: 'bold', textAlign: 'center'}}>
-              Победные очки:
-              <Box component="span" sx={{ml: 1, fontSize: '1.5rem', color: 'success.main'}}>
-                {me.victoryPoints}
-              </Box>
-            </Typography>
-            
+          <Box sx={{ p: 1 }}>
             <Card sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
               <Typography variant="subtitle1" sx={{mt: 2, m: 1, fontWeight: 'medium', color: 'text.secondary'}}>
                 Карты развития
@@ -229,4 +222,4 @@ const VictoryPointsAndDevelopmentCards = ({me, isMyTurnNow}: Props) => {
   );
 };
 
-export default VictoryPointsAndDevelopmentCards;
+export default DevelopmentCards;

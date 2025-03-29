@@ -6,12 +6,9 @@ import React from 'react';
 type inventoryAndCostsProps = {
   inventory: Inventory;
   costs: Costs;
-  lastNumber: number;
-  robberShouldBeMoved: boolean;
-  isMyTurnNow: boolean;
 }
 
-const InventoryAndCosts = ({inventory, costs, lastNumber, robberShouldBeMoved, isMyTurnNow}: inventoryAndCostsProps) => {
+const InventoryAndCosts = ({inventory, costs}: inventoryAndCostsProps) => {
   const styles = {
     card: {
       flex: 1,
@@ -25,26 +22,6 @@ const InventoryAndCosts = ({inventory, costs, lastNumber, robberShouldBeMoved, i
   return (
     <Box>
       <Card>
-        {lastNumber > 0 &&
-          <Card sx={{m: 1}}>
-            <Typography
-              variant="h6"
-              color="primary"
-              style={{margin: '16px', textAlign: 'center', textTransform: 'uppercase'}}
-            >
-              выпало число {lastNumber}
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{m: 1, textAlign: 'center'}}
-              color={robberShouldBeMoved && isMyTurnNow ? 'red' : 'transparent'}
-            >
-              необходимо передвинуть разбойника
-            </Typography>
-          </Card>
-        }
-        
-        
         <Box display="flex" flexDirection={{ md: 'column', xl: 'row' }} justifyContent="space-between" gap={2} margin={1}>
           <Card sx={styles.card}>
             <Typography variant="h6" color="primary" gutterBottom>

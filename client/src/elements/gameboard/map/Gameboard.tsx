@@ -35,9 +35,10 @@ import Map from './Map.tsx';
 import InventoryAndCosts from './InventoryAndCosts.tsx';
 import PlayersList from './PlayersList.tsx';
 import {Box, Button, Card, Typography, useMediaQuery} from '@mui/material';
-import VictoryPointsAndDevelopmentCards from './VictoryPointsAndDevelopmentCards.tsx';
+import DevelopmentCards from './DevelopmentCards.tsx';
 import player from '../../../typesDefinitions/room/player.ts';
 import UnclosablePopup from '../../UI/UnclosablePopup.tsx';
+import VictoryPointsAndLastNumber from './VictoryPointsAndLastNumber.tsx';
 
 
 type mapProps = {
@@ -323,6 +324,8 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
           flex: 1,
           width: { xs: '100%', md: 'auto' }
         }}>
+          <VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
+          
           {/* Кнопки для мобильных */}
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
@@ -341,9 +344,9 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
           {/* Основные компоненты */}
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) ||
-              <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved} isMyTurnNow={isMyTurnNow}/>
+              <InventoryAndCosts inventory={inventory} costs={costs}/>
             }
-            <VictoryPointsAndDevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
+            <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
           </Box>
         </Box>
         
@@ -363,7 +366,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
       
       {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
         <MovableModal id={'inventory'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
-          <InventoryAndCosts inventory={inventory} costs={costs} lastNumber={room.lastNumber} robberShouldBeMoved={room.robberShouldBeMoved} isMyTurnNow={isMyTurnNow}/>
+          <InventoryAndCosts inventory={inventory} costs={costs}/>
         </MovableModal>
       }
       
@@ -473,8 +476,13 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
       </MovableModal>
       
       
-      <UnclosablePopup message={`У вас осталось ${me.freeRoads - update.roads.length} неиспользованных бесплатных дороги! Если их не использовать за этот ход, то они исчезнут!`} visible={me.freeRoads - update.roads.length > 0}/>
+      <UnclosablePopup
+        message={`У вас осталось ${me.freeRoads - update.roads.length} неиспользованных бесплатных дороги!
+         Если их не использовать за этот ход, то они исчезнут!`}
+        visible={me.freeRoads - update.roads.length > 0}
+      />
       
+      <UnclosablePopup message={"Необходимо передвинуть разбойника!"} visible={room.robberShouldBeMoved && isMyTurnNow}/>
       
       <MovableModal id={'incorrect-turn'} isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
         <Box className={classes.buttonGroup}>
