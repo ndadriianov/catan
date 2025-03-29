@@ -320,23 +320,38 @@ io.on('connection', (socket: Socket): void => {
         isSuccessful = false;
         gameboard.Undo();
       }
+      
+      if (isSuccessful) {
+        const priceCalculator: PriceCalculator = new PriceCalculator();
+        priceCalculator.AddRoad(update.roads.length - data.player.freeRoads > 0 ? update.roads.length - data.player.freeRoads : 0);
+        priceCalculator.AddVillage(update.villages.length);
+        priceCalculator.AddCity(update.cities.length);
+        
+        if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
+          || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
+          console.log('пользователю нехватает ресурсов');
+          gameboard.Undo();
+          callback(false);
+          return;
+        }
+      }
     }
     
     
     if (isSuccessful) {
-      const priceCalculator: PriceCalculator = new PriceCalculator();
-      priceCalculator.AddRoad(update.roads.length - data.player.freeRoads > 0 ? update.roads.length - data.player.freeRoads : 0);
-      priceCalculator.AddVillage(update.villages.length);
-      priceCalculator.AddCity(update.cities.length);
-      
-      if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
-        || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
-        console.log('пользователю нехватает ресурсов');
-        gameboard.Undo();
-        callback(false);
-        return;
+      const longestRoad = data.room.gameboard.LongestRoad(data.player.color);
+      if (longestRoad > data.room.longestRoad) {
+        data.room.longestRoad = longestRoad;
+        if (longestRoad >= 5) {
+          if (data.room.playerWithTheLongestRoad) {
+            data.room.playerWithTheLongestRoad.hasLongestRoad = false;
+            data.room.playerWithTheLongestRoad.victoryPoints -= 2;
+          }
+          data.room.playerWithTheLongestRoad = data.player;
+          data.player.victoryPoints += 2;
+          data.player.hasLongestRoad = true;
+        }
       }
-      
       data.player.victoryPoints += update.villages.length + update.cities.length;
       data.player.freeRoads = 0;
       data.room.nextTurn();

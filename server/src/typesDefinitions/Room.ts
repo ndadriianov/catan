@@ -23,6 +23,9 @@ export class Room {
   robberShouldBeMoved: boolean;
   debtors: string[];
   playWithRobber: boolean;
+  longestRoad: number;
+  playerWithTheLongestRoad: Player|undefined;
+  playerWithTheLargestArmy: Player|undefined;
   
   
   get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
@@ -117,6 +120,7 @@ export class Room {
     this.robberShouldBeMoved = false;
     this.debtors = [];
     this.playWithRobber = false;
+    this.longestRoad = 0;
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {

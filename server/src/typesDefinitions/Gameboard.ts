@@ -189,8 +189,8 @@ export class Gameboard {
    *********************************************************************************************************************/
   
   private _IsRoadCoordsValid(coords: Coords): boolean {
-    if (coords.y < 0 || coords.y > this.roads.length) return false;
-    if (coords.x < 0 || coords.x > this.roads[coords.y].length) return false;
+    if (coords.y < 0 || coords.y >= this.roads.length) return false;
+    if (coords.x < 0 || coords.x >= this.roads[coords.y].length) return false;
     return true;
   }
   
@@ -271,6 +271,55 @@ export class Gameboard {
   }
   
   
+  private _CoordsRoadLeftFromRoad(coords: Coords): Coords | null {
+    const neighbor: Coords = {x: coords.x - 1, y: coords.y };
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  private _CoordsRoadRightFromRoad(coords: Coords): Coords | null {
+    const neighbor: Coords = {x: coords.x + 1, y: coords.y };
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  private _CoordsRoadUpFromRoad(coords: Coords): Coords | null {
+    let neighbor: Coords;
+    
+    if (this._IsRoadUpper(coords)) {
+      if (this._IsRoadLeft(coords)) {
+        neighbor = {x: coords.x / 2, y: coords.y - 1};
+      } else {
+        neighbor = {x: (coords.x - 1) / 2, y: coords.y - 1}
+      }
+    } else {
+      if (this._IsRoadLeft(coords)) {
+        neighbor = {x: (coords.x + 1) / 2, y: coords.y - 1};
+      } else {
+        neighbor = {x: coords.x / 2, y: coords.y - 1};
+      }
+    }
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  private _CoordsRoadDownFromRoad(coords: Coords): Coords | null {
+    let neighbor: Coords;
+    
+    if (this._IsRoadUpper(coords)) {
+      if (this._IsRoadLeft(coords)) {
+        neighbor = {x: coords.x / 2, y: coords.y + 1};
+      } else {
+        neighbor = {x: (coords.x + 1) / 2, y: coords.y + 1}
+      }
+    } else {
+      if (this._IsRoadLeft(coords)) {
+        neighbor = {x: (coords.x - 1) / 2, y: coords.y + 1};
+      } else {
+        neighbor = {x: coords.x / 2, y: coords.y + 1};
+      }
+    }
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  
   // соседние дороги для вертикальных
   
   private _RoadUpperLeftFromRoad(coords: Coords): Owner | null {
@@ -311,6 +360,51 @@ export class Gameboard {
     } else {
       return this.roads[coords.y + 1][coords.x * 2 + 1];
     }
+  }
+  
+  
+  private _CoordsRoadUpperLeftFromRoad(coords: Coords): Coords | null {
+    let neighbor: Coords;
+    
+    if (this._IsRoadCentral(coords) || this._IsRoadUpper(coords)) {
+      neighbor = {x: coords.x * 2 - 1, y: coords.y - 1};
+    } else {
+      neighbor = {x: coords.x * 2, y: coords.y - 1};
+    }
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  private _CoordsRoadUpperRightFromRoad(coords: Coords): Coords | null {
+    let neighbor: Coords;
+    
+    if (this._IsRoadCentral(coords) || this._IsRoadUpper(coords)) {
+      neighbor = {x: coords.x * 2, y: coords.y - 1};
+    } else {
+      neighbor = {x: coords.x * 2 + 1, y: coords.y - 1};
+    }
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  private _CoordsRoadBottomLeftFromRoad(coords: Coords): Coords | null {
+    let neighbor: Coords;
+    
+    if (this._IsRoadCentral(coords) || !this._IsRoadUpper(coords)) {
+      neighbor = {x: coords.x * 2 - 1, y: coords.y + 1};
+    } else {
+      neighbor = {x: coords.x * 2, y: coords.y + 1};
+    }
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
+  }
+  
+  private _CoordsRoadBottomRightFromRoad(coords: Coords): Coords | null {
+    let neighbor: Coords;
+    
+    if (this._IsRoadCentral(coords) || !this._IsRoadUpper(coords)) {
+      neighbor = {x: coords.x * 2, y: coords.y + 1};
+    } else {
+      neighbor = {x: coords.x * 2 + 1, y: coords.y + 1};
+    }
+    return this._IsRoadCoordsValid(neighbor) ? neighbor : null;
   }
   
   
@@ -370,6 +464,69 @@ export class Gameboard {
   }
   
   
+  private _GetNeighborsWithMyColorForRoads(coords: Coords, color: Owner): Coords[] {
+    const neighbors: Coords[] = [];
+    
+    if (this._IsRoadHorizontal(coords)) {
+      const right = this._CoordsRoadRightFromRoad(coords);
+      const left = this._CoordsRoadLeftFromRoad(coords);
+      const up = this._CoordsRoadUpFromRoad(coords);
+      const down = this._CoordsRoadDownFromRoad(coords);
+      
+      if (right !== null && this.roads[right.y][right.x] === color) neighbors.push(right);
+      if (left !== null && this.roads[left.y][left.x] === color) neighbors.push(left);
+      if (up !== null && this.roads[up.y][up.x] === color) neighbors.push(up);
+      if (down !== null && this.roads[down.y][down.x] === color) neighbors.push(down);
+      
+    } else {
+      const ul = this._CoordsRoadUpperLeftFromRoad(coords);
+      const ur = this._CoordsRoadUpperRightFromRoad(coords);
+      const bl = this._CoordsRoadBottomLeftFromRoad(coords);
+      const br = this._CoordsRoadBottomRightFromRoad(coords);
+      
+      if (ul !== null && this.roads[ul.y][ul.x] === color) neighbors.push(ul);
+      if (ur !== null && this.roads[ur.y][ur.x] === color) neighbors.push(ur);
+      if (bl !== null && this.roads[bl.y][bl.x] === color) neighbors.push(bl);
+      if (br !== null && this.roads[br.y][br.x] === color) neighbors.push(br);
+    }
+    
+    return neighbors;
+  }
+  
+  public LongestRoad(owner: Owner): number {
+    let max = 0;
+    const coordsToString = (coords: Coords) => {
+      return `${coords.x};${coords.y}`;
+    }
+    const dfs = (coords: Coords, prevNeighbours: Coords[], visited: Set<string>, localMax: number) => {
+      const key = coordsToString(coords);
+      visited.add(key);
+      max = Math.max(max, localMax);
+      
+      const neighbors = this._GetNeighborsWithMyColorForRoads(coords, owner);
+      
+      for (const neighbor of neighbors) {
+        const neighborKey = coordsToString(neighbor);
+        if (!visited.has(neighborKey) && !prevNeighbours.find(c => c.x === neighbor.x && c.y === neighbor.y)) {
+          dfs(neighbor, neighbors, visited, localMax + 1);
+        }
+      }
+    }
+    
+    for (let y = 0; y < this.roads.length; y++) {
+      for (let x = 0; x < this.roads[y].length; x++) {
+        if (this.roads[y][x] === owner) {
+          const coords = { x: x, y: y };
+          const visited = new Set<string>;
+          dfs(coords, [], visited, 1);
+        }
+      }
+    }
+    
+    return max;
+  }
+  
+  
   /*********************************************************************************************************************
    * ВСПОМОГАТЕЛЬНЫЕ ДЛЯ РАЗБОЙНИКА
    *********************************************************************************************************************/
@@ -397,8 +554,8 @@ export class Gameboard {
    *********************************************************************************************************************/
   
   private _IsHouseCoordsValid(coords: Coords): boolean {
-    if (coords.y < 0 || coords.y > this.houses.length) return false;
-    if (coords.x < 0 || coords.x > this.houses[coords.y].length) return false;
+    if (coords.y < 0 || coords.y >= this.houses.length) return false;
+    if (coords.x < 0 || coords.x >= this.houses[coords.y].length) return false;
     return true;
   }
   

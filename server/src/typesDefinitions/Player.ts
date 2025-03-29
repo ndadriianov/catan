@@ -16,6 +16,8 @@ export class Player {
   usedKnightThisTurn: boolean;
   freeRoads: number;
   victoryPoints: number;
+  hasLongestRoad: boolean;
+  hasLargestArmy: boolean;
   
   
   constructor(username: string) {
@@ -31,6 +33,8 @@ export class Player {
     this.usedKnightThisTurn = false;
     this.freeRoads = 0;
     this.victoryPoints = 0;
+    this.hasLongestRoad = false;
+    this.hasLargestArmy = false;
   }
   
   
@@ -46,6 +50,8 @@ export class Player {
       usedKnightThisTurn: this.usedKnightThisTurn,
       freeRoads: this.freeRoads,
       victoryPoints: this.victoryPoints,
+      hasLongestRoad: this.hasLongestRoad,
+      hasLargestArmy: this.hasLargestArmy,
       
       knights: this.developmentCards.Knights,
       
