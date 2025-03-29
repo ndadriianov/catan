@@ -2,7 +2,6 @@ import {House} from '../../../typesDefinitions/houses.ts';
 import classes from './Buildings.module.css'
 import clsx from 'clsx'
 import {ReactNode} from 'react';
-import emitter from '../../../typesDefinitions/emitter.ts';
 import Coords from '../../../typesDefinitions/coords.ts';
 import Owner from '../../../typesDefinitions/owner.ts';
 import updateProps from '../../../typesDefinitions/updateProps.ts';
@@ -11,20 +10,23 @@ import updateProps from '../../../typesDefinitions/updateProps.ts';
 type HousesRowProps = {
   houses: House[],
   isUpper: boolean,
-  verticalIndex: number,
+  y: number,
   selectedCoords: Coords,
   isMyTurnNow: boolean,
   owner: Owner,
   update: updateProps
+  onClick: (x: number, y: number, isMyTurnNow: boolean, owner: Owner, update: updateProps) => void
 }
 
-const HousesRow = ({houses, isUpper, verticalIndex, selectedCoords, isMyTurnNow, owner, update}: HousesRowProps): ReactNode => {
+const HousesRow = (
+  {houses, isUpper, y, selectedCoords, isMyTurnNow, owner, update, onClick}: HousesRowProps) => {
+  
   const inUpdate: boolean[] = new Array(houses.length).fill(false);
   update.villages.forEach(village => {
-    if (village.y === verticalIndex) inUpdate[village.x] = true;
+    if (village.y === y) inUpdate[village.x] = true;
   });
   update.cities.forEach(city => {
-    if (city.y === verticalIndex) inUpdate[city.x] = true;
+    if (city.y === y) inUpdate[city.x] = true;
   });
   
   return (
@@ -36,11 +38,11 @@ const HousesRow = ({houses, isUpper, verticalIndex, selectedCoords, isMyTurnNow,
           className={clsx(
             classes.house,
             ((isUpper && index % 2 === 0) || (!isUpper && index % 2 === 1)) && classes.lower,
-            selectedCoords.y === verticalIndex && selectedCoords.x === index&& classes.selected,
+            selectedCoords.y === y && selectedCoords.x === index&& classes.selected,
             inUpdate[index] && classes.update
           )}
           alt={'House'}
-          onClick={() => emitter.emit('tap-on-house', verticalIndex, index, isMyTurnNow, owner, update)}
+          onClick={() => onClick(index, y, isMyTurnNow, owner, update)}
         />
       ))}
     </div>

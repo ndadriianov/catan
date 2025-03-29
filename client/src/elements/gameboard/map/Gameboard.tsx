@@ -3,9 +3,7 @@ import initialTiles, {initialNumbers} from '../../../constants/TileRows.ts';
 import initialRoads from '../../../constants/RoadRows.ts';
 import initialHouses from '../../../constants/HouseRows.ts';
 import React, {useEffect, useState} from 'react';
-import Loader from '../../UI/loader/Loader.tsx';
 import Room from '../../../typesDefinitions/room/room.ts';
-import emitter from '../../../typesDefinitions/emitter.ts';
 import {Road} from '../../../typesDefinitions/roads.ts';
 import {House} from '../../../typesDefinitions/houses.ts';
 import {changeColorHouse, changeColorRoad} from './mapRelatedFunctions/changeColorOperations.ts';
@@ -51,7 +49,6 @@ type mapProps = {
 
 
 const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [tiles, setTiles] = useState<Tile[][]>(initialTiles);
   const [numbers, setNumbers] = useState<number[][]>(initialNumbers);
   const [roads, setRoads] = useState<Road[][]>(initialRoads);
@@ -76,51 +73,6 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const [showChooseVictim, setShowChooseVictim] = useState<boolean>(false);
   const [showTheftSucceed, setShowTheftSucceed] = useState<boolean>(false);
   const [showTheftFailed, setShowTheftFailed] = useState<boolean>(false);
-  
-  
-  useEffect(() => {
-    function roadHandler(y: number, x: number, isMyTurnNow: boolean, owner: Owner): void {
-      const isNobodys: boolean = room.gameboard?.roads[y][x] === Owner.nobody;
-      
-      console.log(x, y)
-      
-      if (isMyTurnNow && isNobodys) {
-        setRoadCoords({x: x, y: y});
-        setIsRoadNobodys(isNobodys);
-        changeColorRoad({coords: {x: x, y: y}, owner: owner, setRoads: setRoads});
-        setIsConfirmationRequiredRoad(true);
-      }
-    }
-    
-    function houseHandler(y: number, x: number, isMyTurnNow: boolean, owner: Owner, update: updateProps): void {
-      const currentHouse: house | undefined = room.gameboard?.houses[y][x];
-      const isNobodys: boolean = currentHouse?.owner === Owner.nobody;
-      const isMyVillage: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.village;
-      const isMyUpdateVillage: boolean = !!update.villages.find((village: Coords):boolean => village.x === x && village.y === y);
-      const isMyCity: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.city;
-      const isMyUpdateCity: boolean = !!update.cities.find((city: Coords): boolean => city.x === x && city.y === y);
-      
-      console.log(x, y);
-      
-      if (isMyTurnNow && (isNobodys || isMyVillage || isMyUpdateVillage) && !isMyCity) {
-        setHouseCoords({y: y, x: x});
-        setIsHouseNobodys(isNobodys);
-        setIsMyVillage(isMyVillage);
-        setIsMyUpdateVillage(isMyUpdateVillage);
-        setIsMyUpdateCity(isMyUpdateCity);
-        changeColorHouse({coords: {x: x, y: y}, owner: owner, toCity: isMyUpdateCity, setHouses: setHouses});
-        setIsConfirmationRequiredHouse(true);
-      }
-    }
-    
-    emitter.on('tap-on-road', roadHandler);
-    emitter.on('tap-on-house', houseHandler);
-    
-    return (): void => {
-      emitter.off('tap-on-road', roadHandler);
-      emitter.off('tap-on-house', houseHandler);
-    };
-  }, [owner]);
   
   
   useEffect(() => {
@@ -279,6 +231,40 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   }
   
   
+  function roadHandler(x: number, y: number, isMyTurnNow: boolean, owner: Owner): void {
+    const isNobodys: boolean = room.gameboard?.roads[y][x] === Owner.nobody;
+    
+    console.log(x, y)
+    
+    if (isMyTurnNow && isNobodys) {
+      setRoadCoords({x: x, y: y});
+      setIsRoadNobodys(isNobodys);
+      changeColorRoad({coords: {x: x, y: y}, owner: owner, setRoads: setRoads});
+      setIsConfirmationRequiredRoad(true);
+    }
+  }
+  function houseHandler(x: number, y: number, isMyTurnNow: boolean, owner: Owner, update: updateProps): void {
+    const currentHouse: house | undefined = room.gameboard?.houses[y][x];
+    const isNobodys: boolean = currentHouse?.owner === Owner.nobody;
+    const isMyVillage: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.village;
+    const isMyUpdateVillage: boolean = !!update.villages.find((village: Coords):boolean => village.x === x && village.y === y);
+    const isMyCity: boolean = currentHouse?.owner === owner && currentHouse?.type === houseType.city;
+    const isMyUpdateCity: boolean = !!update.cities.find((city: Coords): boolean => city.x === x && city.y === y);
+    
+    console.log(x, y);
+    
+    if (isMyTurnNow && (isNobodys || isMyVillage || isMyUpdateVillage) && !isMyCity) {
+      setHouseCoords({y: y, x: x});
+      setIsHouseNobodys(isNobodys);
+      setIsMyVillage(isMyVillage);
+      setIsMyUpdateVillage(isMyUpdateVillage);
+      setIsMyUpdateCity(isMyUpdateCity);
+      changeColorHouse({coords: {x: x, y: y}, owner: owner, toCity: isMyUpdateCity, setHouses: setHouses});
+      setIsConfirmationRequiredHouse(true);
+    }
+  }
+  
+  
   const isSmallMobile = useMediaQuery('(max-height: 890px) and (orientation: portrait)');
   const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
   const isTablet = useMediaQuery('(min-width: 600px) and (max-width: 1199px)');
@@ -286,11 +272,6 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const isColumnLayout = useMediaQuery('(max-width: 1536px)');
   const isLowScreen = useMediaQuery('(max-height: 880px)');
   
-  console.log(room.debtors);
-  
-  if (isLoading) return <Loader/>;
-  
-  // если высота хотя бы 1000 при горизонтальной ориентации, то можно отображать Trade
   
   return (
     <div className={classes.wrapper}>
@@ -306,8 +287,10 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
       </Box>
       
       
-      <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords} robberPosition={robberPosition}
-           houseCoords={houseCoords} owner={owner} update={update} isMyTurnNow={isMyTurnNow} onNumberClick={onNumberClick}/>
+      <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
+           robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} update={update}
+           isMyTurnNow={isMyTurnNow} onNumberClick={onNumberClick} houseHandler={houseHandler} roadHandler={roadHandler}
+      />
       
       <Box sx={{
         display: 'flex',
