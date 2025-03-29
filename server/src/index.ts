@@ -541,6 +541,21 @@ io.on('connection', (socket: Socket): void => {
     if (!data.player.usedKnightThisTurn && !data.player.threwTheDice && data.room.playWithRobber && data.player.developmentCards.Knights > 0) {
       data.room.robberShouldBeMoved = true;
       data.player.developmentCards.Knights--;
+      data.player.usedKnightsAmount++;
+      
+      if (data.player.usedKnightsAmount > data.room.largestArmy) {
+        data.room.largestArmy = data.player.usedKnightsAmount;
+        if (data.player.usedKnightsAmount >= 3) {
+          if (data.room.playerWithTheLargestArmy) {
+            data.room.playerWithTheLargestArmy.hasLargestArmy = false;
+            data.room.playerWithTheLargestArmy.victoryPoints -= 2;
+          }
+          data.room.playerWithTheLargestArmy = data.player;
+          data.player.victoryPoints += 2;
+          data.player.hasLargestArmy = true;
+        }
+      }
+      
       eventEmitter.emit('update', data.room.id);
     }
   })

@@ -24,6 +24,7 @@ export class Room {
   debtors: string[];
   playWithRobber: boolean;
   longestRoad: number;
+  largestArmy: number;
   playerWithTheLongestRoad: Player|undefined;
   playerWithTheLargestArmy: Player|undefined;
   
@@ -121,6 +122,7 @@ export class Room {
     this.debtors = [];
     this.playWithRobber = false;
     this.longestRoad = 0;
+    this.largestArmy = 0;
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {

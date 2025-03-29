@@ -14,6 +14,7 @@ export class Player {
   addedDevelopmentCards: DevelopmentCards;
   threwTheDice: boolean;
   usedKnightThisTurn: boolean;
+  usedKnightsAmount: number;
   freeRoads: number;
   victoryPoints: number;
   hasLongestRoad: boolean;
@@ -31,6 +32,7 @@ export class Player {
     this.addedDevelopmentCards = new DevelopmentCards();
     this.threwTheDice = false;
     this.usedKnightThisTurn = false;
+    this.usedKnightsAmount = 0;
     this.freeRoads = 0;
     this.victoryPoints = 0;
     this.hasLongestRoad = false;
