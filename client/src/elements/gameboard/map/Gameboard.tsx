@@ -60,6 +60,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const [roadPurchaseFailed, setRoadPurchaseFailed] = useState(false);
   const [villagePurchaseFailed, setVillagePurchaseFailed] = useState(false);
   const [cityPurchaseFailed, setCityPurchaseFailed] = useState(false);
+  const [showDevelopmentCards, setShowDevelopmentCards] = useState(false);
   
   
   function endTurn(): void {
@@ -188,6 +189,10 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const isColumnLayout = useMediaQuery('(max-width: 1536px)');
   const isLowScreen = useMediaQuery('(max-height: 880px)');
   
+  const renderResources = haveEnoughSpace;
+  const renderTrade = haveEnoughSpace;
+  const renderDevCards = haveEnoughSpace;
+  
   
   return (
     <div className={classes.wrapper}>
@@ -208,72 +213,56 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
            onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
       />
       
+      
       <Box sx={{
         display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
+        flexDirection: { xs: 'column', md: 'column' },
         gap: 2,
         alignItems: 'flex-start'
       }}>
-        {/* Левый столбец (основной контент) */}
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-          flex: 1,
-          width: { xs: '100%', md: 'auto' }
-        }}>
+        { /* счетчик */ }
+        <Box>
           <VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
-          
-          {/* Кнопки для мобильных */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
-              <Button variant="contained" onClick={() => setShowResourceModal(true)}>
-                Показать ресурсы
-              </Button>
-            }
-            {haveEnoughSpace ||
-              <Button variant="contained" onClick={() => setShowTradeModal(true)}>
-                Открыть меню торговли
-              </Button>
-            }
-            <Button variant="contained" onClick={throwTheDice} disabled={!isMyTurnNow || me.threwTheDice || room.debutMode}>Бросить кубики</Button>
-          </Box>
-          
-          {/* Основные компоненты */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) ||
-              <InventoryDisplay inventory={inventory}/>
-            }
-            <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
-          </Box>
         </Box>
-        
-        {/* Правый столбец (только Trade, если есть место) */}
-        {haveEnoughSpace && (
-          <Box sx={{
-            position: { xs: 'static', md: 'sticky' },
-            marginTop: 2,
-            width: { xs: '100%', md: '300px' },
-            ml: { md: 0.5 }
-          }}>
-            <Trade room={room} color={owner} inventory={inventory} />
-          </Box>
-        )}
+        { /* кнопки */ }
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {renderResources || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
+            Показать ресурсы
+          </Button>}
+          {renderTrade || <Button variant="contained" onClick={() => setShowTradeModal(true)}>
+            Открыть меню торговли
+          </Button>}
+          {renderDevCards || <Button variant="contained" onClick={() => setShowDevelopmentCards(true)}>
+            Открыть карты развития
+          </Button>}
+        </Box>
+        { /* 'элементы' */ }
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {renderResources && <InventoryDisplay inventory={inventory}/>}
+          {renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
+          {renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
+        </Box>
       </Box>
       
       
-      {(isSmallMobile || isTablet || strangeMobile || (isColumnLayout && isLowScreen)) &&
-        <MovableModal id={'inventory'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
+      {renderResources ||
+        <MovableModal id={'res'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
           <InventoryDisplay inventory={inventory}/>
         </MovableModal>
       }
       
-      {haveEnoughSpace ||
-        <MovableModal id={'trade'} isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
-          <Trade room={room} color={owner} inventory={inventory}/>
+      {renderDevCards ||
+        <MovableModal id={'development'} isOpen={showDevelopmentCards} onClose={() => setShowDevelopmentCards(false)}>
+          <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
         </MovableModal>
       }
+      
+      {renderTrade ||
+        <MovableModal id={'trd'} isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
+          <Trade room={room} color={me.color} inventory={inventory}/>
+        </MovableModal>
+      }
+      
       
       
       <MovableModal id={'roads'} isOpen={showRoadModal} onClose={CancelRoadPurchase}>
