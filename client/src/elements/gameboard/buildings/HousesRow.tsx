@@ -4,7 +4,6 @@ import clsx from 'clsx'
 import {ReactNode} from 'react';
 import Coords from '../../../typesDefinitions/coords.ts';
 import Owner from '../../../typesDefinitions/owner.ts';
-import updateProps from '../../../typesDefinitions/updateProps.ts';
 
 
 type HousesRowProps = {
@@ -14,20 +13,11 @@ type HousesRowProps = {
   selectedCoords: Coords,
   isMyTurnNow: boolean,
   owner: Owner,
-  update: updateProps
-  onClick: (x: number, y: number, isMyTurnNow: boolean, owner: Owner, update: updateProps) => void
+  onClick: (x: number, y: number, isMyTurnNow: boolean, owner: Owner) => void
 }
 
 const HousesRow = (
-  {houses, isUpper, y, selectedCoords, isMyTurnNow, owner, update, onClick}: HousesRowProps) => {
-  
-  const inUpdate: boolean[] = new Array(houses.length).fill(false);
-  update.villages.forEach(village => {
-    if (village.y === y) inUpdate[village.x] = true;
-  });
-  update.cities.forEach(city => {
-    if (city.y === y) inUpdate[city.x] = true;
-  });
+  {houses, isUpper, y, selectedCoords, isMyTurnNow, owner, onClick}: HousesRowProps) => {
   
   return (
     <div className={classes.housesRow}>
@@ -38,11 +28,10 @@ const HousesRow = (
           className={clsx(
             classes.house,
             ((isUpper && index % 2 === 0) || (!isUpper && index % 2 === 1)) && classes.lower,
-            selectedCoords.y === y && selectedCoords.x === index&& classes.selected,
-            inUpdate[index] && classes.update
+            selectedCoords.y === y && selectedCoords.x === index&& classes.selected
           )}
           alt={'House'}
-          onClick={() => onClick(index, y, isMyTurnNow, owner, update)}
+          onClick={() => onClick(index, y, isMyTurnNow, owner)}
         />
       ))}
     </div>

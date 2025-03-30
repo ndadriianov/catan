@@ -16,6 +16,7 @@ export class Player {
   usedKnightThisTurn: boolean;
   usedKnightsAmount: number;
   freeRoads: number;
+  freeVillages: number;
   victoryPoints: number;
   hasLongestRoad: boolean;
   hasLargestArmy: boolean;
@@ -37,6 +38,7 @@ export class Player {
     this.victoryPoints = 0;
     this.hasLongestRoad = false;
     this.hasLargestArmy = false;
+    this.freeVillages = 0;
   }
   
   
@@ -129,11 +131,4 @@ export class Inventory {
     this.stone = 0;
     this.wheat = 0;
   }
-}
-
-
-export type updateProps = {
-  villages: Coords[];
-  cities: Coords[];
-  roads: Coords[];
 }

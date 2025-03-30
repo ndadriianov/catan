@@ -5,7 +5,7 @@ import cors from 'cors';
 import {ConnectionStatus, LoginStatus, User} from './typesDefinitions/User';
 import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
-import {Coords, Player, updateProps} from './typesDefinitions/Player';
+import {Coords, Player} from './typesDefinitions/Player';
 import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
@@ -16,7 +16,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', // Адрес вашего клиента
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
   },
 });
@@ -213,154 +213,38 @@ io.on('connection', (socket: Socket): void => {
   });
   
   
-  socket.on('end-turn', (update: updateProps, callback: (succeed: boolean) => void): void => {
+  socket.on('end-turn', (callback: (succeed: boolean) => void): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
     if (!data || !data.room.gameboard) {
       callback(false);
       return;
     }
-    const gameboard = data.room.gameboard;
-    let isSuccessful: boolean = true;
     
-    
-    /*********
-     * ДЕБЮТ *
-     *********/
     if (data.room.debutMode) {
-      if (!(update.roads.length === 1 && update.villages.length === 1 && update.cities.length === 0)) {
-        console.log('несоответствие параметров');
+      if (data.player.freeRoads > 0 || data.player.freeVillages > 0) {
         callback(false);
         return;
       }
-      
-      if (data.room.gameboard.DebutCheckVillage(update.villages[0], data.player.color)) {
-        gameboard.PlaceVillage(update.villages[0], data.player.color);
-      } else {
-        isSuccessful = false;
-        console.log('ошибка при добавлении здания');
-      }
-      
-      if (isSuccessful && gameboard.CheckRoad(update.roads[0], data.player.color)) {
-        gameboard.PlaceRoad(update.roads[0], data.player.color);
-      } else {
-        console.log('ошибка при добавлении дороги');
-        gameboard.Undo();
-        isSuccessful = false;
-      }
-      
-      gameboard.ClearUndo();
-      
-      
-      /*****************
-       * ОСНОВНАЯ ИГРА *
-       *****************/
-    }
-    else {
+    } else {
       if (data.room.robberShouldBeMoved || !data.room.activePlayer?.threwTheDice || data.room.debtors.length > 0) {
         callback(false);
         return;
       }
-      
-      
-      // добавление дорог
-      try {
-        let processedRoadsCounter: number = 0;
-        let prevProcessedRoadsCounter: number = 0;
-        const processedRoads: boolean[] = new Array(update.roads.length).fill(false);
-        do {
-          update.roads.forEach((road: Coords, index: number): void => {
-            prevProcessedRoadsCounter = processedRoadsCounter;
-            if (!processedRoads[index] && gameboard.CheckRoad(road, data.player.color)) {
-              gameboard.PlaceRoad(road, data.player.color);
-              processedRoads[index] = true;
-              processedRoadsCounter++;
-            }
-          })
-        } while (processedRoadsCounter > prevProcessedRoadsCounter);
-        
-        if (processedRoadsCounter !== update.roads.length) {
-          throw new Error('road unavailable');
-        }
-      } catch (error) {
-        if (error instanceof Error) console.log(error.message);
-        else console.log('возникла неизвестная ошибка при добавлении дорог!');
-        isSuccessful = false;
-        gameboard.Undo();
-      }
-      
-      
-      // добавление поселений
-      try {
-        update.villages.forEach((village: Coords): void => {
-          if (isSuccessful && gameboard.CheckVillage(village, data.player.color)) {
-            gameboard.PlaceVillage(village, data.player.color);
-          } else {
-            throw new Error('village unavailable!');
-          }
-        })
-      } catch (error) {
-        if (error instanceof Error) console.log(error.message);
-        else console.log('возникла неизвестная ошибка при добавлении поселений!');
-        isSuccessful = false;
-        gameboard.Undo();
-      }
-      
-      // добавление городов
-      try {
-        update.cities.forEach((city: Coords): void => {
-          if (isSuccessful && gameboard.CheckCity(city, data.player.color)) {
-            gameboard.PlaceCity(city, data.player.color);
-          } else {
-            throw new Error('city unavailable!');
-          }
-        })
-      }catch (error) {
-        if (error instanceof Error) console.log(error.message);
-        else console.log('возникла неизвестная ошибка при добавлении городов!');
-        isSuccessful = false;
-        gameboard.Undo();
-      }
-      
-      if (isSuccessful) {
-        const priceCalculator: PriceCalculator = new PriceCalculator();
-        priceCalculator.AddRoad(update.roads.length - data.player.freeRoads > 0 ? update.roads.length - data.player.freeRoads : 0);
-        priceCalculator.AddVillage(update.villages.length);
-        priceCalculator.AddCity(update.cities.length);
-        
-        if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
-          || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
-          console.log('пользователю нехватает ресурсов');
-          gameboard.Undo();
-          callback(false);
-          return;
-        }
-      }
     }
     
-    
-    if (isSuccessful) {
-      UpdateLongestRoad(data);
-      data.player.victoryPoints += update.villages.length + update.cities.length;
-      data.player.freeRoads = 0;
-      data.room.nextTurn();
-      data.room.activePlayer?.ApplyAdditionDevCards();
-      data.room.activePlayer = data.room.nextPlayer();
-      data.room.activePlayer.threwTheDice = false;
-      gameboard.ApprovePorts(data.room.playersByLink);
-      data.room.purchases?.endTurn();
-      eventEmitter.emit('update', data.room.id);
+    data.player.freeRoads = 0;
+    data.room.nextTurn();
+    data.room.activePlayer?.ApplyAdditionDevCards();
+    data.room.activePlayer = data.room.nextPlayer();
+    if (data.room.debutMode) {
+      data.room.activePlayer.freeRoads = 1;
+      data.room.activePlayer.freeVillages = 1;
     }
+    data.room.activePlayer.threwTheDice = false;
+    data.room.purchases?.endTurn();
+    eventEmitter.emit('update', data.room.id);
     
-    
-    /*
-    console.log(update);
-    console.log(room.gameboard);
-    room.players.forEach((p: Player): void => {console.log(p.inventory); console.log(p.ports)})
-    console.log(isSuccessful);
-     */
-    
-    gameboard.ClearUndo()
-    callback(isSuccessful);
+    callback(true);
   });
   
   
@@ -613,7 +497,7 @@ io.on('connection', (socket: Socket): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
     if (!data) return;
     
-    if (!data.room.gameboard || !data.room.gameboard.CheckRoad(coords, data.player.color)) {
+    if (!data.room.gameboard || !data.room.gameboard.CheckRoad(coords, data.player.color) || !data.player.threwTheDice) {
       callback(false);
       return;
     }
@@ -640,20 +524,32 @@ io.on('connection', (socket: Socket): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
     if (!data) return;
     
-    if (!data.room.gameboard || !data.room.gameboard.CheckVillage(coords, data.player.color)) {
+    if (
+      !data.room.gameboard || !data.player.threwTheDice
+      || !(
+        (data.room.debutMode && data.room.gameboard.DebutCheckVillage(coords, data.player.color))
+        ||
+        data.room.gameboard.CheckVillage(coords, data.player.color)
+      )
+    ) {
       callback(false);
       return;
     }
     
-    const priceCalculator: PriceCalculator = new PriceCalculator();
-    priceCalculator.AddVillage(1);
-    if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
-      || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
-      callback(false);
-      return;
+    if (data.player.freeVillages > 0) data.player.freeVillages--;
+    else {
+      const priceCalculator: PriceCalculator = new PriceCalculator();
+      priceCalculator.AddVillage(1);
+      if (!priceCalculator.DoesPlayerHaveEnoughResources(data.player)
+        || !data.room.borrowResourcesFromPlayer(data.player.username, priceCalculator)) {
+        callback(false);
+        return;
+      }
     }
     
     data.room.gameboard.PlaceVillage(coords, data.player.color);
+    data.room.gameboard.ApprovePorts(data.room.playersByLink);
+    data.player.victoryPoints++;
     callback(true);
     eventEmitter.emit('update', data.room.id);
   });
@@ -663,7 +559,7 @@ io.on('connection', (socket: Socket): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
     if (!data) return;
     
-    if (!data.room.gameboard || !data.room.gameboard.CheckCity(coords, data.player.color)) {
+    if (!data.room.gameboard || !data.room.gameboard.CheckCity(coords, data.player.color) || !data.player.threwTheDice) {
       callback(false);
       return;
     }
@@ -677,38 +573,10 @@ io.on('connection', (socket: Socket): void => {
     }
     
     data.room.gameboard.PlaceCity(coords, data.player.color);
+    data.player.victoryPoints++;
     callback(true);
     eventEmitter.emit('update', data.room.id);
   })
-  
-  
-  /*socket.on('debut-end-turn', (debutData: any, callback: (succeed: boolean) => void): void => {
-    if (!checkIsAuth({socket, callback})) {
-      callback(false);
-      return;
-    }
-    const room: Room = socket.data.user.activeRoom;
-    const color: Owner|undefined = room.players.find(p => p.username === socket.data.user.username)?.color;
-    if (!color) {
-      callback(false);
-      return;
-    }
-    
-    console.log('debut-turn', debutData);
-    if (room.gameboard) {
-      console.log(room.gameboard.DebutCheckVillage(debutData.village, color));
-      
-      if (room.gameboard.DebutCheckVillage(debutData.village, color)) {
-        room.gameboard.PlaceVillage(debutData.village, color);
-        
-        console.log(room.gameboard.CheckRoad(debutData.road, color));
-        room.gameboard.PlaceRoad(debutData.road, color);
-      }
-    }
-    // check !!
-    // place !!
-  })
-  */
   
   
   /*********************************************************************************************************************

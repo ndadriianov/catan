@@ -3,7 +3,6 @@ import {Road} from '../../../typesDefinitions/roads.ts';
 import { House } from '../../../typesDefinitions/houses.ts';
 import Coords from '../../../typesDefinitions/coords.ts';
 import Owner from '../../../typesDefinitions/owner.ts';
-import updateProps from '../../../typesDefinitions/updateProps.ts';
 import classes from './Map.module.css';
 import frame from '../../../assets/map/frame.png';
 import HexagonalRow from '../hexagonalRow/HexagonalRow.tsx';
@@ -22,17 +21,16 @@ type mapNewProps = {
   roadCoords: Coords;
   houseCoords: Coords;
   owner: Owner;
-  update: updateProps;
   isMyTurnNow: boolean;
   robberPosition: Coords;
   roadHandler: (x: number, y: number, isMyTurnNow: boolean, owner: Owner) => void;
-  houseHandler: (x: number, y: number, isMyTurnNow: boolean, owner: Owner, update: updateProps) => void;
+  houseHandler: (x: number, y: number, isMyTurnNow: boolean, owner: Owner) => void;
   onNumberClick: (coords: Coords) => void;
 }
 
 
 const Map = (
-  {tiles, roads, houses, numbers, roadCoords, houseCoords, owner, update, isMyTurnNow,
+  {tiles, roads, houses, numbers, roadCoords, houseCoords, owner, isMyTurnNow,
   robberPosition, roadHandler, houseHandler, onNumberClick}: mapNewProps) => {
   
   
@@ -78,42 +76,42 @@ const Map = (
       
       <div className={classes.roadsContainer}>
         <TurnedRoadsRow roads={roads[0]} y={0} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                        owner={owner} update={update} onClick={roadHandler}/>
+                        owner={owner} onClick={roadHandler}/>
         <VertRoadsRow roads={roads[1]} y={1} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                      owner={owner} update={update} onClick={roadHandler}/>
+                      owner={owner} onClick={roadHandler}/>
         <TurnedRoadsRow roads={roads[2]} y={2} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                        owner={owner} update={update} onClick={roadHandler}/>
+                        owner={owner} onClick={roadHandler}/>
         <VertRoadsRow roads={roads[3]} y={3} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                      owner={owner} update={update} onClick={roadHandler}/>
+                      owner={owner} onClick={roadHandler}/>
         <TurnedRoadsRow roads={roads[4]} y={4} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                        owner={owner} update={update} onClick={roadHandler}/>
+                        owner={owner} onClick={roadHandler}/>
         <VertRoadsRow roads={roads[5]} y={5} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                      owner={owner} update={update} onClick={roadHandler}/>
+                      owner={owner} onClick={roadHandler}/>
         <TurnedRoadsRow roads={roads[6]} y={6} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                        owner={owner} update={update} onClick={roadHandler}/>
+                        owner={owner} onClick={roadHandler}/>
         <VertRoadsRow roads={roads[7]} y={7} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                      owner={owner} update={update} onClick={roadHandler}/>
+                      owner={owner} onClick={roadHandler}/>
         <TurnedRoadsRow roads={roads[8]} y={8} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                        owner={owner} update={update} onClick={roadHandler}/>
+                        owner={owner} onClick={roadHandler}/>
         <VertRoadsRow roads={roads[9]} y={9} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                      owner={owner} update={update} onClick={roadHandler}/>
+                      owner={owner} onClick={roadHandler}/>
         <TurnedRoadsRow roads={roads[10]} y={10} selectedCoords={roadCoords} isMyTurnNow={isMyTurnNow}
-                        owner={owner} update={update} onClick={roadHandler}/>
+                        owner={owner} onClick={roadHandler}/>
       </div>
       
       <div className={classes.housesContainer}>
         <HousesRow houses={houses[0]} isUpper={true} y={0} selectedCoords={houseCoords}
-                   isMyTurnNow={isMyTurnNow} owner={owner} update={update} onClick={houseHandler}/>
+                   isMyTurnNow={isMyTurnNow} owner={owner} onClick={houseHandler}/>
         <HousesRow houses={houses[1]} isUpper={true} y={1} selectedCoords={houseCoords}
-                   isMyTurnNow={isMyTurnNow} owner={owner} update={update} onClick={houseHandler}/>
+                   isMyTurnNow={isMyTurnNow} owner={owner} onClick={houseHandler}/>
         <HousesRow houses={houses[2]} isUpper={true} y={2} selectedCoords={houseCoords}
-                   isMyTurnNow={isMyTurnNow} owner={owner} update={update} onClick={houseHandler}/>
+                   isMyTurnNow={isMyTurnNow} owner={owner} onClick={houseHandler}/>
         <HousesRow houses={houses[3]} isUpper={false} y={3} selectedCoords={houseCoords}
-                   isMyTurnNow={isMyTurnNow} owner={owner} update={update} onClick={houseHandler}/>
+                   isMyTurnNow={isMyTurnNow} owner={owner} onClick={houseHandler}/>
         <HousesRow houses={houses[4]} isUpper={false} y={4} selectedCoords={houseCoords}
-                   isMyTurnNow={isMyTurnNow} owner={owner} update={update} onClick={houseHandler}/>
+                   isMyTurnNow={isMyTurnNow} owner={owner} onClick={houseHandler}/>
         <HousesRow houses={houses[5]} isUpper={false} y={5} selectedCoords={houseCoords}
-                   isMyTurnNow={isMyTurnNow} owner={owner} update={update} onClick={houseHandler}/>
+                   isMyTurnNow={isMyTurnNow} owner={owner} onClick={houseHandler}/>
       </div>
       
       

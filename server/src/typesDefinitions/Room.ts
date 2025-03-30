@@ -287,6 +287,8 @@ export class Room {
     if (!this.playWithRobber) this.gameboard.TurnRobberOff();
     
     this._players.forEach((player: Player): void => {
+      player.freeRoads = 1;
+      player.freeVillages = 1;
       this._eventEmitter.emit(`room-started-${player.username}`, this);
     });
     this._eventEmitter.emit('update', this.id);
