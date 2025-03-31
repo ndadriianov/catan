@@ -54,6 +54,12 @@ eventEmitter.on('purchase-update', (id: number): void => {
   const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
   if (room) io.to(id.toString()).emit('purchase-update', room.purchases?.toJSON());
 })
+eventEmitter.on('win', (id: number, username: string): void => {
+  const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
+  if (room) {
+    io.to(id.toString()).emit('win', username);
+  }
+})
 
 
 
@@ -192,6 +198,15 @@ io.on('connection', (socket: Socket): void => {
     if (socket.data.user.activeRoom) socket.data.user.activeRoom.setColor(color, socket.data.user.username);
   });
   
+  
+  socket.on('change-win', (points: number): void => {
+    if (!checkIsAuth({socket})) return;
+    
+    if (socket.data.user.activeRoom && points >= 3 && points <= 20) {
+      socket.data.user.activeRoom.pointsToWin = points;
+      eventEmitter.emit('update', socket.data.user.activeRoom.id);
+    }
+  })
   
   // срабатывает когда пользователь(в будущем - только создатель комнаты) нажимает на кнопку начать игру
   socket.on('start-room', (id: number, callback: (succeed: boolean) => void): void => {
@@ -497,7 +512,8 @@ io.on('connection', (socket: Socket): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
     if (!data) return;
     
-    if (!data.room.gameboard || !data.room.gameboard.CheckRoad(coords, data.player.color) || !data.player.threwTheDice) {
+    if (!data.room.gameboard || !data.room.gameboard.CheckRoad(coords, data.player.color)
+      || !((data.player.threwTheDice) || data.room.debutMode)) {
       callback(false);
       return;
     }
@@ -524,14 +540,13 @@ io.on('connection', (socket: Socket): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
     if (!data) return;
     
-    if (
-      !data.room.gameboard || !data.player.threwTheDice
-      || !(
-        (data.room.debutMode && data.room.gameboard.DebutCheckVillage(coords, data.player.color))
-        ||
-        data.room.gameboard.CheckVillage(coords, data.player.color)
-      )
-    ) {
+    if (!data.room.gameboard) {
+      callback(false);
+      return;
+    }
+    if (!(data.room.debutMode && data.room.gameboard.DebutCheckVillage(coords, data.player.color))
+        &&
+       (!(data.room.gameboard.CheckVillage(coords, data.player.color) && data.player.threwTheDice))) {
       callback(false);
       return;
     }

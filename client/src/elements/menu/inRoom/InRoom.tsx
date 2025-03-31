@@ -13,12 +13,14 @@ import {
   Button,
   Container,
   Divider,
-  Paper,
-  Stack,
-  Typography,
-  Select,
   FormControl,
-  InputLabel, MenuItem
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Typography
 } from '@mui/material';
 
 
@@ -34,6 +36,9 @@ const InRoom = () => {
   const [color, setColor] = useState<Owner>(Owner.nobody);
   const [isMyTurnNow, setIsMyTurnNow] = useState<boolean>(false);
   const [robberEnabled, setRobberEnabled] = useState<boolean>(false);
+  const [pointsToWin, setPointsToWin] = useState<number>(10);
+  const [pointsError, setPointsError] = useState<boolean>(false);
+  const [arePlayersOk, setArePlayersOk] = useState<boolean>(false);
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -76,6 +81,7 @@ const InRoom = () => {
   }
   
   function start(): void {
+    if (pointsError) return;
     socket.emit('start-room', roomId, (success: boolean): void => {
       if (success) {
         console.log('start room');
@@ -88,6 +94,23 @@ const InRoom = () => {
   function handleBackToChoose():void {
     socket.emit('go-back-to-choose', roomId);
     navigate('/choose-room');
+  }
+  
+  function handlePointsToWinChange(e: React.ChangeEvent<HTMLInputElement>):void {
+    const value = parseInt(e.target.value, 10);
+    setPointsToWin(value);
+    if (value < 3 || value > 20) setPointsError(true);
+    else setPointsError(false);
+  }
+  
+  function checkPlayers(players: Player[]): boolean {
+    if (players.some(p => p.color === Owner.nobody)) return false;
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        if (players[i].color === players[j].color) return false;
+      }
+    }
+    return true;
   }
   
   const colors: string[] = [
@@ -114,8 +137,17 @@ const InRoom = () => {
   useEffect(() => {
     setMe(room?.players.find((player: Player): boolean => player.username === user.username));
     if (user.username && room) setIsMyTurnNow(room?.activePlayer === user.username);
-    if (room) setRobberEnabled(room.playWithRobber);
+    if (room) {
+      setRobberEnabled(room.playWithRobber);
+      setPointsToWin(room.pointsToWin);
+    }
   }, [user, room]);
+  
+  useEffect(() => {
+    if (room?.players) {
+      setArePlayersOk(checkPlayers(room.players));
+    }
+  }, [room?.players]);
   
   
   return (
@@ -204,13 +236,51 @@ const InRoom = () => {
                 </Box>
                 
                 <Box sx={{ width: '100%', maxWidth: 400 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Очков для победы"
+                      value={pointsToWin}
+                      error={pointsError}
+                      helperText={pointsError || "Введите число от 3 до 20"}
+                      onChange={handlePointsToWinChange}
+                      disabled={!me}
+                      type="number"
+                      inputProps={{
+                        min: 3,
+                        max: 20
+                      }}
+                      sx={{
+                        '& .MuiInputBase-root': {
+                          height: '100%'
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        if (!pointsError) socket.emit('change-win', pointsToWin);
+                      }}
+                      disabled={!me || pointsError || room.pointsToWin === pointsToWin}
+                      sx={{
+                        minWidth: '120px',
+                        height: '56px'
+                      }}
+                    >
+                      Подтвердить
+                    </Button>
+                  </Box>
+                </Box>
+                
+                <Box sx={{ width: '100%', maxWidth: 400 }}>
                   <Button
                     fullWidth
                     variant="contained"
                     color="success"
                     onClick={start}
                     size="large"
-                    disabled={!me}
+                    disabled={!me || pointsError || !arePlayersOk}
                   >
                     Начать игру
                   </Button>

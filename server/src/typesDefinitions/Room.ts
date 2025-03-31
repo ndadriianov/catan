@@ -27,6 +27,17 @@ export class Room {
   largestArmy: number;
   playerWithTheLongestRoad: Player|undefined;
   playerWithTheLargestArmy: Player|undefined;
+  private _pointsToWin: number;
+  
+  
+  get pointsToWin(): number {return this._pointsToWin;}
+  
+  set pointsToWin(value: number) {
+    this._pointsToWin = value;
+    this._players.forEach((player: Player) => {
+      player.pointsToWin = value;
+    })
+  }
   
   
   get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
@@ -46,7 +57,7 @@ export class Room {
     if (this._hasStarted || this._players.length === 4) return false;
     if (this._players.find((player: Player): boolean => player.username === username)) return false;
     
-    this._players.push(new Player(username));
+    this._players.push(new Player(username, this._eventEmitter, this.id));
     this._eventEmitter.emit('update', this.id);
     return true;
   }
@@ -103,6 +114,7 @@ export class Room {
       debtors: this.debtors,
       playWithRobber: this.playWithRobber,
       debutMode: this.debutMode,
+      pointsToWin: this.pointsToWin,
     };
   }
   
@@ -123,6 +135,7 @@ export class Room {
     this.playWithRobber = false;
     this.longestRoad = 0;
     this.largestArmy = 0;
+    this._pointsToWin = 10;
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {

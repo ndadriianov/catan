@@ -61,6 +61,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const [villagePurchaseFailed, setVillagePurchaseFailed] = useState(false);
   const [cityPurchaseFailed, setCityPurchaseFailed] = useState(false);
   const [showDevelopmentCards, setShowDevelopmentCards] = useState(false);
+  const [winner, setWinner] = useState<string>('');
   
   
   function endTurn(): void {
@@ -181,6 +182,16 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
     if (room && room.debtors.length > 0) setShowChooseVictim(true);
   }, [room])
   
+  useEffect(() => {
+    socket.on('win', (winnerName: string): void => {
+      setWinner(winnerName);
+    })
+    
+    return () => {
+      socket.off('win');
+    }
+  }, []);
+  
   
   const isSmallMobile = useMediaQuery('(max-height: 890px) and (orientation: portrait)');
   const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
@@ -189,7 +200,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   const isColumnLayout = useMediaQuery('(max-width: 1536px)');
   const isLowScreen = useMediaQuery('(max-height: 880px)');
   
-  const renderResources = haveEnoughSpace;
+  const renderResources = !isSmallMobile;
   const renderTrade = haveEnoughSpace;
   const renderDevCards = haveEnoughSpace;
   
@@ -218,14 +229,18 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
         display: 'flex',
         flexDirection: { xs: 'column', md: 'column' },
         gap: 2,
-        alignItems: 'flex-start'
+        alignItems: 'center',
       }}>
         { /* счетчик */ }
-        <Box>
+        <Box sx={{display: 'flex', flexDirection: 'row'}}>
           <VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
+          {renderResources && <InventoryDisplay inventory={inventory}/>}
         </Box>
         { /* кнопки */ }
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Button variant="contained" onClick={throwTheDice} disabled={me.threwTheDice || !isMyTurnNow || room.debutMode}>
+            Бросить кубики
+          </Button>
           {renderResources || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
             Показать ресурсы
           </Button>}
@@ -237,8 +252,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
           </Button>}
         </Box>
         { /* 'элементы' */ }
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {renderResources && <InventoryDisplay inventory={inventory}/>}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} gap={2}>
           {renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
           {renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
         </Box>
@@ -362,6 +376,8 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
       />
       
       <UnclosablePopup message={"Необходимо передвинуть разбойника!"} visible={room.robberShouldBeMoved && isMyTurnNow}/>
+      
+      <UnclosablePopup message={`Игрок ${winner} победил`} visible={winner !== ''}/>
       
       <MovableModal id={'incorrect-turn'} isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
         <Box className={classes.buttonGroup}>

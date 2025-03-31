@@ -20,17 +20,23 @@ type CardItemProps = {
 }
 
 const DevCardItem = ({name, value, addValue, onApply, disabled}: CardItemProps) => (
-  <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2}}>
-    <Typography variant="body1" sx={{minWidth: 120 }}>
+  <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+    <Typography variant="body2" sx={{minWidth: 60}}>
       {name}:
     </Typography>
-    <Typography variant="body1" sx={{fontWeight: 'bold', minWidth: 30, textAlign: 'center'}}>
+    <Typography variant="body2" sx={{fontWeight: 'bold', minWidth: 20, textAlign: 'center'}}>
       {value}
     </Typography>
-    <Typography variant="body1" sx={{fontWeight: 'bold', minWidth: 30, textAlign: 'center'}} color={addValue > 0 ? 'green' : 'orange'}>
+    <Typography variant="body2" sx={{fontWeight: 'bold', minWidth: 30, textAlign: 'center'}} color={addValue > 0 ? 'green' : 'orange'}>
       (+{addValue})
     </Typography>
-    <Button variant="outlined" size="small" onClick={onApply} sx={{ml: 'auto', px: 2}} disabled={disabled}>
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={onApply}
+      disabled={disabled}
+      sx={{ml: 'auto', px: 1, fontSize: '0.75rem'}}
+    >
       Применить
     </Button>
   </Box>
@@ -53,7 +59,6 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
     { value: resourceTypes.wheat, label: 'Пшеница' }
   ];
   
-  
   function BuyDevCard(): void {
     socket.emit('buy-dev-card', (succeed: boolean): void => {
       if (succeed) setShowPurchaseSucceed(true);
@@ -75,57 +80,57 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
   
   return (
     <Box>
-      <Box
-        sx={{display: 'flex', justifyContent: 'center', bgcolor: '#f5f5f5', borderRadius: 2,}}>
-        <Card sx={{minWidth: 300, boxShadow: 3, bgcolor: 'background.paper',}}>
-          <Box sx={{ p: 1 }}>
-            <Card sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
-              <Typography variant="subtitle1" sx={{mt: 2, m: 1, fontWeight: 'medium', color: 'text.secondary'}}>
-                Карты развития
-              </Typography>
-              
-              <Button variant="outlined" size="small" onClick={BuyDevCard} sx={{mr: 1}} disabled={!isMyTurnNow || !me.threwTheDice}>
-                купить
-              </Button>
-            </Card>
-            
-            
-            <Card variant="outlined" sx={{p: 2, borderColor: 'divider', bgcolor: 'action.hover',}}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <DevCardItem
-                  name="Рыцарь"
-                  value={me.knights}
-                  addValue={me.addedKnights}
-                  onApply={ActivateKnight}
-                  disabled={!(isMyTurnNow && (!me.threwTheDice && !me.usedKnightThisTurn) && me.knights > 0)}
-                />
-                <DevCardItem
-                  name="Строительство дорог"
-                  value={me.roadBuildings}
-                  addValue={me.addedRoadBuildings}
-                  onApply={ActivateRoadBuilding}
-                  disabled={!(isMyTurnNow && me.roadBuildings > 0 && me.threwTheDice)}
-                />
-                <DevCardItem
-                  name="Изобретение"
-                  value={me.inventions}
-                  addValue={me.addedInventions}
-                  onApply={() => setShowInventionModal(true)}
-                  disabled={!(isMyTurnNow && me.inventions > 0 && me.threwTheDice)}
-                />
-                <DevCardItem
-                  name="Монополия"
-                  value={me.monopolies}
-                  addValue={me.addedMonopolies}
-                  onApply={() => setShowMonopolyModal(true)}
-                  disabled={!(isMyTurnNow && me.monopolies > 0 && me.threwTheDice)}
-                />
-              </Box>
-            </Card>
+      <Card sx={{minWidth: 240, boxShadow: 3, bgcolor: 'background.paper'}}>
+        <Box sx={{p: 1}}>
+          <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
+            <Typography variant="subtitle2" sx={{color: 'text.secondary'}}>
+              Карты развития
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={BuyDevCard}
+              disabled={!isMyTurnNow || !me.threwTheDice}
+              sx={{fontSize: '0.75rem'}}
+            >
+              купить
+            </Button>
           </Box>
-        </Card>
-      </Box>
-      
+          
+          <Card variant="outlined" sx={{p: 1, borderColor: 'divider'}}>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
+              <DevCardItem
+                name="Рыцарь"
+                value={me.knights}
+                addValue={me.addedKnights}
+                onApply={ActivateKnight}
+                disabled={!(isMyTurnNow && (!me.threwTheDice && !me.usedKnightThisTurn) && me.knights > 0)}
+              />
+              <DevCardItem
+                name="Дороги"
+                value={me.roadBuildings}
+                addValue={me.addedRoadBuildings}
+                onApply={ActivateRoadBuilding}
+                disabled={!(isMyTurnNow && me.roadBuildings > 0 && me.threwTheDice)}
+              />
+              <DevCardItem
+                name="Изобретение"
+                value={me.inventions}
+                addValue={me.addedInventions}
+                onApply={() => setShowInventionModal(true)}
+                disabled={!(isMyTurnNow && me.inventions > 0 && me.threwTheDice)}
+              />
+              <DevCardItem
+                name="Монополия"
+                value={me.monopolies}
+                addValue={me.addedMonopolies}
+                onApply={() => setShowMonopolyModal(true)}
+                disabled={!(isMyTurnNow && me.monopolies > 0 && me.threwTheDice)}
+              />
+            </Box>
+          </Card>
+        </Box>
+      </Card>
       
       <MovableModal id={'vpadc-ps'} isOpen={showPurchaseSucceed} onClose={() => setShowPurchaseSucceed(false)}>
         <Card className={classes.centeredModal}>
@@ -139,12 +144,11 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
         </Card>
       </MovableModal>
       
-      
       <MovableModal id={'invention-modal'} isOpen={showInventionModal} onClose={() => setShowInventionModal(false)}>
-        <Card sx={{ p: 3, minWidth: 300 }}>
-          <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>Выберите 2 ресурса которые вы хотите получить за изобретение</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <FormControl fullWidth>
+        <Card sx={{p: 2, minWidth: 250}}>
+          <Typography variant="subtitle1" sx={{mb: 1, textAlign: 'center'}}>Выберите 2 ресурса</Typography>
+          <Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+            <FormControl fullWidth size="small">
               <InputLabel>Первый ресурс</InputLabel>
               <Select
                 value={inventionResource1}
@@ -152,14 +156,12 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
                 label="Первый ресурс"
               >
                 {resourceOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                 ))}
               </Select>
             </FormControl>
             
-            <FormControl fullWidth>
+            <FormControl fullWidth size="small">
               <InputLabel>Второй ресурс</InputLabel>
               <Select
                 value={inventionResource2}
@@ -167,20 +169,15 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
                 label="Второй ресурс"
               >
                 {resourceOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                 ))}
               </Select>
             </FormControl>
             
-            <Button
-              variant="contained"
-              onClick={() => {
-                ActivateInvention();
-                setShowInventionModal(false);
-              }}
-            >
+            <Button variant="contained" size="small" onClick={() => {
+              ActivateInvention();
+              setShowInventionModal(false);
+            }}>
               Подтвердить
             </Button>
           </Box>
@@ -188,34 +185,31 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
       </MovableModal>
       
       <MovableModal id={'monopoly-modal'} isOpen={showMonopolyModal} onClose={() => setShowMonopolyModal(false)}>
-        <Card sx={{ p: 3, minWidth: 300 }}>
-          <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>Выберите ресурс для монополии</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <FormControl fullWidth>
-              <InputLabel>Ресурс</InputLabel>
-              <Select
-                value={monopolyResource}
-                onChange={(e) => setMonopolyResource(e.target.value as resourceTypes)}
-                label="Ресурс"
-              >
-                {resourceOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <Button
-              variant="contained"
-              onClick={() => {
-                ActivateMonopoly();
-                setShowMonopolyModal(false);
-              }}
+        <Card sx={{p: 2, minWidth: 250}}>
+          <Typography variant="subtitle1" sx={{mb: 1, textAlign: 'center'}}>Выберите ресурс</Typography>
+          <FormControl fullWidth size="small">
+            <InputLabel>Ресурс</InputLabel>
+            <Select
+              value={monopolyResource}
+              onChange={(e) => setMonopolyResource(e.target.value as resourceTypes)}
+              label="Ресурс"
             >
-              Подтвердить
-            </Button>
-          </Box>
+              {resourceOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => {
+              ActivateMonopoly();
+              setShowMonopolyModal(false);
+            }}
+            sx={{mt: 2}}
+          >
+            Подтвердить
+          </Button>
         </Card>
       </MovableModal>
     </Box>

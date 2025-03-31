@@ -2,6 +2,7 @@ import {ConnectionStatus} from './User';
 import {Owner} from './Gameboard';
 import {PortTypes} from './Ports';
 import {DevelopmentCard, DevelopmentCards} from './DevelopmentCard';
+import {EventEmitter} from 'node:events';
 
 export class Player {
   username: string;
@@ -17,12 +18,15 @@ export class Player {
   usedKnightsAmount: number;
   freeRoads: number;
   freeVillages: number;
-  victoryPoints: number;
+  private _victoryPoints: number;
   hasLongestRoad: boolean;
   hasLargestArmy: boolean;
+  pointsToWin: number;
+  private _eventEmitter: EventEmitter;
+  private _roomId: number;
   
   
-  constructor(username: string) {
+  constructor(username: string, eventEmitter: EventEmitter, roomId: number) {
     this.username = username;
     this.inventory = new Inventory();
     this.status = ConnectionStatus.Green;
@@ -35,10 +39,23 @@ export class Player {
     this.usedKnightThisTurn = false;
     this.usedKnightsAmount = 0;
     this.freeRoads = 0;
-    this.victoryPoints = 0;
+    this._victoryPoints = 0;
     this.hasLongestRoad = false;
     this.hasLargestArmy = false;
     this.freeVillages = 0;
+    this.pointsToWin = 10;
+    this._eventEmitter = eventEmitter;
+    this._roomId = roomId;
+  }
+  
+  
+  get victoryPoints(): number {return this._victoryPoints;}
+  
+  set victoryPoints(victoryPoints: number) {
+    this._victoryPoints = victoryPoints;
+    if (this._victoryPoints >= this.pointsToWin) {
+      this._eventEmitter.emit('win', this._roomId, this.username);
+    }
   }
   
   
@@ -53,7 +70,7 @@ export class Player {
       threwTheDice: this.threwTheDice,
       usedKnightThisTurn: this.usedKnightThisTurn,
       freeRoads: this.freeRoads,
-      victoryPoints: this.victoryPoints,
+      victoryPoints: this._victoryPoints,
       hasLongestRoad: this.hasLongestRoad,
       hasLargestArmy: this.hasLargestArmy,
       
