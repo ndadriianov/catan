@@ -20,18 +20,16 @@ function App() {
   const [user, setUser] = useState<User>({username: undefined, password: undefined});
   
   const appStyle: CSSProperties = {
-    backgroundColor: 'cadetblue', // Цвет фона
-    backgroundImage: 'url("your-image-url.jpg")', // Изображение на фоне
-    backgroundSize: 'cover', // Покрывает весь экран
-    backgroundPosition: 'center', // Центрирует изображение
-    backgroundAttachment: 'fixed', // Чтобы фон оставался фиксированным при прокрутке
-    height: '100vh', // Высота на весь экран
-    width: '100vw', // Ширина на весь экран
-    margin: 0, // Убираем отступы по умолчанию
-    display: 'flex', // Чтобы компоненты внутри можно было выравнивать
-    flexDirection: 'column', // Например, для вертикального выравнивания
-    //justifyContent: 'center', // Чтобы элементы по центру по вертикали
-    //alignItems: 'center', // Чтобы элементы по центру по горизонтали
+    backgroundColor: 'cadetblue',
+    backgroundImage: 'url("your-image-url.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
+    height: '100vh',
+    width: '100vw',
+    margin: 0,
+    display: 'flex',
+    flexDirection: 'column',
   };
   
   return (

@@ -1,14 +1,27 @@
 import { useEffect, useState } from 'react';
 import socket from '../../socket.ts';
 import { useNavigate } from 'react-router-dom';
-import classes from './menu.module.css';
-import globalClasses from '../../styles.module.css';
-import { Button, Modal, Box, Typography, TextField } from '@mui/material';
+import {
+  Button,
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  Divider
+} from '@mui/material';
 
 type RoomIdArrays = {
   currentRoomIds: number[];
   otherRoomIds: number[];
 };
+
+const MAX_ROOMS_VISIBLE = 5;
+const ROOM_ITEM_HEIGHT = 48;
 
 const ChooseRoom = () => {
   const [roomIdArrays, setRoomIdArrays] = useState<RoomIdArrays>({ currentRoomIds: [], otherRoomIds: [] });
@@ -39,15 +52,13 @@ const ChooseRoom = () => {
     };
   }, []);
   
-  // Обработчик изменения значения в TextField
   const handleRoomIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (isNaN(value) || value > 0) {
-      setRoomId(value); // Устанавливаем только значения больше 0 или undefined (если пусто)
+      setRoomId(value);
     }
   };
   
-  // Стили для модальных окон
   const modalStyle = {
     position: 'absolute' as const,
     top: '50%',
@@ -62,65 +73,148 @@ const ChooseRoom = () => {
   };
   
   return (
-    <div style={{ backgroundColor: 'cadetblue', height: '100vh' }}>
-      <div style={{ paddingTop: '20px' }}>
+    <Box sx={{
+      backgroundColor: 'cadetblue',
+      height: '100vh',
+      p: 3
+    }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 3
+      }}>
         <Button
           variant="contained"
           size="large"
           onClick={(): void => setShowCreateRoomModal(true)}
-          className={classes.createRoomButton}
+          sx={{ width: '300px' }}
         >
           Создать комнату
         </Button>
         
-        <div className={classes.chooseRoomContainer}>
-          <div className={classes.chooseRoomContent}>
-            <h3>Комнаты, в которых вы принимаете участие</h3>
+        <Box sx={{
+          display: 'flex',
+          gap: 4,
+          width: '100%',
+          maxWidth: '800px',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <Paper elevation={3} sx={{
+            width: '350px',
+            bgcolor: 'background.paper',
+            borderRadius: '12px',
+            overflow: 'hidden'
+          }}>
+            <Typography variant="h6" sx={{
+              p: 2,
+              textAlign: 'center',
+              bgcolor: '#2c4fff',
+              color: 'white'
+            }}>
+              Ваши комнаты
+            </Typography>
+            <Divider />
             {roomIdArrays.currentRoomIds.length > 0 ? (
-              <div className={classes.chooseRoomRooms}>
-                <h4>Доступные комнаты:</h4>
-                <ul className={classes.chooseRoomList}>
-                  {roomIdArrays.currentRoomIds.map((id: number, index: number) => (
-                    <li
-                      className={classes.chooseRoomListElement}
-                      key={index}
+              <List sx={{
+                maxHeight: MAX_ROOMS_VISIBLE * ROOM_ITEM_HEIGHT,
+                overflow: 'auto',
+                p: 0
+              }}>
+                {roomIdArrays.currentRoomIds.map((id: number) => (
+                  <ListItem key={id} disablePadding>
+                    <ListItemButton
                       onClick={() => navigate(`/room?id=${id}`)}
+                      sx={{
+                        '&:hover': { bgcolor: '#f0f4ff' },
+                        px: 3,
+                        py: 1.5
+                      }}
                     >
-                      {id}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                      <ListItemText
+                        primary={`Комната ${id}`}
+                        primaryTypographyProps={{
+                          fontSize: '1.1rem',
+                          fontWeight: 'medium',
+                          color: 'text.primary'
+                        }}
+                        sx={{ textAlign: 'center' }}
+                      />
+                    </ListItemButton>
+                    <Divider component="li" />
+                  </ListItem>
+                ))}
+              </List>
             ) : (
-              <h4>Нет доступных комнат</h4>
+              <Typography sx={{
+                p: 3,
+                textAlign: 'center',
+                color: 'text.secondary'
+              }}>
+                Нет доступных комнат
+              </Typography>
             )}
-          </div>
+          </Paper>
           
-          <div className={classes.chooseRoomContent}>
-            <h3>Остальные комнаты</h3>
+          <Paper elevation={3} sx={{
+            width: '350px',
+            bgcolor: 'background.paper',
+            borderRadius: '12px',
+            overflow: 'hidden'
+          }}>
+            <Typography variant="h6" sx={{
+              p: 2,
+              textAlign: 'center',
+              bgcolor: '#2c4fff',
+              color: 'white'
+            }}>
+              Другие комнаты
+            </Typography>
+            <Divider />
             {roomIdArrays.otherRoomIds.length > 0 ? (
-              <div className={classes.chooseRoomRooms}>
-                <h4>Доступные комнаты:</h4>
-                <ul className={classes.chooseRoomList}>
-                  {roomIdArrays.otherRoomIds.map((id: number, index: number) => (
-                    <li
-                      className={classes.chooseRoomListElement}
-                      key={index}
+              <List sx={{
+                maxHeight: MAX_ROOMS_VISIBLE * ROOM_ITEM_HEIGHT,
+                overflow: 'auto',
+                p: 0
+              }}>
+                {roomIdArrays.otherRoomIds.map((id: number) => (
+                  <ListItem key={id} disablePadding>
+                    <ListItemButton
                       onClick={() => navigate(`/room?id=${id}`)}
+                      sx={{
+                        '&:hover': { bgcolor: '#f0f4ff' },
+                        px: 3,
+                        py: 1.5
+                      }}
                     >
-                      {id}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                      <ListItemText
+                        primary={`Комната ${id}`}
+                        primaryTypographyProps={{
+                          fontSize: '1.1rem',
+                          fontWeight: 'medium',
+                          color: 'text.primary'
+                        }}
+                        sx={{ textAlign: 'center' }}
+                      />
+                    </ListItemButton>
+                    <Divider component="li" />
+                  </ListItem>
+                ))}
+              </List>
             ) : (
-              <h4>Нет доступных комнат</h4>
+              <Typography sx={{
+                p: 3,
+                textAlign: 'center',
+                color: 'text.secondary'
+              }}>
+                Нет доступных комнат
+              </Typography>
             )}
-          </div>
-        </div>
-      </div>
+          </Paper>
+        </Box>
+      </Box>
       
-      {/* Модальное окно для создания комнаты */}
       <Modal
         open={showCreateRoomModal}
         onClose={(): void => setShowCreateRoomModal(false)}
@@ -133,27 +227,25 @@ const ChooseRoom = () => {
           </Typography>
           <TextField
             type="number"
-            inputProps={{ min: 1, step: 1 }} // Ограничение минимального значения и шага
-            value={roomId || ''} // Если roomId undefined, показываем пустую строку
-            onChange={handleRoomIdChange} // Используем кастомный обработчик
+            inputProps={{ min: 1, step: 1 }}
+            value={roomId || ''}
+            onChange={handleRoomIdChange}
             fullWidth
             margin="normal"
-            className={globalClasses.numberInput}
             placeholder="Введите ID комнаты (больше 0)"
           />
           <Button
             variant="contained"
             onClick={() => roomId && CreateRoom(roomId)}
             fullWidth
-            className={globalClasses.button}
-            disabled={!roomId || roomId <= 0} // Деактивируем кнопку, если значение <= 0
+            disabled={!roomId || roomId <= 0}
+            sx={{ mt: 2 }}
           >
             Создать комнату
           </Button>
         </Box>
       </Modal>
       
-      {/* Модальное окно для уведомления о занятой комнате */}
       <Modal
         open={showTaken}
         onClose={(): void => setShowTaken(false)}
@@ -177,7 +269,7 @@ const ChooseRoom = () => {
           </Button>
         </Box>
       </Modal>
-    </div>
+    </Box>
   );
 };
 
