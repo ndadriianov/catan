@@ -194,15 +194,14 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
   
   
   const isSmallMobile = useMediaQuery('(max-height: 890px) and (orientation: portrait)');
-  const strangeMobile = useMediaQuery('(max-height: 920px) and (min-width: 480px) and (max-width: 520px)');
-  const isTablet = useMediaQuery('(min-width: 600px) and (max-width: 1199px)');
+  const isMobile = useMediaQuery('(orientation: portrait)');
   const haveEnoughSpace = useMediaQuery('(min-height: 1000px) and (orientation: landscape) and (min-width: 1536px)');
-  const isColumnLayout = useMediaQuery('(max-width: 1536px)');
-  const isLowScreen = useMediaQuery('(max-height: 880px)');
+  const isLowScreen = useMediaQuery('(max-height: 760px)');
+  const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 330;
   
   const renderResources = !isSmallMobile;
   const renderTrade = haveEnoughSpace;
-  const renderDevCards = haveEnoughSpace;
+  const renderDevCards = !isLowScreen && !isMobile;
   
   
   return (
@@ -218,45 +217,48 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
         </Card>
       </Box>
       
-      
+      {isSquare ||
       <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
            robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
            onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
-      />
+      />}
       
       
-      <Box sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', md: 'column' },
-        gap: 2,
-        alignItems: 'center',
-      }}>
-        { /* счетчик */ }
-        <Box sx={{display: 'flex', flexDirection: 'row'}}>
-          <VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
-          {renderResources && <InventoryDisplay inventory={inventory}/>}
-        </Box>
-        { /* кнопки */ }
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box sx={{display: 'flex', flexDirection: 'row', gap: 1, marginTop: '5px'}}>
+        <Box sx={{display: 'flex', flexDirection: { xs: 'column', md: 'column' }, gap: 1, alignItems: 'center',}}>
           <Button variant="contained" onClick={throwTheDice} disabled={me.threwTheDice || !isMyTurnNow || room.debutMode}>
             Бросить кубики
           </Button>
-          {renderResources || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
-            Показать ресурсы
-          </Button>}
-          {renderTrade || <Button variant="contained" onClick={() => setShowTradeModal(true)}>
-            Открыть меню торговли
-          </Button>}
-          {renderDevCards || <Button variant="contained" onClick={() => setShowDevelopmentCards(true)}>
-            Открыть карты развития
-          </Button>}
-        </Box>
-        { /* 'элементы' */ }
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} gap={2}>
+          
+          <Box sx={{display: 'flex', flexDirection: 'row'}}>
+            <VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
+            {renderResources && <InventoryDisplay inventory={inventory}/>}
+          </Box>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {renderResources || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
+              Показать ресурсы
+            </Button>}
+            {renderTrade || <Button variant="contained" onClick={() => setShowTradeModal(true)}>
+              Открыть меню торговли
+            </Button>}
+            {renderDevCards || <Button variant="contained" onClick={() => setShowDevelopmentCards(true)}>
+              Открыть карты развития
+            </Button>}
+          </Box>
+          
           {renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
-          {renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
         </Box>
+        
+        {renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
       </Box>
+      
+      {isSquare &&
+        <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
+             robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
+             onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
+        />
+      }
       
       
       {renderResources ||

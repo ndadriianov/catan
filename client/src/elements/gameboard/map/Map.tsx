@@ -39,7 +39,7 @@ const Map = (
   
   useEffect(() => {
     const handleResize = () => {
-      const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 320;
+      const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 330;
       const isPortrait = window.innerHeight > window.innerWidth;
       const isLow = window.innerHeight < 620;
       

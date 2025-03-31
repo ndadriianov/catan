@@ -153,10 +153,19 @@ const InRoom = () => {
   return (
     <div>
       <Box display="flex" justifyContent="space-between" alignItems="center" p={0.2} sx={{ backgroundColor: '#2c4fff', borderRadius: 1 }}>
-        <Typography variant="h5" component="h1" sx={{color: 'white'}}>
+        <Typography
+          variant="h5"
+          component="h1"
+          sx={{color: 'white', fontSize: {xs: '1rem', sm: '1.5rem'}}}
+        >
           Комната {roomId}
         </Typography>
-        <Button variant='contained' color="primary" onClick={handleBackToChoose}>
+        <Button
+          variant='contained'
+          color="primary"
+          onClick={handleBackToChoose}
+          sx={{fontSize: {xs: '0.75rem', sm: '0.875rem'}}}
+        >
           Вернуться к выбору комнаты
         </Button>
       </Box>
