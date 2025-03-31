@@ -28,7 +28,7 @@ export class User {
   }
   
   
-  get status(): ConnectionStatus {return Object.assign({}, this._status);}
+  get status(): ConnectionStatus {return this._status}
   
   // если пользователь не восстановил подключение в течение 5 секунд, он удаляется из комнаты
   set status(status: ConnectionStatus) {
@@ -85,7 +85,7 @@ export class User {
     this.password = password;
     this.participatingRooms = [];
     this._activeRoom = null;
-    this._status = ConnectionStatus.Green;
+    this._status = ConnectionStatus.Red;
     this._eventEmitter = emitter;
     
     emitter.on(`room-started-${this.username}`, (room: Room): void => {
