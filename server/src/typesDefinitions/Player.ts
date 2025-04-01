@@ -1,7 +1,7 @@
 import {ConnectionStatus} from './User';
 import {Owner} from './Gameboard';
 import {PortTypes} from './Ports';
-import {DevelopmentCard, DevelopmentCards} from './DevelopmentCard';
+import {DevelopmentCards} from './DevelopmentCard';
 import {EventEmitter} from 'node:events';
 
 export class Player {
@@ -60,6 +60,28 @@ export class Player {
   
   
   toJSON() {
+    return {
+      username: this.username,
+      inventory: this.inventory,
+      status: this.status,
+      leftTheRoom: this.leftTheRoom,
+      color: this.color,
+      ports: [... new Set(this.ports)],
+      developmentCards: this.developmentCards,
+      addedDevelopmentCards: this.addedDevelopmentCards,
+      threwTheDice: this.threwTheDice,
+      usedKnightThisTurn: this.usedKnightThisTurn,
+      usedKnightsAmount: this.usedKnightsAmount,
+      freeRoads: this.freeRoads,
+      victoryPoints: this._victoryPoints,
+      hasLongestRoad: this.hasLongestRoad,
+      hasLargestArmy: this.hasLargestArmy,
+      freeVillages: this.freeVillages
+    }
+  }
+  
+  
+  toJSON_forClient() {
     return {
       username: this.username,
       inventory: this.inventory,

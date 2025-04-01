@@ -9,6 +9,7 @@ import {Coords, Player} from './typesDefinitions/Player';
 import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
+import {saveRoom, setupAndSaveUser} from './InteractionWithDB';
 
 
 const PORT = 4000;
@@ -43,12 +44,25 @@ rooms[0].PREPARE2();
 
 //////////
 
+saveRoom(rooms[0])
+  .then(() => console.log('Initial room saved successfully'))
+  .catch((error) => console.error('Error saving initial room:', error));
+
+setupAndSaveUser()
+  .then(() => {
+    console.log('Setup and save completed successfully');
+  })
+  .catch((error) => {
+    console.error('Error during setup and save:', error);
+  });
+
+
+
+
 // срабатывает когда изменяет список пользователей, либо haveStarted в комнате, аргумент - id данной комнаты
 eventEmitter.on('update', (id: number): void => {
   const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
-  //console.log(room);
-  //console.log(room?.toJSON());
-  if (room) io.to(id.toString()).emit('room-update', room.toJSON());
+  if (room) io.to(id.toString()).emit('room-update', room.toJSON_forClient());
 });
 eventEmitter.on('purchase-update', (id: number): void => {
   const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
@@ -147,11 +161,11 @@ io.on('connection', (socket: Socket): void => {
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
     if (room) {
       socket.join(id.toString());
-      if (room.hasStarted && room.isInRoom(socket.data.user.username)) {
+      if (room.haveStarted && room.isInRoom(socket.data.user.username)) {
         eventEmitter.emit('update-user-status', socket.data.user.username, socket.data.user._status);
         socket.data.user.activeRoom = room;
       }
-      callback(room.toJSON());
+      callback(room.toJSON_forClient());
       
     } else {
       callback(undefined);
@@ -266,7 +280,7 @@ io.on('connection', (socket: Socket): void => {
   
   socket.on('refresh-room', (id: number): void => {
     const room: Room|undefined = rooms.find((room: Room): boolean => room.id === id);
-    if (room) socket.emit('room-update', room.toJSON());
+    if (room) socket.emit('room-update', room.toJSON_forClient());
   });
   
   
@@ -353,7 +367,7 @@ io.on('connection', (socket: Socket): void => {
   
   socket.on('buy-dev-card', (callback: (succeed: boolean) => void): void => {
     const data = GetAndCheckUserActivePlayerRoom({socket, callback});
-    if (!data || !data.room.hasStarted || !data.player.threwTheDice) {
+    if (!data || !data.room.haveStarted || !data.player.threwTheDice) {
       callback(false);
       return;
     }
@@ -366,7 +380,7 @@ io.on('connection', (socket: Socket): void => {
     if (!checkIsAuth({socket})) return;
     const user: User = socket.data.user;
     
-    if (!user.activeRoom || !user.activeRoom.hasStarted) return;
+    if (!user.activeRoom || !user.activeRoom.haveStarted) return;
     const room: Room = user.activeRoom;
     room.MoveRobber(coords, user.username);
   })
@@ -378,7 +392,7 @@ io.on('connection', (socket: Socket): void => {
     const room: Room = socket.data.user.activeRoom;
     const player = room.playersByLink.find(p => p.username === user.username);
     
-    if (!user.activeRoom || !room.hasStarted || room.activePlayer?.username !== user.username || !room.gameboard || !player || player.threwTheDice || room.debutMode) return;
+    if (!user.activeRoom || !room.haveStarted || room.activePlayer?.username !== user.username || !room.gameboard || !player || player.threwTheDice || room.debutMode) return;
     room.lastNumber = room.gameboard.GiveResources(room.playersByLink);
     player.threwTheDice = true;
     
@@ -399,7 +413,7 @@ io.on('connection', (socket: Socket): void => {
     const user: User = socket.data.user;
     const room: Room = socket.data.user.activeRoom;
     
-    if (!user.activeRoom || !room.hasStarted || room.activePlayer?.username !== user.username || !room.gameboard) {
+    if (!user.activeRoom || !room.haveStarted || room.activePlayer?.username !== user.username || !room.gameboard) {
       callback(false);
       return;
     }
@@ -414,7 +428,7 @@ io.on('connection', (socket: Socket): void => {
   socket.on('change-robber-mode', (playWithRobber: boolean): void => {
     if (!checkIsAuth({socket}) || !socket.data.user.activeRoom) return;
     const room: Room = socket.data.user.activeRoom;
-    if (!room.hasStarted) {
+    if (!room.haveStarted) {
       room.playWithRobber = playWithRobber;
       eventEmitter.emit('update', room.id);
     }

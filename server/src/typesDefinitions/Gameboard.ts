@@ -38,83 +38,94 @@ export type House = {
 }
 
 
+interface GameboardOptions {
+  tiles: Tile[][],
+  houses: House[][],
+  roads: Owner[][],
+  numbers: number[][],
+  robberPosition: Coords
+}
+
+
 export class Gameboard {
   private tiles: Tile[][];
   private houses: House[][];
   private roads: Owner[][];
   private numbers: number[][];
-  private undoRoads: Coords[];
-  private undoCities: Coords[];
-  private undoVillages: Coords[];
   private portsBuffer: {port: PortTypes, owner: Owner}[];
   private robberPosition: Coords;
   
   
-  constructor() {
-    const tilesCollection: Tile[] = [
-      Tile.forrest, Tile.forrest, Tile.forrest, Tile.forrest,
-      Tile.wheat, Tile.wheat, Tile.wheat, Tile.wheat,
-      Tile.sheep, Tile.sheep, Tile.sheep, Tile.sheep,
-      Tile.clay, Tile.clay, Tile.clay,
-      Tile.stone, Tile.stone, Tile.stone,
-      Tile.wasteland
-    ];
-    const numbersCollection: number[] = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12];
-    
-    this.tiles = [[], [], [], [], []];
-    this.numbers = [[], [], [], [], []];
-    this.portsBuffer = [];
-    this.robberPosition = {x: -1, y: -1};
-    
-    
-    const place = (i: number)=>  {
-      const tileId: number = this.getRandomInt(0, tilesCollection.length - 1);
-      if (tilesCollection[tileId] === Tile.wasteland) {
-        this.numbers[i].push(7);
-        this.robberPosition = {y: i, x: this.numbers[i].length - 1};
-        
-      } else {
-        const numberId: number = this.getRandomInt(0, numbersCollection.length - 1);
-        this.numbers[i].push(numbersCollection[numberId]);
-        numbersCollection.splice(numberId, 1);
+  constructor(options?: GameboardOptions) {
+    if (options) {
+      this.tiles = options.tiles;
+      this.houses = options.houses;
+      this.roads = options.roads;
+      this.numbers = options.numbers;
+      this.portsBuffer = [];
+      this.robberPosition = options.robberPosition;
+    } else {
+      const tilesCollection: Tile[] = [
+        Tile.forrest, Tile.forrest, Tile.forrest, Tile.forrest,
+        Tile.wheat, Tile.wheat, Tile.wheat, Tile.wheat,
+        Tile.sheep, Tile.sheep, Tile.sheep, Tile.sheep,
+        Tile.clay, Tile.clay, Tile.clay,
+        Tile.stone, Tile.stone, Tile.stone,
+        Tile.wasteland
+      ];
+      const numbersCollection: number[] = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12];
+      
+      this.tiles = [[], [], [], [], []];
+      this.numbers = [[], [], [], [], []];
+      this.portsBuffer = [];
+      this.robberPosition = {x: -1, y: -1};
+      
+      
+      const place = (i: number) => {
+        const tileId: number = this.getRandomInt(0, tilesCollection.length - 1);
+        if (tilesCollection[tileId] === Tile.wasteland) {
+          this.numbers[i].push(7);
+          this.robberPosition = {y: i, x: this.numbers[i].length - 1};
+          
+        } else {
+          const numberId: number = this.getRandomInt(0, numbersCollection.length - 1);
+          this.numbers[i].push(numbersCollection[numberId]);
+          numbersCollection.splice(numberId, 1);
+        }
+        this.tiles[i].push(tilesCollection[tileId]);
+        tilesCollection.splice(tileId, 1);
       }
-      this.tiles[i].push(tilesCollection[tileId]);
-      tilesCollection.splice(tileId, 1);
+      
+      for (let i = 0; i < 3; i++) place(0);
+      for (let i = 0; i < 4; i++) place(1);
+      for (let i = 0; i < 5; i++) place(2);
+      for (let i = 0; i < 4; i++) place(3);
+      for (let i = 0; i < 3; i++) place(4);
+      
+      
+      this.houses = [
+        new Array(7).fill({owner: Owner.nobody, type: houseType.village}),
+        new Array(9).fill({owner: Owner.nobody, type: houseType.village}),
+        new Array(11).fill({owner: Owner.nobody, type: houseType.village}),
+        new Array(11).fill({owner: Owner.nobody, type: houseType.village}),
+        new Array(9).fill({owner: Owner.nobody, type: houseType.village}),
+        new Array(7).fill({owner: Owner.nobody, type: houseType.village}),
+      ];
+      
+      this.roads = [
+        new Array(6).fill(Owner.nobody),
+        new Array(4).fill(Owner.nobody),
+        new Array(8).fill(Owner.nobody),
+        new Array(5).fill(Owner.nobody),
+        new Array(10).fill(Owner.nobody),
+        new Array(6).fill(Owner.nobody),
+        new Array(10).fill(Owner.nobody),
+        new Array(5).fill(Owner.nobody),
+        new Array(8).fill(Owner.nobody),
+        new Array(4).fill(Owner.nobody),
+        new Array(6).fill(Owner.nobody),
+      ]
     }
-    
-    for (let i = 0; i < 3; i++) place(0);
-    for (let i = 0; i < 4; i++) place(1);
-    for (let i = 0; i < 5; i++) place(2);
-    for (let i = 0; i < 4; i++) place(3);
-    for (let i = 0; i < 3; i++) place(4);
-    
-    
-    this.houses = [
-      new Array(7).fill({owner: Owner.nobody, type: houseType}),
-      new Array(9).fill({owner: Owner.nobody, type: houseType}),
-      new Array(11).fill({owner: Owner.nobody, type: houseType}),
-      new Array(11).fill({owner: Owner.nobody, type: houseType}),
-      new Array(9).fill({owner: Owner.nobody, type: houseType}),
-      new Array(7).fill({owner: Owner.nobody, type: houseType}),
-    ];
-    
-    this.roads = [
-      new Array(6).fill(Owner.nobody),
-      new Array(4).fill(Owner.nobody),
-      new Array(8).fill(Owner.nobody),
-      new Array(5).fill(Owner.nobody),
-      new Array(10).fill(Owner.nobody),
-      new Array(6).fill(Owner.nobody),
-      new Array(10).fill(Owner.nobody),
-      new Array(5).fill(Owner.nobody),
-      new Array(8).fill(Owner.nobody),
-      new Array(4).fill(Owner.nobody),
-      new Array(6).fill(Owner.nobody),
-    ]
-    
-    this.undoRoads = [];
-    this.undoVillages = [];
-    this.undoCities = [];
   }
   
   
@@ -151,8 +162,6 @@ export class Gameboard {
     this.roads[4][8] = Owner.blue;
     this.roads[3][4] = Owner.blue;
     this.roads[4][9] = Owner.blue;
-    
-    this.ClearUndo();
   }
   
   
@@ -168,7 +177,7 @@ export class Gameboard {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
   
-  toGSON() {
+  toJSON() {
     return {
       tiles: this.tiles,
       houses: this.houses,
@@ -681,19 +690,16 @@ export class Gameboard {
   
   
   PlaceVillage(coords: Coords, owner: Owner): void {
-    this.undoVillages.push(coords);
     this.houses[coords.y][coords.x] = {owner: owner, type: houseType.village};
     const port = this._CheckPort(coords);
     if (port !== PortTypes.noPort) this.portsBuffer.push({port: port, owner: owner});
   }
   
   PlaceCity(coords: Coords, owner: Owner): void {
-    this.undoCities.push(coords);
     this.houses[coords.y][coords.x] = {owner: owner, type: houseType.city};
   }
   
   PlaceRoad(coords: Coords, owner: Owner): void {
-    this.undoRoads.push(coords);
     this.roads[coords.y][coords.x] = owner;
   }
   
@@ -757,28 +763,6 @@ export class Gameboard {
   
   public TurnRobberOff(): void {
     this.robberPosition = {x: -1, y: -1};
-  }
-  
-  
-  Undo(): void {
-    this.undoRoads.forEach((coords: Coords): void => {
-      this.roads[coords.y][coords.x] = Owner.nobody;
-    });
-    this.undoCities.forEach((coords: Coords): void => {
-      this.houses[coords.y][coords.x] = {...this.houses[coords.y][coords.x], type: houseType.village};
-    })
-    this.undoVillages.forEach((coords: Coords): void => {
-      this.houses[coords.y][coords.x] = {owner: Owner.nobody, type: houseType.village};
-    });
-    
-    this.ClearUndo();
-    this.portsBuffer = [];
-  }
-  
-  public ClearUndo(): void {
-    this.undoRoads = [];
-    this.undoCities = [];
-    this.undoVillages = [];
   }
   
   

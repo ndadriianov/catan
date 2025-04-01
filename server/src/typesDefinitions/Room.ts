@@ -8,26 +8,25 @@ import {DevelopmentCard, InitialDevelopmentCards} from './DevelopmentCard';
 
 
 export class Room {
-  id: number;
-  active: boolean;
-  private _activePlayer?: Player;
-  debutMode: boolean;
-  lastNumber: number;
-  private _counter: number;
-  private _players: Array<Player>;
-  private _hasStarted: boolean;
-  private _eventEmitter: EventEmitter;
-  private _developmentCardDeck: DevelopmentCard[];
-  gameboard?: Gameboard;
-  purchases?: PurchaseService;
-  robberShouldBeMoved: boolean;
-  debtors: string[];
-  playWithRobber: boolean;
-  longestRoad: number;
-  largestArmy: number;
-  playerWithTheLongestRoad: Player|undefined;
-  playerWithTheLargestArmy: Player|undefined;
-  private _pointsToWin: number;
+  id: number; // ok
+  debutMode: boolean; // ok
+  lastNumber: number; // ok
+  robberShouldBeMoved: boolean; // ok
+  playWithRobber: boolean; // ok
+  debtors: string[]; // ok
+  longestRoad: number; // need to add
+  largestArmy: number; // need to add
+  playerWithTheLongestRoad: Player|undefined; // need to add
+  playerWithTheLargestArmy: Player|undefined; // need to add
+  purchases?: PurchaseService; // dont need in db
+  gameboard?: Gameboard;            // complicated
+  private _players: Array<Player>;  // complicated
+  private _activePlayer?: Player; // ok
+  private _eventEmitter: EventEmitter; // dont need in db
+  private _developmentCardDeck: DevelopmentCard[]; // need to add
+  private _counter: number; // ok
+  private _haveStarted: boolean; // ok
+  private _pointsToWin: number; // ok
   
   
   get pointsToWin(): number {return this._pointsToWin;}
@@ -54,7 +53,7 @@ export class Room {
   // если игра не началась, то пользователь будет добавлен при наличии места
   // если игра началась, то ничего не произойдет
   addPlayer(username: string): boolean {
-    if (this._hasStarted || this._players.length === 4) return false;
+    if (this._haveStarted || this._players.length === 4) return false;
     if (this._players.find((player: Player): boolean => player.username === username)) return false;
     
     this._players.push(new Player(username, this._eventEmitter, this.id));
@@ -65,7 +64,7 @@ export class Room {
   // если игра не началась, то пользователь просто будет удален
   // если игра началась, то ничего не произойдет
   removePlayer(username: string): boolean {
-    if (this._hasStarted) return false;
+    if (this._haveStarted) return false;
     if (!this._players.find((player: Player): boolean => player.username === username)) return false;
     
     this._players = this._players.filter((player: Player): boolean => player.username !== username);
@@ -101,32 +100,54 @@ export class Room {
   }
   
   
-  toJSON() {
+  toJSON_forClient() {
     return {
       id: this.id,
-      players: this._players.map(player => (player.toJSON())),
+      debutMode: this.debutMode,
+      lastNumber: this.lastNumber,
+      robberShouldBeMoved: this.robberShouldBeMoved,
+      playWithRobber: this.playWithRobber,
+      debtors: this.debtors,
+      gameboard: this.gameboard ? this.gameboard.toJSON() : undefined,
+      players: this._players.map(player => (player.toJSON_forClient())),
       activePlayer: this._activePlayer?.username,
       counter: this._counter,
-      lastNumber: this.lastNumber,
-      haveStarted: this._hasStarted,
-      gameboard: this.gameboard ? this.gameboard.toGSON() : undefined,
-      robberShouldBeMoved: this.robberShouldBeMoved,
-      debtors: this.debtors,
-      playWithRobber: this.playWithRobber,
-      debutMode: this.debutMode,
+      haveStarted: this._haveStarted,
       pointsToWin: this.pointsToWin,
     };
   }
   
   
+  toJSON() {
+    return {
+      id: this.id,
+      debutMode: this.debutMode,
+      lastNumber: this.lastNumber,
+      robberShouldBeMoved: this.robberShouldBeMoved,
+      playWithRobber: this.playWithRobber,
+      debtors: this.debtors,
+      longestRoad: this.longestRoad,
+      largestArmy: this.largestArmy,
+      playerWithTheLongestRoad: this.playerWithTheLongestRoad,
+      playerWithTheLargestArmy: this.playerWithTheLargestArmy,
+      gameboard: this.gameboard?.toJSON(),
+      players: this._players.map(player => (player.toJSON())),
+      activePlayerName: this.activePlayer?.username,
+      developmentCardDeck: this._developmentCardDeck,
+      counter: this._counter,
+      haveStarted: this._haveStarted,
+      pointsToWin: this.pointsToWin
+    }
+  }
+  
+  
   constructor(id: number, eventEmitter: EventEmitter) {
     this.id = id;
-    this.active = true; // буду использовать для создания архива незаконченных сессий
     this._activePlayer = undefined;
     this.debutMode = false;
     this._counter = 1;
     this._players = [];
-    this._hasStarted = false;
+    this._haveStarted = false;
     this._eventEmitter = eventEmitter;
     this.lastNumber = 0;
     this._developmentCardDeck = [...InitialDevelopmentCards].sort(() => Math.random() - 0.5);
@@ -195,7 +216,7 @@ export class Room {
   }
   
   
-  get hasStarted(): boolean {return this._hasStarted; }
+  get haveStarted(): boolean {return this._haveStarted; }
   
   
   get activePlayer(): Player | undefined {return this._activePlayer;}
@@ -290,9 +311,9 @@ export class Room {
   
   
   start(): void {
-    if (this._hasStarted) return;
+    if (this._haveStarted) return;
     
-    this._hasStarted = true;
+    this._haveStarted = true;
     this.debutMode = true;
     this.gameboard = new Gameboard();
     this.purchases = new PurchaseService(this._players, this._eventEmitter, this.id);

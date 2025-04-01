@@ -14,12 +14,14 @@
   "description": "",
   "devDependencies": {
     "@types/express": "^5.0.0",
+    "@types/pg": "^8.11.11",
     "typescript": "^5.7.3",
     "vite-node": "^3.0.3"
   },
   "dependencies": {
     "@types/node": "^22.10.7",
     "express": "^4.21.2",
+    "pg": "^8.14.1",
     "socket.io": "^4.8.1"
   }
 }
