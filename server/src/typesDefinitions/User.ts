@@ -79,10 +79,11 @@ export class User {
   }
   
   
-  constructor(username: string, password: string, emitter: EventEmitter) {
+  constructor(username: string, password: string, emitter: EventEmitter, participatingRooms?: Room[]) {
     this.username = username;
     this.password = password;
-    this.participatingRooms = [];
+    if (participatingRooms) this.participatingRooms = participatingRooms;
+    else this.participatingRooms = [];
     this._activeRoom = null;
     this._status = ConnectionStatus.Red;
     this._eventEmitter = emitter;

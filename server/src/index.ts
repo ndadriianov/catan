@@ -43,7 +43,16 @@ users[1].activeRoom = rooms[0];
 rooms[0].PREPARE2();
 
 //////////
-
+/*
+test(rooms[0], users)
+  .then(() => {
+    console.log('Test completed successfully');
+    console.log('Proceeding with the rest of the program...');
+  })
+  .catch(error => {
+    console.error('Error during test execution:', error);
+  });
+*/
 
 
 

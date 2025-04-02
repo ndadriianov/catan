@@ -60,7 +60,7 @@ async function createTables() {
 }
 
 
-async function saveUser(user: User): Promise<void> {
+export async function saveUser(user: User): Promise<void> {
   const client = await pool.connect();
   
   try {
@@ -118,6 +118,42 @@ export async function saveRoom(room: Room): Promise<void> {
     
   } catch (error) {
     console.error(`Error saving room ${room.id}:`, error);
+    throw error;
+    
+  } finally {
+    client.release();
+  }
+}
+
+
+export async function getUsers(eventEmitter: EventEmitter, rooms: Room[]): Promise<User[]> {
+  const client = await pool.connect();
+  
+  try {
+    const query = `
+        SELECT username, password, participating_rooms
+        FROM users;
+    `;
+    
+    const result = await client.query(query);
+    const users: User[] = result.rows.map(row => {
+      const participatingRooms = row.participating_rooms
+        .map((roomId: number) => rooms.find(room => room.id === roomId))
+        .filter((room: Room|undefined): room is Room => room !== undefined);
+      
+      return new User(
+        row.username,
+        row.password,
+        eventEmitter,
+        participatingRooms
+      );
+    });
+    
+    console.log(`Retrieved ${users.length} users from database`);
+    return users;
+    
+  } catch (error) {
+    console.error('Error retrieving users:', error);
     throw error;
     
   } finally {
@@ -299,22 +335,98 @@ export async function setupAndSaveUser() {
 }
 
 
-export async function test(room: Room): Promise<void> {
+export async function test(room: Room, testUsers: User[]): Promise<void> {
+  function compareRooms(original: Room, fromDB: Room) {
+    const originalJSON = original.toJSON();
+    const dbJSON = fromDB.toJSON();
+    
+    for (const key in originalJSON) {
+      // @ts-ignore
+      if (JSON.stringify(originalJSON[key]) !== JSON.stringify(dbJSON[key])) {
+        console.error(`Field mismatch: ${key}`);
+        // @ts-ignore
+        console.log('Original:', originalJSON[key]);
+        // @ts-ignore
+        console.log('Database:', dbJSON[key]);
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  await createTables();
+  
   const eventEmitter = new EventEmitter();
   
   try {
-    // Сохраняем комнату в базу данных
+    // Сохраняем тестовых пользователей
+    for (const user of testUsers) {
+      await saveUser(user);
+      console.log(`User ${user.username} saved for testing`);
+    }
+    
+    // Сохраняем тестовую комнату
     await saveRoom(room);
     console.log(`Room ${room.id} saved for testing`);
     
-    // Получаем все комнаты из базы данных
-    const rooms = await getRooms(eventEmitter);
+    // Получаем всех пользователей из базы данных
+    const usersFromDB = await getUsers(eventEmitter, [room]);
+    console.log('Users retrieved from database:');
+    usersFromDB.forEach((user, index) => {
+      console.log(`User ${index + 1}:`, {
+        username: user.username,
+        password: user.password,
+        participatingRooms: user.participatingRooms.map(r => r.id)
+      });
+    });
     
-    // Выводим результат в консоль
+    // Получаем все комнаты из базы данных
+    const roomsFromDB = await getRooms(eventEmitter);
     console.log('Rooms retrieved from database:');
-    rooms.forEach((r, index) => {
+    roomsFromDB.forEach((r, index) => {
       console.log(`Room ${index + 1}:`, r.toJSON());
     });
+    
+    // Проверяем соответствие сохраненных и полученных данных
+    console.log('\nData consistency check:');
+    
+    // Проверка пользователей
+    testUsers.forEach(testUser => {
+      const dbUser = usersFromDB.find(u => u.username === testUser.username);
+      if (!dbUser) {
+        console.error(`User ${testUser.username} not found in database!`);
+        return;
+      }
+      
+      if (dbUser.password !== testUser.password) {
+        console.error(`Password mismatch for user ${testUser.username}`);
+      }
+      
+      const testRoomIds = testUser.participatingRooms.map(r => r.id);
+      const dbRoomIds = dbUser.participatingRooms.map(r => r.id);
+      
+      if (JSON.stringify(testRoomIds) !== JSON.stringify(dbRoomIds)) {
+        console.error(`Room IDs mismatch for user ${testUser.username}`);
+        console.log('Expected:', testRoomIds);
+        console.log('Got:', dbRoomIds);
+      }
+    });
+    
+    // Проверка комнаты
+    const dbRoom = roomsFromDB.find(r => r.id === room.id);
+    if (!dbRoom) {
+      console.error(`Room ${room.id} not found in database!`);
+    } else {
+      const originalJSON = room.toJSON();
+      const dbJSON = dbRoom.toJSON();
+      
+      compareRooms(room, dbRoom);
+      if (JSON.stringify(originalJSON) !== JSON.stringify(dbJSON)) {
+        console.error(`Room data mismatch for room ${room.id}`);
+      }
+    }
+    
+    console.log('Test completed successfully');
     
   } catch (error) {
     console.error('Error in test function:', error);
