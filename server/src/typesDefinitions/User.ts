@@ -22,7 +22,7 @@ export class User {
     this._status = ConnectionStatus.Red;
     if (this._activeRoom) {
       this._activeRoom.removePlayer(this.username);
-      this.activeRoom = null;
+      this._activeRoom = null;
       this._eventEmitter.removeAllListeners(`${this.username}:debut-turn`);
     }
   }
@@ -77,7 +77,6 @@ export class User {
       }
     }
   }
-  
   
   
   constructor(username: string, password: string, emitter: EventEmitter) {

@@ -38,7 +38,7 @@ export type House = {
 }
 
 
-interface GameboardOptions {
+export interface GameboardOptions {
   tiles: Tile[][],
   houses: House[][],
   roads: Owner[][],

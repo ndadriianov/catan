@@ -9,7 +9,7 @@ import {Coords, Player} from './typesDefinitions/Player';
 import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
-import {saveRoom, setupAndSaveUser} from './InteractionWithDB';
+import {saveRoom, setupAndSaveUser, test} from './InteractionWithDB';
 
 
 const PORT = 4000;
@@ -43,18 +43,6 @@ users[1].activeRoom = rooms[0];
 rooms[0].PREPARE2();
 
 //////////
-
-saveRoom(rooms[0])
-  .then(() => console.log('Initial room saved successfully'))
-  .catch((error) => console.error('Error saving initial room:', error));
-
-setupAndSaveUser()
-  .then(() => {
-    console.log('Setup and save completed successfully');
-  })
-  .catch((error) => {
-    console.error('Error during setup and save:', error);
-  });
 
 
 

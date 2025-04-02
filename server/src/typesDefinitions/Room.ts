@@ -7,9 +7,27 @@ import {PurchaseService} from './Purchase';
 import {DevelopmentCard, InitialDevelopmentCards} from './DevelopmentCard';
 
 
+export interface RoomOptions {
+  lastNumber: number;
+  robberShouldBeMoved: boolean;
+  playWithRobber: boolean;
+  debtors: string[];
+  longestRoad: number;
+  largestArmy: number;
+  playerWithTheLongestRoad?: string;
+  playerWithTheLargestArmy?: string;
+  gameboard?: Gameboard;
+  players: Player[];
+  developmentCardDeck: DevelopmentCard[];
+  counter: number;
+  haveStarted: boolean;
+  pointsToWin: number;
+}
+
+
 export class Room {
   id: number; // ok
-  debutMode: boolean; // ok
+  debutMode: boolean; // dont need in db
   lastNumber: number; // ok
   robberShouldBeMoved: boolean; // ok
   playWithRobber: boolean; // ok
@@ -20,7 +38,7 @@ export class Room {
   playerWithTheLargestArmy: Player|undefined; // need to add
   purchases?: PurchaseService; // dont need in db
   gameboard?: Gameboard;            // complicated
-  private _players: Array<Player>;  // complicated
+  private _players: Player[];  // complicated
   private _activePlayer?: Player; // ok
   private _eventEmitter: EventEmitter; // dont need in db
   private _developmentCardDeck: DevelopmentCard[]; // need to add
@@ -121,18 +139,16 @@ export class Room {
   toJSON() {
     return {
       id: this.id,
-      debutMode: this.debutMode,
       lastNumber: this.lastNumber,
       robberShouldBeMoved: this.robberShouldBeMoved,
       playWithRobber: this.playWithRobber,
       debtors: this.debtors,
       longestRoad: this.longestRoad,
       largestArmy: this.largestArmy,
-      playerWithTheLongestRoad: this.playerWithTheLongestRoad,
-      playerWithTheLargestArmy: this.playerWithTheLargestArmy,
+      playerWithTheLongestRoad: this.playerWithTheLongestRoad?.username,
+      playerWithTheLargestArmy: this.playerWithTheLargestArmy?.username,
       gameboard: this.gameboard?.toJSON(),
       players: this._players.map(player => (player.toJSON())),
-      activePlayerName: this.activePlayer?.username,
       developmentCardDeck: this._developmentCardDeck,
       counter: this._counter,
       haveStarted: this._haveStarted,
@@ -141,22 +157,54 @@ export class Room {
   }
   
   
-  constructor(id: number, eventEmitter: EventEmitter) {
-    this.id = id;
-    this._activePlayer = undefined;
-    this.debutMode = false;
-    this._counter = 1;
-    this._players = [];
-    this._haveStarted = false;
-    this._eventEmitter = eventEmitter;
-    this.lastNumber = 0;
-    this._developmentCardDeck = [...InitialDevelopmentCards].sort(() => Math.random() - 0.5);
-    this.robberShouldBeMoved = false;
-    this.debtors = [];
-    this.playWithRobber = false;
-    this.longestRoad = 0;
-    this.largestArmy = 0;
-    this._pointsToWin = 10;
+  constructor(id: number, eventEmitter: EventEmitter, options?: RoomOptions) {
+    if (options) {
+      this.id = id;
+      // debut ok
+      this.lastNumber = options.lastNumber;
+      this.robberShouldBeMoved = options.robberShouldBeMoved;
+      this.playWithRobber = options.playWithRobber;
+      this.debtors = options.debtors;
+      this.longestRoad = options.longestRoad;
+      this.largestArmy = options.largestArmy;
+      // purchases ok
+      // gameboard ok через options передается уже созданный Gameboard
+      this._players = options.players; // через options передается уже созданный Player[]t
+      this.playerWithTheLongestRoad = this._players.find(p => p.username === options.playerWithTheLongestRoad);
+      this.playerWithTheLargestArmy = this._players.find(p => p.username === options.playerWithTheLargestArmy);
+      // activePlayer ok
+      this._eventEmitter = eventEmitter;
+      this._developmentCardDeck = options.developmentCardDeck;
+      this._counter = options.counter;
+      this._haveStarted = options.haveStarted;
+      this._pointsToWin = options.pointsToWin;
+      
+      this.debutMode = this._counter <= this._players.length * 2;
+      if (this._haveStarted) {
+        this._activePlayer = this.nextPlayer(); // здесь counter не инкрементирован, поэтому nextPlayer вернет текущего
+        this.purchases = new PurchaseService(this._players, eventEmitter, id);
+        this.gameboard = options.gameboard ? options.gameboard : new Gameboard();
+      }
+    }
+    
+    else {
+      this.id = id;
+      this._activePlayer = undefined;
+      this.debutMode = false;
+      this._counter = 1;
+      this._players = [];
+      this._haveStarted = false;
+      this._eventEmitter = eventEmitter;
+      this.lastNumber = 0;
+      this._developmentCardDeck = [...InitialDevelopmentCards].sort(() => Math.random() - 0.5);
+      this.robberShouldBeMoved = false;
+      this.debtors = [];
+      this.playWithRobber = false;
+      this.longestRoad = 0;
+      this.largestArmy = 0;
+      this._pointsToWin = 10;
+    }
+    
     eventEmitter.on('update-user-status', (username: string, status: ConnectionStatus): void => { // надо сделать чтобы получала только та комната где есть данный игрок
       const player: Player | undefined = this._players.find((player: Player): boolean => player.username === username);
       if (player) {
@@ -325,9 +373,7 @@ export class Room {
       player.freeVillages = 1;
       this._eventEmitter.emit(`room-started-${player.username}`, this);
     });
-    this._eventEmitter.emit('update', this.id);
     
-    // дебют
     this._activePlayer = this._players[0];
     this._eventEmitter.emit('update', this.id);
   }

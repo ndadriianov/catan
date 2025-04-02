@@ -4,6 +4,27 @@ import {PortTypes} from './Ports';
 import {DevelopmentCards} from './DevelopmentCard';
 import {EventEmitter} from 'node:events';
 
+
+export interface PlayerOptions {
+  inventory: Inventory;
+  status: ConnectionStatus;
+  leftTheRoom: boolean;
+  color: Owner;
+  ports: PortTypes[];
+  developmentCards: DevelopmentCards;
+  addedDevelopmentCards: DevelopmentCards;
+  threwTheDice: boolean;
+  usedKnightThisTurn: boolean;
+  usedKnightsAmount: number;
+  freeRoads: number;
+  freeVillages: number;
+  victoryPoints: number;
+  hasLongestRoad: boolean;
+  hasLargestArmy: boolean;
+  pointsToWin: number; // из Room
+}
+
+
 export class Player {
   username: string;
   inventory: Inventory;
@@ -21,35 +42,59 @@ export class Player {
   private _victoryPoints: number;
   hasLongestRoad: boolean;
   hasLargestArmy: boolean;
-  pointsToWin: number;
+  pointsToWin: number; // из Room
   private _eventEmitter: EventEmitter;
-  private _roomId: number;
+  private _roomId: number; // из Room
   
   
-  constructor(username: string, eventEmitter: EventEmitter, roomId: number) {
+  constructor(username: string, eventEmitter: EventEmitter, roomId: number, options?: PlayerOptions) {
     this.username = username;
-    this.inventory = new Inventory();
-    this.status = ConnectionStatus.Green;
-    this.leftTheRoom = false;
-    this.color = Owner.nobody;
-    this.ports = [];
-    this.developmentCards = new DevelopmentCards();
-    this.addedDevelopmentCards = new DevelopmentCards();
-    this.threwTheDice = false;
-    this.usedKnightThisTurn = false;
-    this.usedKnightsAmount = 0;
-    this.freeRoads = 0;
-    this._victoryPoints = 0;
-    this.hasLongestRoad = false;
-    this.hasLargestArmy = false;
-    this.freeVillages = 0;
-    this.pointsToWin = 10;
     this._eventEmitter = eventEmitter;
     this._roomId = roomId;
+    
+    if (options) {
+      this.inventory = options.inventory;
+      this.status = options.status;
+      this.leftTheRoom = options.leftTheRoom;
+      this.color = options.color;
+      this.ports = options.ports;
+      this.developmentCards = options.developmentCards;
+      this.addedDevelopmentCards = options.addedDevelopmentCards;
+      this.threwTheDice = options.threwTheDice;
+      this.usedKnightThisTurn = options.usedKnightThisTurn;
+      this.usedKnightsAmount = options.usedKnightsAmount;
+      this.freeRoads = options.freeRoads;
+      this.freeVillages = options.freeVillages;
+      this._victoryPoints = options.victoryPoints;
+      this.hasLongestRoad = options.hasLongestRoad;
+      this.hasLargestArmy = options.hasLargestArmy;
+      this.pointsToWin = options.pointsToWin;
+    }
+    
+    else {
+      this.inventory = new Inventory();
+      this.status = ConnectionStatus.Green;
+      this.leftTheRoom = false;
+      this.color = Owner.nobody;
+      this.ports = [];
+      this.developmentCards = new DevelopmentCards();
+      this.addedDevelopmentCards = new DevelopmentCards();
+      this.threwTheDice = false;
+      this.usedKnightThisTurn = false;
+      this.usedKnightsAmount = 0;
+      this.freeRoads = 0;
+      this._victoryPoints = 0;
+      this.hasLongestRoad = false;
+      this.hasLargestArmy = false;
+      this.freeVillages = 0;
+      this.pointsToWin = 10;
+    }
   }
   
   
-  get victoryPoints(): number {return this._victoryPoints;}
+  get victoryPoints(): number {
+    return this._victoryPoints;
+  }
   
   set victoryPoints(victoryPoints: number) {
     this._victoryPoints = victoryPoints;
@@ -66,18 +111,18 @@ export class Player {
       status: this.status,
       leftTheRoom: this.leftTheRoom,
       color: this.color,
-      ports: [... new Set(this.ports)],
+      ports: [...new Set(this.ports)],
       developmentCards: this.developmentCards,
       addedDevelopmentCards: this.addedDevelopmentCards,
       threwTheDice: this.threwTheDice,
       usedKnightThisTurn: this.usedKnightThisTurn,
       usedKnightsAmount: this.usedKnightsAmount,
       freeRoads: this.freeRoads,
+      freeVillages: this.freeVillages,
       victoryPoints: this._victoryPoints,
       hasLongestRoad: this.hasLongestRoad,
       hasLargestArmy: this.hasLargestArmy,
-      freeVillages: this.freeVillages
-    }
+    };
   }
   
   
@@ -88,7 +133,7 @@ export class Player {
       status: this.status,
       leftTheRoom: this.leftTheRoom,
       color: this.color,
-      ports: [... new Set(this.ports)],
+      ports: [...new Set(this.ports)],
       threwTheDice: this.threwTheDice,
       usedKnightThisTurn: this.usedKnightThisTurn,
       freeRoads: this.freeRoads,
@@ -146,7 +191,6 @@ export class Player {
     }
   }
 }
-
 
 
 export type Coords = {
