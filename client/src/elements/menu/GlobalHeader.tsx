@@ -21,19 +21,7 @@ const GlobalHeader = () => {
     sessionStorage.removeItem('password');
     navigate('/login');
   }
-  
-  
-  // сохранение логина и пароля в sessionStorage чтобы они не слетели при перезагрузке страницы
-  useEffect(() => {
-    if (user.username && user.password) {
-      sessionStorage.setItem('username', user.username);
-      sessionStorage.setItem('password', user.password);
-    }
-  }, [user]);
-  
-  
-  // попытка авторизации при перезагрузке страницы
-  useEffect(() => {
+  function Login(): void {
     if (!(user.username && user.password)) {
       const storageUsername = sessionStorage.getItem('username');
       const storagePassword = sessionStorage.getItem('password');
@@ -50,6 +38,22 @@ const GlobalHeader = () => {
         clearInvalidAccount();
       }
     }
+  }
+  
+  
+  // сохранение логина и пароля в sessionStorage чтобы они не слетели при перезагрузке страницы
+  useEffect(() => {
+    if (user.username && user.password) {
+      sessionStorage.setItem('username', user.username);
+      sessionStorage.setItem('password', user.password);
+    }
+  }, [user]);
+  
+  
+  // попытка авторизации при перезагрузке страницы
+  useEffect(() => {
+    Login();
+    socket.on('check-login', Login);
   }, []);
   
   
@@ -58,7 +62,7 @@ const GlobalHeader = () => {
       setNeedAuthorizeAgain(true);
       clearInvalidAccount();
     })
-  })
+  }, [])
   
   
   return (

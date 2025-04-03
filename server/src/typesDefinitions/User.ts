@@ -1,5 +1,6 @@
 import {Room} from './Room';
 import {EventEmitter} from 'node:events';
+import {saveUser} from '../InteractionWithDB';
 
 
 export class User {
@@ -88,8 +89,9 @@ export class User {
     this._status = ConnectionStatus.Red;
     this._eventEmitter = emitter;
     
-    emitter.on(`room-started-${this.username}`, (room: Room): void => {
+    emitter.on(`room-started-${this.username}`, async (room: Room): Promise<void> => {
       this.participatingRooms.push(room);
+      await saveUser(this);
     });
   }
 }

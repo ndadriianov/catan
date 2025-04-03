@@ -54,8 +54,8 @@ export class Player {
     
     if (options) {
       this.inventory = options.inventory;
-      this.status = options.status;
-      this.leftTheRoom = options.leftTheRoom;
+      this.status = ConnectionStatus.Red;
+      this.leftTheRoom = true;
       this.color = options.color;
       this.ports = options.ports;
       this.developmentCards = options.developmentCards;
