@@ -7,15 +7,15 @@ import {Gameboard, GameboardOptions} from './typesDefinitions/Gameboard';
 
 
 const pool = new Pool({
-  user: 'postgres',
+  user: 'my_user',
   password: '34',
   host: 'localhost',
   port: 5432,
-  database: 'catan'
+  database: 'my_database',
 });
 
 
-async function createTables() {
+export async function createTables() {
   const client = await pool.connect();
   
   try {

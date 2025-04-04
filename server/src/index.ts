@@ -9,7 +9,7 @@ import {Coords, Player} from './typesDefinitions/Player';
 import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
-import {getRooms, getUsers, saveRoom, saveUser} from './InteractionWithDB';
+import {createTables, getRooms, getUsers, saveRoom, saveUser} from './InteractionWithDB';
 
 
 const PORT = 4000;
@@ -17,7 +17,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
   },
 });
@@ -33,6 +33,7 @@ async function main(): Promise<void> {
   let rooms: Room[] = [];
   
   try {
+    await createTables();
     rooms = await getRooms(eventEmitter);
     users = await getUsers(eventEmitter, rooms);
   } catch (error) {

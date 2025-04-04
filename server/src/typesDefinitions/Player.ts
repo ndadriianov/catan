@@ -137,6 +137,7 @@ export class Player {
       threwTheDice: this.threwTheDice,
       usedKnightThisTurn: this.usedKnightThisTurn,
       freeRoads: this.freeRoads,
+      freeVillages: this.freeVillages,
       victoryPoints: this._victoryPoints,
       hasLongestRoad: this.hasLongestRoad,
       hasLargestArmy: this.hasLargestArmy,

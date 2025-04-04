@@ -369,13 +369,21 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
           Не удалось украсть ресурс у игрока
         </Box>
       </MovableModal>
-      
-      
+
+
+      <UnclosablePopup
+          message={`У вас осталось ${me.freeVillages} неиспользованных бесплатных поселений!
+          Если их не использовать за этот ход, то они исчезнут!`}
+          visible={me.freeVillages > 0}
+      />
+
+
       <UnclosablePopup
         message={`У вас осталось ${me.freeRoads} неиспользованных бесплатных дороги!
          Если их не использовать за этот ход, то они исчезнут!`}
         visible={me.freeRoads > 0}
       />
+
       
       <UnclosablePopup message={"Необходимо передвинуть разбойника!"} visible={room.robberShouldBeMoved && isMyTurnNow}/>
       

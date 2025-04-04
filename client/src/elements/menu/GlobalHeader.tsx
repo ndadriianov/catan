@@ -53,7 +53,7 @@ const GlobalHeader = () => {
   // попытка авторизации при перезагрузке страницы
   useEffect(() => {
     Login();
-    socket.on('check-login', Login);
+    // socket.on('check-login', Login);
   }, []);
   
   

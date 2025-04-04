@@ -19,6 +19,7 @@ type Player = {
   threwTheDice: boolean;
   usedKnightThisTurn: boolean;
   freeRoads: number;
+  freeVillages: number;
   hasLongestRoad: boolean;
   hasLargestArmy: boolean;
   
@@ -49,6 +50,7 @@ export function parsePlayer(playerJSON: jsonPlayer): Player {
     threwTheDice: playerJSON.threwTheDice,
     usedKnightThisTurn: playerJSON.usedKnightThisTurn,
     freeRoads: playerJSON.freeRoads,
+    freeVillages: playerJSON.freeVillages,
     hasLongestRoad: playerJSON.hasLongestRoad,
     hasLargestArmy: playerJSON.hasLargestArmy,
     
