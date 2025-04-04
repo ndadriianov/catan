@@ -1,13 +1,17 @@
-import { Box, Paper, Typography } from '@mui/material';
+import {Box, Paper, Typography, Collapse, IconButton} from '@mui/material';
+import {useState} from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 interface UnclosablePopupProps {
-  message: string;
-  visible: boolean;
+  messages: string[];
 }
 
-const UnclosablePopup = ({ message, visible }: UnclosablePopupProps) => {
-  if (!visible) return null;
-  
+const UnclosablePopup = ({messages}: UnclosablePopupProps) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!messages.find(m => m !== '')) return null;
+
   return (
     <Box
       sx={{
@@ -25,17 +29,46 @@ const UnclosablePopup = ({ message, visible }: UnclosablePopupProps) => {
         sx={{
           p: 2,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          flexDirection: 'column',
           backgroundColor: 'background.paper',
           borderRadius: 2,
           border: '1px solid',
           borderColor: 'primary.main'
         }}
       >
-        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-          {message}
-        </Typography>
+        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+          <Typography variant="body1" sx={{fontWeight: 'medium'}}>
+            У вас {messages.filter(m => m !== '').length} оповещения
+          </Typography>
+          {messages.length > 0 && (
+            <IconButton
+              size="small"
+              onClick={() => setExpanded(!expanded)}
+              sx={{ml: 1}}
+            >
+              {expanded ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
+            </IconButton>
+          )}
+        </Box>
+
+        <Collapse in={expanded && messages.length > 1}>
+          <Box sx={{mt: 1, display: 'flex', flexDirection: 'column'}}>
+            {messages.filter(m => m !== '').map((message, index) => (
+              <Typography
+                key={index}
+                variant="body1"
+                sx={{
+                  fontWeight: 'medium',
+                  pt: 1,
+                  borderTop: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                {message}
+              </Typography>
+            ))}
+          </Box>
+        </Collapse>
       </Paper>
     </Box>
   );
