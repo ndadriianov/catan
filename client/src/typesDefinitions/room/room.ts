@@ -15,6 +15,7 @@ type Room = {
   playWithRobber: boolean;
   debutMode: boolean;
   pointsToWin: number;
+  passwordRequired: boolean;
 }
 
 export type jsonRoom = Omit<Room, 'players'> & {
@@ -39,6 +40,7 @@ export function parseRoom(roomJSON: jsonRoom|null): Room|null {
       playWithRobber: roomJSON.playWithRobber,
       debutMode: roomJSON.debutMode,
       pointsToWin: roomJSON.pointsToWin,
+      passwordRequired: roomJSON.passwordRequired
     };
   } catch (e) {
     console.log("Error parsing room:", e);

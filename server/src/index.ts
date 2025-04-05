@@ -12,12 +12,13 @@ import {resourceTypes} from './typesDefinitions/Purchase';
 import {createTables, getRooms, getUsers, saveRoom, saveUser} from './InteractionWithDB';
 
 
-const PORT = 4000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
+const origin = process.env.ORIGIN || 'http://localhost:5173';
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: origin,
     methods: ['GET', 'POST'],
   },
 });
@@ -194,7 +195,7 @@ async function main(): Promise<void> {
     })
     
     // срабатывает когда пользователь присоединяется к комнате (не путать с 'load room')
-    socket.on('join-room', async (id: number, callback: (succeed: boolean) => void): Promise<void> => {
+    socket.on('join-room', async (id: number, password: string, callback: (succeed: boolean) => void): Promise<void> => {
       if (!checkIsAuth({socket, callback})) return;
       
       const room: Room | undefined = rooms.find((room: Room): boolean => room.id === id);
@@ -202,13 +203,23 @@ async function main(): Promise<void> {
         callback(false);
         return;
       }
-      if (room.addPlayer(socket.data.user.username)) {
+      if ((room.password === undefined || room.password === password) && room.addPlayer(socket.data.user.username)) {
         socket.data.user.activeRoom = room;
         await saveRoom(room);
         callback(true);
       }
       callback(false);
     });
+
+    // установить пароль для комнаты
+    socket.on('set-password', async (password: string): Promise<void> => {
+      if (!checkIsAuth({socket})) return;
+
+      const room = socket.data.user.activeRoom;
+      if (!room || room.players[0].username !== socket.data.user.username) return;
+      room.password = password;
+      await saveRoom(room);
+    })
     
     
     /*********************************************************************************************************************

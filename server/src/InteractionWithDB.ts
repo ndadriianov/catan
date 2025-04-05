@@ -280,6 +280,7 @@ export async function getRooms(eventEmitter: EventEmitter): Promise<Room[]> {
         pointsToWin: roomData.pointsToWin,
         developmentCardDeck: roomData.developmentCardDeck,
         players: players,
+        password: roomData.password
       };
       
       // Воссоздаем gameboard, если он присутствует

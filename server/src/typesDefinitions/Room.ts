@@ -22,6 +22,7 @@ export interface RoomOptions {
   counter: number;
   haveStarted: boolean;
   pointsToWin: number;
+  password?: string;
 }
 
 
@@ -38,6 +39,7 @@ export class Room {
   playerWithTheLargestArmy: Player|undefined; // need to add
   purchases?: PurchaseService; // dont need in db
   gameboard?: Gameboard;            // complicated
+  password?: string;
   private _players: Player[];  // complicated
   private _activePlayer?: Player; // ok
   private _eventEmitter: EventEmitter; // dont need in db
@@ -132,6 +134,7 @@ export class Room {
       counter: this._counter,
       haveStarted: this._haveStarted,
       pointsToWin: this.pointsToWin,
+      passwordRequired: this.password !== undefined,
     };
   }
   
@@ -152,7 +155,8 @@ export class Room {
       developmentCardDeck: this._developmentCardDeck,
       counter: this._counter,
       haveStarted: this._haveStarted,
-      pointsToWin: this.pointsToWin
+      pointsToWin: this.pointsToWin,
+      password: this.password,
     }
   }
   
@@ -178,6 +182,7 @@ export class Room {
       this._counter = options.counter;
       this._haveStarted = options.haveStarted;
       this._pointsToWin = options.pointsToWin;
+      if (options.password) this.password = options.password;
       
       this.debutMode = this._counter <= this._players.length * 2;
       if (this._haveStarted) {

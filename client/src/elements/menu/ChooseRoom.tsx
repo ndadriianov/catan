@@ -14,6 +14,8 @@ import {
   Paper,
   Divider
 } from '@mui/material';
+import BackgroundPicture from '../../assets/BackgroundPicture.png';
+
 
 type RoomIdArrays = {
   currentRoomIds: number[];
@@ -22,6 +24,7 @@ type RoomIdArrays = {
 
 const MAX_ROOMS_VISIBLE = 5;
 const ROOM_ITEM_HEIGHT = 48;
+
 
 const ChooseRoom = () => {
   const [roomIdArrays, setRoomIdArrays] = useState<RoomIdArrays>({ currentRoomIds: [], otherRoomIds: [] });
@@ -74,9 +77,12 @@ const ChooseRoom = () => {
   
   return (
     <Box sx={{
-      backgroundColor: 'cadetblue',
+      backgroundColor: '#2c4fff',
+      backgroundImage: `url(${BackgroundPicture})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       height: '100vh',
-      p: 3
     }}>
       <Box sx={{
         display: 'flex',

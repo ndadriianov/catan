@@ -22,6 +22,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import MovableModal from "../../UI/movableModal/MovableModal.tsx";
 
 
 function ReplayIcon() {
@@ -39,6 +40,9 @@ const InRoom = () => {
   const [pointsToWin, setPointsToWin] = useState<number>(10);
   const [pointsError, setPointsError] = useState<boolean>(false);
   const [arePlayersOk, setArePlayersOk] = useState<boolean>(false);
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
+  const [showNewPasswordModal, setShowNewPasswordModal] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>("");
   
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -53,10 +57,18 @@ const InRoom = () => {
   }
   
   function joinRoom(): void {
-    socket.emit('join-room', roomId, (succeed: boolean): void => {
+    setShowPasswordModal(false);
+    socket.emit('join-room', roomId, password, (succeed: boolean): void => {
       if (!succeed) setUnsuccessful(true);
     });
     socket.emit('apply-color', color);
+  }
+
+  function sendNewPassword(): void {
+    setShowNewPasswordModal(false);
+    if (room?.players[0].username !== user.username) return;
+
+    socket.emit('set-password', password);
   }
   
   function chooseColor(input: string): Owner {
@@ -153,19 +165,12 @@ const InRoom = () => {
   return (
     <div>
       <Box display="flex" justifyContent="space-between" alignItems="center" p={0.2} sx={{ backgroundColor: '#2c4fff', borderRadius: 1 }}>
-        <Typography
-          variant="h5"
-          component="h1"
-          sx={{color: 'white', fontSize: {xs: '1rem', sm: '1.5rem'}}}
-        >
+        {/* комната id */}
+        <Typography variant="h5" component="h1" sx={{color: 'white', fontSize: {xs: '1rem', sm: '1.5rem'}}}>
           Комната {roomId}
         </Typography>
-        <Button
-          variant='contained'
-          color="primary"
-          onClick={handleBackToChoose}
-          sx={{fontSize: {xs: '0.75rem', sm: '0.875rem'}}}
-        >
+        {/* вернуться к выбору комнаты */}
+        <Button variant='contained' color="primary" onClick={handleBackToChoose} sx={{fontSize: {xs: '0.75rem', sm: '0.875rem'}}}>
           Вернуться к выбору комнаты
         </Button>
       </Box>
@@ -174,13 +179,7 @@ const InRoom = () => {
       {room ? (
         <Container maxWidth="md">
           {room.haveStarted && me ? (
-            <Gameboard
-              owner={me.color || color}
-              room={room}
-              isMyTurnNow={isMyTurnNow}
-              me={me}
-              inventory={me.inventory}
-            />
+            <Gameboard owner={me.color || color} room={room} isMyTurnNow={isMyTurnNow} me={me} inventory={me.inventory}/>
           ) : (
             <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
               <Typography variant="h5" gutterBottom align="center">
@@ -188,12 +187,13 @@ const InRoom = () => {
               </Typography>
               
               <Stack spacing={2} alignItems="center">
+                {/* присоединиться */}
                 <Box sx={{ width: '100%', maxWidth: 400 }}>
                   <Button
                     fullWidth
                     variant="contained"
                     color="primary"
-                    onClick={joinRoom}
+                    onClick={room.passwordRequired ? () => setShowPasswordModal(true) : joinRoom}
                     size="large"
                     sx={{ mb: 2 }}
                   >
@@ -202,7 +202,22 @@ const InRoom = () => {
                 </Box>
                 
                 <Divider sx={{ width: '100%', my: 2 }} />
-                
+
+                {/* установить пароль */}
+                <Box sx={{width: '100%', maxWidth: 400}}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setShowNewPasswordModal(true)}
+                    size="large"
+                    disabled={room.players[0].username !== user.username}
+                  >
+                    Установить пароль
+                  </Button>
+                </Box>
+
+                {/* выбор цвета */}
                 <Box sx={{width: '100%', maxWidth: 400}}>
                   <FormControl fullWidth>
                     <InputLabel id="color-select-label">Выберите цвет</InputLabel>
@@ -226,7 +241,8 @@ const InRoom = () => {
                     </Select>
                   </FormControl>
                 </Box>
-                
+
+                {/* разбойник */}
                 <Box sx={{ width: '100%', maxWidth: 400 }}>
                   <FormControl fullWidth>
                     <InputLabel id="robber-mode-label">Режим разбойника</InputLabel>
@@ -243,7 +259,8 @@ const InRoom = () => {
                     </Select>
                   </FormControl>
                 </Box>
-                
+
+                {/* количество победных очков */}
                 <Box sx={{ width: '100%', maxWidth: 400 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                     <TextField
@@ -281,7 +298,8 @@ const InRoom = () => {
                     </Button>
                   </Box>
                 </Box>
-                
+
+                {/* начать игру */}
                 <Box sx={{ width: '100%', maxWidth: 400 }}>
                   <Button
                     fullWidth
@@ -325,6 +343,66 @@ const InRoom = () => {
           </Paper>
         </Container>
       )}
+      
+      
+      <MovableModal id={'password-modal'} isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
+        <Box sx={{textAlign: 'center', p: 3}}>
+          <Typography variant="h5" gutterBottom>
+            Введите пароль для доступа к комнате
+          </Typography>
+          <TextField
+            fullWidth
+            label="Пароль"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            sx={{mb: 3}}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={joinRoom}
+          >
+            Подтвердить
+          </Button>
+        </Box>
+      </MovableModal>
+
+
+      <MovableModal id={'set-password'} isOpen={showNewPasswordModal} onClose={() => setShowNewPasswordModal(false)}>
+        <Paper
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: 3,
+            width: 300,
+          }}
+        >
+          <Typography id="password-modal-title" variant="h6" gutterBottom>
+            Установить пароль
+          </Typography>
+          <TextField
+            fullWidth
+            label="Введите пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            sx={{mb: 2}}
+          />
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={sendNewPassword}
+            disabled={!password.trim()}
+          >
+            Установить
+          </Button>
+        </Paper>
+      </MovableModal>
+      
       
       <MyModal visible={unsuccessful} setVisible={setUnsuccessful}>
         Не удалось подключиться к комнате
