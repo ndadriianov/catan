@@ -22,6 +22,7 @@ export interface PlayerOptions {
   hasLongestRoad: boolean;
   hasLargestArmy: boolean;
   pointsToWin: number; // из Room
+  wantsToDeleteRoom: boolean;
 }
 
 
@@ -45,6 +46,7 @@ export class Player {
   pointsToWin: number; // из Room
   private _eventEmitter: EventEmitter;
   private _roomId: number; // из Room
+  wantsToDeleteRoom: boolean;
   
   
   constructor(username: string, eventEmitter: EventEmitter, roomId: number, options?: PlayerOptions) {
@@ -69,6 +71,7 @@ export class Player {
       this.hasLongestRoad = options.hasLongestRoad;
       this.hasLargestArmy = options.hasLargestArmy;
       this.pointsToWin = options.pointsToWin;
+      this.wantsToDeleteRoom = options.wantsToDeleteRoom;
     }
     
     else {
@@ -88,6 +91,7 @@ export class Player {
       this.hasLargestArmy = false;
       this.freeVillages = 0;
       this.pointsToWin = 10;
+      this.wantsToDeleteRoom = false;
     }
   }
   

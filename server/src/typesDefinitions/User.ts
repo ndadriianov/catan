@@ -93,6 +93,9 @@ export class User {
       this.participatingRooms.push(room);
       await saveUser(this);
     });
+    emitter.on('delete-room', (id: number): void => {
+      this.participatingRooms = this.participatingRooms.filter(room => room.id !== id);
+    })
   }
 }
 

@@ -25,6 +25,7 @@ import DevelopmentCards from './DevelopmentCards.tsx';
 import player from '../../../typesDefinitions/room/player.ts';
 import UnclosablePopup from '../../UI/UnclosablePopup.tsx';
 import VictoryPointsAndLastNumber from './VictoryPointsAndLastNumber.tsx';
+import ResourcesWithCards from "./ResourcesWithCards.tsx";
 
 
 type mapProps = {
@@ -242,7 +243,8 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	const isLowScreen = useMediaQuery('(max-height: 760px)');
 	const isSquare = Math.abs(window.innerHeight - window.innerWidth) < 330;
 	
-	const renderResources = !isSmallMobile;
+	const renderResources = !isSmallMobile && isMobile;
+	const renderResourcesWithCards = !isMobile;
 	const renderTrade = haveEnoughSpace;
 	const renderDevCards = !isLowScreen && !isMobile;
 	
@@ -279,7 +281,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 					</Box>
 					
 					<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-						{renderResources || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
+						{renderResources || renderResourcesWithCards || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
                 Показать ресурсы
             </Button>}
 						{renderTrade || <Button variant="contained" onClick={() => setShowTradeModal(true)}>
@@ -289,13 +291,15 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
                 Открыть карты развития
             </Button>}
 					</Box>
-					
+
+					{renderResourcesWithCards && <ResourcesWithCards resources={inventory}/>}
 					{renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
 				</Box>
-				
+
 				{renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
 			</Box>
-			
+
+
 			{isSquare &&
           <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
                robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}

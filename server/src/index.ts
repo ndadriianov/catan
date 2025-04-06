@@ -9,7 +9,7 @@ import {Coords, Player} from './typesDefinitions/Player';
 import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
-import {createTables, getRooms, getUsers, saveRoom, saveUser} from './InteractionWithDB';
+import {createTables, deleteRoom, getRooms, getUsers, saveRoom, saveUser} from './InteractionWithDB';
 
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
@@ -219,6 +219,25 @@ async function main(): Promise<void> {
       if (!room || room.players[0].username !== socket.data.user.username) return;
       room.password = password;
       await saveRoom(room);
+    })
+
+
+    socket.on('delete-room', async (id: number): Promise<void> => {
+      if (!checkIsAuth({socket})) return;
+
+      const room: Room | undefined = rooms.find((room: Room): boolean => room.id === id);
+      if (!room) return;
+
+      const player: Player | undefined = room.playersByLink.find(p => p.username === socket.data.user.username);
+      if (!player) return;
+
+      player.wantsToDeleteRoom = true;
+      if (room.playersByLink.filter(p => p.wantsToDeleteRoom).length >= room.players.length / 2) {
+        rooms = rooms.filter(r => r.id !== id);
+        eventEmitter.emit('delete-room', id);
+        eventEmitter.emit('prepare-update-room-list');
+        await deleteRoom(id);
+      }
     })
     
     

@@ -129,7 +129,19 @@ const ChooseRoom = () => {
                 p: 0
               }}>
                 {roomIdArrays.currentRoomIds.map((id: number) => (
-                  <ListItem key={id} disablePadding>
+                  <ListItem key={id} secondaryAction={
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        socket.emit('delete-room', id);
+                      }}
+                    >
+                      Удалить
+                    </Button>
+                  }>
                     <ListItemButton
                       onClick={() => navigate(`/room?id=${id}`)}
                       sx={{
@@ -143,12 +155,9 @@ const ChooseRoom = () => {
                         primaryTypographyProps={{
                           fontSize: '1.1rem',
                           fontWeight: 'medium',
-                          color: 'text.primary'
                         }}
-                        sx={{ textAlign: 'center' }}
                       />
                     </ListItemButton>
-                    <Divider component="li" />
                   </ListItem>
                 ))}
               </List>

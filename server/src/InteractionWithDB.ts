@@ -245,6 +245,7 @@ export async function getRooms(eventEmitter: EventEmitter): Promise<Room[]> {
           hasLongestRoad: playerData.hasLongestRoad,
           hasLargestArmy: playerData.hasLargestArmy,
           pointsToWin: roomData.pointsToWin,
+          wantsToDeleteRoom: roomData.wantsToDeleteRoom,
         };
         return new Player(playerData.username, eventEmitter, row.id, playerOptions);
       });
@@ -306,6 +307,24 @@ export async function getRooms(eventEmitter: EventEmitter): Promise<Room[]> {
     console.error('Error retrieving rooms:', error);
     throw error;
     
+  } finally {
+    client.release();
+  }
+}
+
+
+export async function deleteRoom(roomId: number): Promise<void> {
+  const client = await pool.connect();
+  try {
+    const result = await client.query('DELETE FROM rooms WHERE id = $1', [roomId]);
+    if (result.rowCount === 0) {
+      console.warn(`Room with ID ${roomId} not found in the database.`);
+    } else {
+      console.log(`Room with ID ${roomId} successfully deleted.`);
+    }
+  } catch (error) {
+    console.error(`Failed to delete room with ID ${roomId}:`, error);
+    throw error;
   } finally {
     client.release();
   }
