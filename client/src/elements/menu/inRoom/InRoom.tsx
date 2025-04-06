@@ -211,7 +211,7 @@ const InRoom = () => {
                     color="primary"
                     onClick={() => setShowNewPasswordModal(true)}
                     size="large"
-                    disabled={room.players[0].username !== user.username}
+                    disabled={room.players[0] && room.players[0].username !== user.username}
                   >
                     Установить пароль
                   </Button>
