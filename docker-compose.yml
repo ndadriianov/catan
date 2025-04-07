@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+
+  server:
+    build: ./server
+    restart: always
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    environment:
+      PORT: 4000
+      ORIGIN: "http://localhost:3000"
+      DATABASE_USER: my_user
+      DATABASE_PASSWORD: "34"
+      DATABASE_NAME: my_database
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+
+  client:
+    build: ./client
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: my_user
+      POSTGRES_PASSWORD: "34"
+      POSTGRES_DB: my_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
