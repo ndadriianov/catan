@@ -89,6 +89,7 @@ export class Room {
     
     this._players = this._players.filter((player: Player): boolean => player.username !== username);
     this._eventEmitter.emit('update', this.id);
+    if (this._players.length === 0) this._eventEmitter.emit('empty-room', this.id);
     return true;
   }
   

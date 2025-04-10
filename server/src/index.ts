@@ -78,6 +78,11 @@ async function main(): Promise<void> {
       io.to(id.toString()).emit('win', username);
     }
   })
+  eventEmitter.on('empty-room', (id: number): void => {
+    rooms = rooms.filter(room => room.id !== id);
+    deleteRoom(id);
+    eventEmitter.emit('prepare-update-room-list');
+  })
   
   
   io.on('connection', (socket: Socket): void => {
