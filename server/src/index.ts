@@ -8,7 +8,7 @@ import {Owner} from './typesDefinitions/Gameboard';
 import {PriceCalculator} from './typesDefinitions/PriceCalculator';
 import {resourceTypes} from './typesDefinitions/Purchase';
 import {createTables, deleteRoom, getRooms, getUsers, saveRoom, saveUser} from './InteractionWithDB';
-
+//
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 console.log(`PORT: ${PORT}`)
