@@ -1,7 +1,5 @@
-import express from 'express';
 import {createServer} from 'http';
 import {Server, Socket} from 'socket.io';
-import cors from 'cors';
 import {ConnectionStatus, LoginStatus, User} from './typesDefinitions/User';
 import {Room} from './typesDefinitions/Room';
 import {EventEmitter} from 'node:events';
@@ -14,16 +12,13 @@ import {createTables, deleteRoom, getRooms, getUsers, saveRoom, saveUser} from '
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 const origin = process.env.ORIGIN || 'http://localhost:5173';
-const app = express();
-const server = createServer(app);
+const server = createServer();
 const io = new Server(server, {
   cors: {
     origin: origin,
     methods: ['GET', 'POST'],
   },
 });
-
-app.use(cors());
 
 
 async function main(): Promise<void> {
@@ -86,11 +81,12 @@ async function main(): Promise<void> {
   
   io.on('connection', (socket: Socket): void => {
     console.log(`Client connected: ${socket.id}`);
-    socket.emit('check-login');
-    
-    eventEmitter.on('prepare-update-room-list', (): void => {
+
+    const prepareUpdateRoomListHandler = (): void => {
       if (socket.data.user) socket.emit('update-room-list', prepareRoomIdLists(socket.data.user));
-    });
+    };
+
+    eventEmitter.on('prepare-update-room-list', prepareUpdateRoomListHandler);
     
     /*********************************************************************************************************************
      * Взаимодействие в меню
@@ -103,9 +99,17 @@ async function main(): Promise<void> {
         await saveUser(user);
         users.push(user);
         socket.data.user = user;
-        eventEmitter.on(`inform-about-deal-${user.username}`, (partner: string, succeed: boolean): void => {
+
+        const informAboutDealHandler = (partner: string, succeed: boolean): void => {
           socket.emit('inform-about-deal', partner, succeed);
+        };
+
+        eventEmitter.on(`inform-about-deal-${user.username}`, informAboutDealHandler);
+
+        socket.on('disconnect', (): void => {
+          eventEmitter.off(`inform-about-deal-${user.username}`, informAboutDealHandler);
         });
+
         callback(true);
       } else {
         callback(false);
@@ -119,9 +123,17 @@ async function main(): Promise<void> {
         if (user.status !== ConnectionStatus.Green) { // пользователь не должен иметь текущей активности
           user.status = ConnectionStatus.Green; // восстановление соединения и подключение после долгой паузы
           socket.data.user = user;
-          eventEmitter.on(`inform-about-deal-${user.username}`, (partner: string, succeed: boolean): void => {
+
+          const informAboutDealHandler = (partner: string, succeed: boolean): void => {
             socket.emit('inform-about-deal', partner, succeed);
+          };
+
+          eventEmitter.on(`inform-about-deal-${user.username}`, informAboutDealHandler);
+
+          socket.on('disconnect', (): void => {
+            eventEmitter.off(`inform-about-deal-${user.username}`, informAboutDealHandler);
           });
+
           callback(LoginStatus.Success);
         } else {
           callback(LoginStatus.Duplicate)
@@ -706,6 +718,7 @@ async function main(): Promise<void> {
     // пользователь отключился (закрыл страницу/перезагрузил/у него пропал интернет)
     socket.on('disconnect', (reason) => {
       console.log(`Socket disconnected: ${socket.id}, reason: ${reason}`);
+      eventEmitter.off('prepare-update-room-list', prepareUpdateRoomListHandler);
       if (socket.data.user) {
         socket.data.user.status = ConnectionStatus.Yellow;
         eventEmitter.removeAllListeners(`inform-about-deal-${socket.data.user.username}`);

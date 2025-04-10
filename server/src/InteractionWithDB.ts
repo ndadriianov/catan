@@ -7,11 +7,11 @@ import {Gameboard, GameboardOptions} from './typesDefinitions/Gameboard';
 
 
 const pool = new Pool({
-  user: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  host: process.env.DATABASE_HOST,
+  user: process.env.DATABASE_USER || 'my_user',
+  password: process.env.DATABASE_PASSWORD || '34',
+  host: process.env.DATABASE_HOST || 'localhost',
   port: parseInt(process.env.DATABASE_PORT || '5432'),
-  database: process.env.DATABASE_NAME,
+  database: process.env.DATABASE_NAME || 'my_database',
 });
 
 

@@ -59,7 +59,7 @@ export class Room {
   }
   
   
-  get players(): Array<Player> {return JSON.parse(JSON.stringify(this._players));}
+  get players(): Player[] {return JSON.parse(JSON.stringify(this._players));}
   
   get playersByLink(): Player[] {return this._players;}
   
