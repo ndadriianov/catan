@@ -11,6 +11,7 @@ import {createTables, deleteRoom, getRooms, getUsers, saveRoom, saveUser} from '
 
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
+console.log(`PORT: ${PORT}`)
 const origin = process.env.ORIGIN || 'http://localhost:5173';
 const server = createServer();
 const io = new Server(server, {

@@ -4,7 +4,8 @@
   "main": "index.ts",
   "scripts": {
     "dev": "cross-env PORT=4000 ORIGIN=http://localhost:5173 vite-node src/index.ts",
-    "start": "cross-env PORT=4000 ORIGIN=http://localhost:3000 vite-node src/index.ts"
+    "start": "cross-env PORT=4000 ORIGIN=http://localhost:3000 vite-node src/index.ts",
+    "docker-start": "vite-node src/index.ts"
   },
   "keywords": [],
   "author": "",

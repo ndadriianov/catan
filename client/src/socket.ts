@@ -1,5 +1,7 @@
 import { io } from 'socket.io-client';
 
-// const socket = io('http://192.168.1.72:4000');
-const socket = io('http://localhost:4000'); // Адрес сервера
+
+const server = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+console.log(server);
+const socket = io(server); // Адрес сервера
 export default socket;

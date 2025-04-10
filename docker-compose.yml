@@ -6,11 +6,11 @@ services:
     build: ./server
     restart: always
     ports:
-      - "4000:4000"
+      - "4001:4001"
     depends_on:
       - db
     environment:
-      PORT: 4000
+      PORT: 4001
       ORIGIN: "http://localhost:3000"
       DATABASE_USER: my_user
       DATABASE_PASSWORD: "34"
@@ -19,7 +19,10 @@ services:
       DATABASE_PORT: 5432
 
   client:
-    build: ./client
+    build:
+      context: ./client
+      args:
+        - VITE_SERVER_URL=http://localhost:4001
     restart: always
     ports:
       - "3000:3000"

@@ -10,6 +10,6 @@ RUN chmod +x wait-for
 
 COPY . .
 
-EXPOSE 4000
+EXPOSE 4001
 
-CMD ["sh", "-c", "./wait-for db:5432 -- npm start"]
+CMD ["sh", "-c", "./wait-for db:5432 -- npm run docker-start"]
