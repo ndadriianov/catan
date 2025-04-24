@@ -10,7 +10,7 @@ import TurnedRoadsRow from '../buildings/TurnedRoadsRow.tsx';
 import VertRoadsRow from '../buildings/VertRoadsRow.tsx';
 import HousesRow from '../buildings/HousesRow.tsx';
 import NumbersRow from '../number/NumbersRow.tsx';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 
 type mapNewProps = {
@@ -32,8 +32,8 @@ type mapNewProps = {
 const Map = (
   {tiles, roads, houses, numbers, roadCoords, houseCoords, owner, isMyTurnNow,
   robberPosition, roadHandler, houseHandler, onNumberClick}: mapNewProps) => {
-  
-  
+
+  const gridRef = useRef<HTMLDivElement>(null);
   
   const [zoomLevel, setZoomLevel] = useState(1);
   
@@ -61,12 +61,31 @@ const Map = (
     // Очистка
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
+
+  useEffect(() => {
+    const el = gridRef.current;
+
+    // Небольшая задержка, чтобы точно всё прогрузилось
+    const timeoutId = setTimeout(() => {
+      if (el) {
+        el.style.transform = 'translateY(0.1px)';
+        requestAnimationFrame(() => {
+          el.style.transform = 'translateY(0)';
+        });
+      }
+    }, 200); // 100ms обычно достаточно (можно попробовать 200-300ms для надёжности)
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+
+
   return (
     <div className={classes.container} style={{zoom: zoomLevel}}>
       <img src={frame} alt={'frame'} className={classes.frame}/>
       
-      <div className={classes.grid}>
+      <div className={classes.grid} ref={gridRef}>
         <HexagonalRow tiles={tiles[0]}/>
         <HexagonalRow tiles={tiles[1]}/>
         <HexagonalRow tiles={tiles[2]}/>

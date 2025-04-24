@@ -116,6 +116,7 @@ const InRoom = () => {
   }
   
   function checkPlayers(players: Player[]): boolean {
+    if (players.length < 2) return false;
     if (players.some(p => p.color === Owner.nobody)) return false;
     for (let i = 0; i < players.length; i++) {
       for (let j = i + 1; j < players.length; j++) {

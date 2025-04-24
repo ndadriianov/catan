@@ -11,7 +11,7 @@ services:
       - db
     environment:
       PORT: 4001
-      ORIGIN: "http://localhost:3000"
+      ORIGIN: "http://217.198.13.150:3000"
       DATABASE_USER: my_user
       DATABASE_PASSWORD: "34"
       DATABASE_NAME: my_database
@@ -22,7 +22,7 @@ services:
     build:
       context: ./client
       args:
-        - VITE_SERVER_URL=http://localhost:4001
+        - VITE_SERVER_URL=http://217.198.13.150:4001
     restart: always
     ports:
       - "3000:3000"

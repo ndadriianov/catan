@@ -32,7 +32,7 @@
 
 .grid {
   position: absolute;
-  top: 0;
+  /*top: 0;*/
   transform-origin: top;
   margin-top: 8.5%;
   scale: 29.1%;
