@@ -26,12 +26,13 @@ type mapNewProps = {
   roadHandler: (x: number, y: number, isMyTurnNow: boolean, owner: Owner) => void;
   houseHandler: (x: number, y: number, isMyTurnNow: boolean, owner: Owner) => void;
   onNumberClick: (coords: Coords) => void;
+  handleImageLoad: () => void;
 }
 
 
 const Map = (
   {tiles, roads, houses, numbers, roadCoords, houseCoords, owner, isMyTurnNow,
-  robberPosition, roadHandler, houseHandler, onNumberClick}: mapNewProps) => {
+  robberPosition, roadHandler, houseHandler, onNumberClick, handleImageLoad}: mapNewProps) => {
 
   const gridRef = useRef<HTMLDivElement>(null);
   
@@ -82,8 +83,8 @@ const Map = (
 
   return (
     <div className={classes.container} style={{zoom: zoomLevel}}>
-      <img src={frame} alt={'frame'} className={classes.frame}/>
-      
+      <img src={frame} alt={'frame'} className={classes.frame} onLoad={handleImageLoad}/>
+
       <div className={classes.grid} ref={gridRef}>
         <HexagonalRow tiles={tiles[0]}/>
         <HexagonalRow tiles={tiles[1]}/>

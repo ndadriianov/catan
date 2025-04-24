@@ -26,6 +26,7 @@ import player from '../../../typesDefinitions/room/player.ts';
 import UnclosablePopup from '../../UI/UnclosablePopup.tsx';
 import VictoryPointsAndLastNumber from './VictoryPointsAndLastNumber.tsx';
 import ResourcesWithCards from "./ResourcesWithCards.tsx";
+import clsx from "clsx";
 
 
 type mapProps = {
@@ -42,16 +43,6 @@ enum AlertTypes {
 	Robber,
 	Winner,
 }
-
-const images = [
-	'assets/map/clay.png',
-	'assets/map/forrest.png',
-	'assets/map/frame.png',
-	'assets/map/sheeps.png',
-	'assets/map/stone.png',
-	'assets/map/wasteland.png',
-	'assets/map/wheat.png'
-];
 
 
 const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
@@ -80,8 +71,8 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	const [cityPurchaseFailed, setCityPurchaseFailed] = useState(false);
 	const [showDevelopmentCards, setShowDevelopmentCards] = useState(false);
 	const [winner, setWinner] = useState<string>('');
-	const [loaded, setLoaded] = useState<boolean>(false);
 	const [alerts, setAlerts] = useState<string[]>([]);
+	const [loaded, setLoaded] = useState<boolean>(false);
 
 	useEffect(() => {
 		const newAlerts = [...alerts];
@@ -269,232 +260,225 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	}, []);
 
 
-	useEffect(() => {
-		let loadedCount = 0;
-
-		images.forEach(src => {
-			const img = new Image();
-			img.src = src;
-			img.onload = () => {
-				loadedCount++;
-				if (loadedCount === images.length) {
-					setLoaded(true);
-				}
-			};
-			img.onerror = () => {
-				console.warn("Ошибка загрузки", src);
-				loadedCount++;
-				if (loadedCount === images.length) {
-					setLoaded(true);
-				}
-			};
-		});
-	}, []);
-
-
-	if (!loaded) {
-		return <div className="loader">Загрузка поля...</div>;
-	}
+	const handleImageLoad = () => {
+		setLoaded(true);
+	};
 
 	return (
-		<div className={classes.wrapper}>
-			<Box>
-				<Card className={classes.upperCard}>
-					<Card sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '5px' }}>
-						<Typography margin={1} variant="h6" color="primary" textTransform='uppercase'>ход {room.counter}</Typography>
-						<Button onClick={endTurn} variant='contained' disabled={!isMyTurnNow}>завершить ход</Button>
+		<>
+			{!loaded &&
+				<div className={classes.loaderScreen}>
+					<div className={classes.loaderSpinner} />
+					<div className={classes.loaderText}>
+						Подождите, идёт загрузка...<br />
+						При первом входе это может занять немного больше времени.
+					</div>
+				</div>
+			}
+
+			<div className={clsx(classes.wrapper, {[classes.hidden]: !loaded})}>
+				<Box>
+					<Card className={classes.upperCard}>
+						<Card sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', margin: '5px'}}>
+							<Typography margin={1} variant="h6" color="primary"
+													textTransform='uppercase'>ход {room.counter}</Typography>
+							<Button onClick={endTurn} variant='contained' disabled={!isMyTurnNow}>завершить ход</Button>
+						</Card>
+
+						<PlayersList players={room.players}/>
 					</Card>
-					
-					<PlayersList players={room.players}/>
-				</Card>
-			</Box>
+				</Box>
 
-			{isSquare ||
-				<div>
-					{!isLoaded && <div className="loader">Загрузка...</div>}
+				{isSquare ||
+					<div>
+						{!isLoaded && <div className="loader">Загрузка...</div>}
 
-					<div
-						className="mapContainer"
-						ref={mapContainerRef}
-						style={{visibility: isLoaded ? 'visible' : 'hidden'}}
-					>
-						<Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
-								 robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
-								 onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
-						/>
+						<div
+							className="mapContainer"
+							ref={mapContainerRef}
+							style={{visibility: isLoaded ? 'visible' : 'hidden'}}
+						>
+							<Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
+									 robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
+									 onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler} handleImageLoad={handleImageLoad}
+							/>
+						</div>
 					</div>
-				</div>
-			}
-			
-			
-			<Box sx={{display: 'flex', flexDirection: 'row', gap: 1, marginTop: '5px'}}>
-				<Box sx={{display: 'flex', flexDirection: { xs: 'column', md: 'column' }, gap: 1, alignItems: 'center',}}>
-					<Button variant="contained" onClick={throwTheDice} disabled={me.threwTheDice || !isMyTurnNow || room.debutMode}>
-						Бросить кубики
-					</Button>
-					
-					<Box sx={{display: 'flex', flexDirection: 'row'}}>
-						<VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
-						{renderResources && <InventoryDisplay inventory={inventory}/>}
-					</Box>
-					
-					<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-						{renderResources || renderResourcesWithCards || <Button variant="contained" onClick={() => setShowResourceModal(true)}>
-                Показать ресурсы
-            </Button>}
-						{renderTrade || <Button variant="contained" onClick={() => setShowTradeModal(true)}>
-                Открыть меню торговли
-            </Button>}
-						{renderDevCards || <Button variant="contained" onClick={() => setShowDevelopmentCards(true)}>
-                Открыть карты развития
-            </Button>}
+				}
+
+
+				<Box sx={{display: 'flex', flexDirection: 'row', gap: 1, marginTop: '5px'}}>
+					<Box sx={{display: 'flex', flexDirection: {xs: 'column', md: 'column'}, gap: 1, alignItems: 'center',}}>
+						<Button variant="contained" onClick={throwTheDice}
+										disabled={me.threwTheDice || !isMyTurnNow || room.debutMode}>
+							Бросить кубики
+						</Button>
+
+						<Box sx={{display: 'flex', flexDirection: 'row'}}>
+							<VictoryPointsAndLastNumber victoryPoints={me.victoryPoints} lastNumber={room.lastNumber}/>
+							{renderResources && <InventoryDisplay inventory={inventory}/>}
+						</Box>
+
+						<Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+							{renderResources || renderResourcesWithCards ||
+								<Button variant="contained" onClick={() => setShowResourceModal(true)}>
+									Показать ресурсы
+								</Button>}
+							{renderTrade || <Button variant="contained" onClick={() => setShowTradeModal(true)}>
+								Открыть меню торговли
+							</Button>}
+							{renderDevCards || <Button variant="contained" onClick={() => setShowDevelopmentCards(true)}>
+								Открыть карты развития
+							</Button>}
+						</Box>
+
+						{renderResourcesWithCards && <ResourcesWithCards resources={inventory}/>}
+						{renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
 					</Box>
 
-					{renderResourcesWithCards && <ResourcesWithCards resources={inventory}/>}
-					{renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
+					{renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
 				</Box>
 
-				{renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
-			</Box>
 
+				{isSquare &&
+					<div>
+						{!isLoaded && <div className="loader">Загрузка...</div>}
 
-			{isSquare &&
-				<div>
-					{!isLoaded && <div className="loader">Загрузка...</div>}
-
-					<div
-						className="mapContainer"
-						ref={mapContainerRef}
-						style={{visibility: isLoaded ? 'visible' : 'hidden'}}
-					>
-						<Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
-								 robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
-								 onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
-						/>
+						<div
+							className="mapContainer"
+							ref={mapContainerRef}
+							style={{visibility: isLoaded ? 'visible' : 'hidden'}}
+						>
+							<Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
+									 robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
+									 onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler} handleImageLoad={handleImageLoad}
+							/>
+						</div>
 					</div>
-				</div>
-			}
-			
-			
-			{renderResources ||
-          <MovableModal id={'res'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
-              <InventoryDisplay inventory={inventory}/>
-          </MovableModal>
-			}
-			
-			{renderDevCards ||
-          <MovableModal id={'development'} isOpen={showDevelopmentCards} onClose={() => setShowDevelopmentCards(false)}>
-              <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
-          </MovableModal>
-			}
-			
-			{renderTrade ||
-          <MovableModal id={'trd'} isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
-              <Trade room={room} color={me.color} inventory={inventory}/>
-          </MovableModal>
-			}
-			
-			
-			
-			<MovableModal id={'roads'} isOpen={showRoadModal} onClose={CancelRoadPurchase}>
-				<Box className={classes.buttonGroup}>
-					<Button variant="contained" color="primary" size="small" onClick={BuyRoad}>
-						Купить дорогу
-					</Button>
-					<Button variant="outlined" size="small" onClick={CancelRoadPurchase}>
-						Отмена
-					</Button>
-				</Box>
-			</MovableModal>
-			
-			<MovableModal id={'roads-f'} isOpen={roadPurchaseFailed} onClose={() => setRoadPurchaseFailed(false)}>
-				<Box className={classes.buttonGroup}>
-					Не удалось купить дорогу
-				</Box>
-			</MovableModal>
-			
-			
-			<MovableModal id={'houses'} isOpen={showHouseModal} onClose={isMyVillage ? CancelCityPurchase : CancelVillagePurchase}>
-				<Box className={classes.buttonGroup}>
-					{isMyVillage ?
-						<>
-							<Button variant="contained" color="primary" size="small" onClick={BuyCity}>
-								Купить город
-							</Button>
-							<Button variant="contained" color="error" size="small" onClick={CancelCityPurchase}>
-								Отмена
-							</Button>
-						</>
-						:
-						<>
-							<Button variant="contained" color="primary" size="small" onClick={BuyVillage}>
-								Купить деревню
-							</Button>
-							<Button variant="contained" color="error" size="small" onClick={CancelVillagePurchase}>
-								Отмена
-							</Button>
-						</>
-					}
-				</Box>
-			</MovableModal>
-			
-			<MovableModal id={'village-f'} isOpen={villagePurchaseFailed} onClose={() => setVillagePurchaseFailed(false)}>
-				<Box className={classes.buttonGroup}>
-					Не удалось купить деревню
-				</Box>
-			</MovableModal>
-			
-			<MovableModal id={'city-f'} isOpen={cityPurchaseFailed} onClose={() => setCityPurchaseFailed(false)}>
-				<Box className={classes.buttonGroup}>
-					Не удалось купить деревню
-				</Box>
-			</MovableModal>
-			
-			
-			<MovableModal id={'numbers'} isOpen={showNumbersModal} onClose={() => setShowNumbersModal(false)}>
-				<Box className={classes.buttonGroup}>
-					<Button variant="contained" color="primary" size="small" onClick={moveRobber}>
-						переместить разбойника сюда
-					</Button>
-					<Button  variant="contained" color="secondary" size="small" onClick={() => setShowNumbersModal(false)}>
-						отмена
-					</Button>
-				</Box>
-			</MovableModal>
-			
-			
-			<MovableModal id={'victim'} isOpen={showChooseVictim} onClose={() => setShowChooseVictim(false)}>
-				<Box className={classes.buttonGroup}>
-					{room.debtors.map((debtor, index) => (
-						<Button key={index} sx={{m: 1, textAlign: 'center'}} onClick={() => stealResource(debtor)}>{debtor}</Button>
-					))}
-				</Box>
-			</MovableModal>
-			
-			
-			<MovableModal id={'theft-s'} isOpen={showTheftSucceed} onClose={() => setShowTheftSucceed(false)}>
-				<Box className={classes.buttonGroup}>
-					Ресурс украден у игрока
-				</Box>
-			</MovableModal>
-			
-			
-			<MovableModal id={'theft-f'} isOpen={showTheftFailed} onClose={() => setShowTheftFailed(false)}>
-				<Box className={classes.buttonGroup}>
-					Не удалось украсть ресурс у игрока
-				</Box>
-			</MovableModal>
+				}
 
 
-			<UnclosablePopup messages={alerts}/>
+				{renderResources ||
+					<MovableModal id={'res'} isOpen={showResourceModal} onClose={() => setShowResourceModal(false)}>
+						<InventoryDisplay inventory={inventory}/>
+					</MovableModal>
+				}
+
+				{renderDevCards ||
+					<MovableModal id={'development'} isOpen={showDevelopmentCards} onClose={() => setShowDevelopmentCards(false)}>
+						<DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
+					</MovableModal>
+				}
+
+				{renderTrade ||
+					<MovableModal id={'trd'} isOpen={showTradeModal} onClose={() => setShowTradeModal(false)}>
+						<Trade room={room} color={me.color} inventory={inventory}/>
+					</MovableModal>
+				}
 
 
-			<MovableModal id={'incorrect-turn'} isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
-				<Box className={classes.buttonGroup}>
-					Такой ход невозможен. Попробуйте снова
-				</Box>
-			</MovableModal>
-		</div>
+				<MovableModal id={'roads'} isOpen={showRoadModal} onClose={CancelRoadPurchase}>
+					<Box className={classes.buttonGroup}>
+						<Button variant="contained" color="primary" size="small" onClick={BuyRoad}>
+							Купить дорогу
+						</Button>
+						<Button variant="outlined" size="small" onClick={CancelRoadPurchase}>
+							Отмена
+						</Button>
+					</Box>
+				</MovableModal>
+
+				<MovableModal id={'roads-f'} isOpen={roadPurchaseFailed} onClose={() => setRoadPurchaseFailed(false)}>
+					<Box className={classes.buttonGroup}>
+						Не удалось купить дорогу
+					</Box>
+				</MovableModal>
+
+
+				<MovableModal id={'houses'} isOpen={showHouseModal}
+											onClose={isMyVillage ? CancelCityPurchase : CancelVillagePurchase}>
+					<Box className={classes.buttonGroup}>
+						{isMyVillage ?
+							<>
+								<Button variant="contained" color="primary" size="small" onClick={BuyCity}>
+									Купить город
+								</Button>
+								<Button variant="contained" color="error" size="small" onClick={CancelCityPurchase}>
+									Отмена
+								</Button>
+							</>
+							:
+							<>
+								<Button variant="contained" color="primary" size="small" onClick={BuyVillage}>
+									Купить деревню
+								</Button>
+								<Button variant="contained" color="error" size="small" onClick={CancelVillagePurchase}>
+									Отмена
+								</Button>
+							</>
+						}
+					</Box>
+				</MovableModal>
+
+				<MovableModal id={'village-f'} isOpen={villagePurchaseFailed} onClose={() => setVillagePurchaseFailed(false)}>
+					<Box className={classes.buttonGroup}>
+						Не удалось купить деревню
+					</Box>
+				</MovableModal>
+
+				<MovableModal id={'city-f'} isOpen={cityPurchaseFailed} onClose={() => setCityPurchaseFailed(false)}>
+					<Box className={classes.buttonGroup}>
+						Не удалось купить деревню
+					</Box>
+				</MovableModal>
+
+
+				<MovableModal id={'numbers'} isOpen={showNumbersModal} onClose={() => setShowNumbersModal(false)}>
+					<Box className={classes.buttonGroup}>
+						<Button variant="contained" color="primary" size="small" onClick={moveRobber}>
+							переместить разбойника сюда
+						</Button>
+						<Button variant="contained" color="secondary" size="small" onClick={() => setShowNumbersModal(false)}>
+							отмена
+						</Button>
+					</Box>
+				</MovableModal>
+
+
+				<MovableModal id={'victim'} isOpen={showChooseVictim} onClose={() => setShowChooseVictim(false)}>
+					<Box className={classes.buttonGroup}>
+						{room.debtors.map((debtor, index) => (
+							<Button key={index} sx={{m: 1, textAlign: 'center'}}
+											onClick={() => stealResource(debtor)}>{debtor}</Button>
+						))}
+					</Box>
+				</MovableModal>
+
+
+				<MovableModal id={'theft-s'} isOpen={showTheftSucceed} onClose={() => setShowTheftSucceed(false)}>
+					<Box className={classes.buttonGroup}>
+						Ресурс украден у игрока
+					</Box>
+				</MovableModal>
+
+
+				<MovableModal id={'theft-f'} isOpen={showTheftFailed} onClose={() => setShowTheftFailed(false)}>
+					<Box className={classes.buttonGroup}>
+						Не удалось украсть ресурс у игрока
+					</Box>
+				</MovableModal>
+
+
+				<UnclosablePopup messages={alerts}/>
+
+
+				<MovableModal id={'incorrect-turn'} isOpen={isTurnIncorrect} onClose={() => setIsTurnIncorrect(false)}>
+					<Box className={classes.buttonGroup}>
+						Такой ход невозможен. Попробуйте снова
+					</Box>
+				</MovableModal>
+			</div>
+		</>
 	);
 };
 	
