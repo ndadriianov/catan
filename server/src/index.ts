@@ -765,7 +765,7 @@ async function main(): Promise<void> {
   
   function prepareRoomIdLists(user: User): {currentRoomIds: number[], otherRoomIds: number[]} {
     const currentRoomIds: number[] = user.participatingRooms.map((room: Room): number => room.id);
-    const allRoomIds: number[] = rooms.map((room: Room): number => room.id);
+    const allRoomIds: number[] = rooms.filter((room: Room): boolean => !room.haveStarted).map((room: Room): number => room.id);
     const otherRoomIds: number[] = allRoomIds.filter((id: number): boolean => {
       return !currentRoomIds.some((otherId: number): boolean => id === otherId);
     })

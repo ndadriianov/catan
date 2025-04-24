@@ -2,7 +2,7 @@ import classes from './Map.module.css';
 import initialTiles, {initialNumbers} from '../../../constants/TileRows.ts';
 import initialRoads from '../../../constants/RoadRows.ts';
 import initialHouses from '../../../constants/HouseRows.ts';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Room from '../../../typesDefinitions/room/room.ts';
 import {Road} from '../../../typesDefinitions/roads.ts';
 import {House} from '../../../typesDefinitions/houses.ts';
@@ -43,6 +43,16 @@ enum AlertTypes {
 	Winner,
 }
 
+const images = [
+	'assets/map/clay.png',
+	'assets/map/forrest.png',
+	'assets/map/frame.png',
+	'assets/map/sheeps.png',
+	'assets/map/stone.png',
+	'assets/map/wasteland.png',
+	'assets/map/wheat.png'
+];
+
 
 const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	const [tiles, setTiles] = useState<Tile[][]>(initialTiles);
@@ -70,9 +80,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	const [cityPurchaseFailed, setCityPurchaseFailed] = useState(false);
 	const [showDevelopmentCards, setShowDevelopmentCards] = useState(false);
 	const [winner, setWinner] = useState<string>('');
-
-
-
+	const [loaded, setLoaded] = useState<boolean>(false);
 	const [alerts, setAlerts] = useState<string[]>([]);
 
 	useEffect(() => {
@@ -247,8 +255,47 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	const renderResourcesWithCards = !isMobile;
 	const renderTrade = haveEnoughSpace;
 	const renderDevCards = !isLowScreen && !isMobile;
-	
-	
+
+	const [isLoaded, setIsLoaded] = useState(false);
+	const mapContainerRef = useRef<HTMLDivElement>(null);
+
+
+	useEffect(() => {
+		const timeoutId = setTimeout(() => {
+			setIsLoaded(true);
+		}, 300);
+
+		return () => clearTimeout(timeoutId);
+	}, []);
+
+
+	useEffect(() => {
+		let loadedCount = 0;
+
+		images.forEach(src => {
+			const img = new Image();
+			img.src = src;
+			img.onload = () => {
+				loadedCount++;
+				if (loadedCount === images.length) {
+					setLoaded(true);
+				}
+			};
+			img.onerror = () => {
+				console.warn("Ошибка загрузки", src);
+				loadedCount++;
+				if (loadedCount === images.length) {
+					setLoaded(true);
+				}
+			};
+		});
+	}, []);
+
+
+	if (!loaded) {
+		return <div className="loader">Загрузка поля...</div>;
+	}
+
 	return (
 		<div className={classes.wrapper}>
 			<Box>
@@ -261,12 +308,23 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 					<PlayersList players={room.players}/>
 				</Card>
 			</Box>
-			
+
 			{isSquare ||
-          <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
-               robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
-               onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
-          />}
+				<div>
+					{!isLoaded && <div className="loader">Загрузка...</div>}
+
+					<div
+						className="mapContainer"
+						ref={mapContainerRef}
+						style={{visibility: isLoaded ? 'visible' : 'hidden'}}
+					>
+						<Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
+								 robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
+								 onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
+						/>
+					</div>
+				</div>
+			}
 			
 			
 			<Box sx={{display: 'flex', flexDirection: 'row', gap: 1, marginTop: '5px'}}>
@@ -301,10 +359,20 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 
 
 			{isSquare &&
-          <Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
-               robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
-               onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
-          />
+				<div>
+					{!isLoaded && <div className="loader">Загрузка...</div>}
+
+					<div
+						className="mapContainer"
+						ref={mapContainerRef}
+						style={{visibility: isLoaded ? 'visible' : 'hidden'}}
+					>
+						<Map tiles={tiles} roads={roads} houses={houses} numbers={numbers} roadCoords={roadCoords}
+								 robberPosition={robberPosition} houseCoords={houseCoords} owner={owner} isMyTurnNow={isMyTurnNow}
+								 onNumberClick={onNumberClick} houseHandler={HouseHandler} roadHandler={RoadHandler}
+						/>
+					</div>
+				</div>
 			}
 			
 			

@@ -10,6 +10,7 @@ import Modal from 'react-modal';
 import {CSSProperties} from 'react';
 import {ThemeProvider} from '@mui/material';
 import {theme} from './Theme.ts';
+import {PreloadAssets} from "./PreloadAssets.ts";
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
     <div style={appStyle}>
       <ThemeProvider theme={theme}>
         <UserContext.Provider value={{user, setUser}}>
+          <PreloadAssets/>
           <BrowserRouter>
             <GlobalHeader/>
             

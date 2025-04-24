@@ -66,7 +66,6 @@ const Map = (
   useEffect(() => {
     const el = gridRef.current;
 
-    // Небольшая задержка, чтобы точно всё прогрузилось
     const timeoutId = setTimeout(() => {
       if (el) {
         el.style.transform = 'translateY(0.1px)';
@@ -74,7 +73,7 @@ const Map = (
           el.style.transform = 'translateY(0)';
         });
       }
-    }, 200); // 100ms обычно достаточно (можно попробовать 200-300ms для надёжности)
+    }, 200);
 
     return () => clearTimeout(timeoutId);
   }, []);
