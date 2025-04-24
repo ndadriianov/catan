@@ -367,7 +367,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       
       {/* Модальное окно для универсального порта */}
       <MovableModal id={'up'} isOpen={showUniversalPortTrade} onClose={() => setShowUniversalPortTrade(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <CardContent>
             <FormControl
               style={{width: '100%'}}
@@ -414,7 +414,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       
       {/* Модальное окно для порта */}
       <MovableModal id={'port'} isOpen={chosenPort !== resourceTypes.notChosen} onClose={() => setChosenPort(resourceTypes.notChosen)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <CardContent>
             <Typography variant="h6" color={'primary'} style={{ whiteSpace: "nowrap", marginBottom: '16px' }}>
               Курс: 2 {options[chosenPort]} за 1 {options[chosenPortResource]}
@@ -458,7 +458,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       
       {/* Модальное окно для торговли с банком */}
       <MovableModal id={'bank'} isOpen={showBankTrade} onClose={() => setShowBankTrade(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <CardContent>
             <FormControl fullWidth>
               <InputLabel>Продать 4</InputLabel>
@@ -505,7 +505,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       
       {/* Модальное окно для действий со сделкой */}
       <MovableModal id={'deal'} isOpen={showDealActions} onClose={() => setShowDealActions(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Stack direction="row" spacing={2}>
             <Button
               variant="contained"
@@ -525,7 +525,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       
       {/* Модальное окно для торговли с игроками */}
       <MovableModal id={'trade-with-players'} isOpen={showTradeWithPlayers} onClose={() => setShowTradeWithPlayers(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <CardContent sx={{
             minWidth: '170px',
             display: 'flex',
@@ -587,79 +587,79 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       
       {/* Модальные окна для ошибок и успехов */}
       <MovableModal id={'trade-errors'} isOpen={incorrect} onClose={() => setIncorrect(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Нельзя дарить или просить подарок</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'dontHaveEnoughClay'} isOpen={dontHaveEnoughClay} onClose={() => setDontHaveEnoughClay(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Недостаточно глины</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'dontHaveEnoughForrest'} isOpen={dontHaveEnoughForrest} onClose={() => setDontHaveEnoughForrest(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Недостаточно леса</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'dontHaveEnoughSheep'} isOpen={dontHaveEnoughSheep} onClose={() => setDontHaveEnoughSheep(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Недостаточно овец</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'dontHaveEnoughStone'} isOpen={dontHaveEnoughStone} onClose={() => setDontHaveEnoughStone(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Недостаточно камня</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'dontHaveEnoughWheat'} isOpen={dontHaveEnoughWheat} onClose={() => setDontHaveEnoughWheat(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Недостаточно пшеницы</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'trade-unsuccessful'} isOpen={unsuccessful} onClose={() => setUnsuccessful(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Не удалось отправить предложение</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'deal-das'} isOpen={showDealAcceptationSucceed} onClose={() => setShowDealAcceptationSucceed(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Сделка состоялась</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'deal-daf'} isOpen={showDealAcceptationFailed} onClose={() => setShowDealAcceptationFailed(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Не удалось заключить сделку</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'deal-dds'} isOpen={showDealDeclineSucceed} onClose={() => setShowDealDeclineSucceed(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Сделка отклонена</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'deal-ddf'} isOpen={showDealDeclineFailed} onClose={() => setShowDealDeclineFailed(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Не удалось отклонить сделку</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'deal-ds'} isOpen={dealSucceed} onClose={() => setDealSucceed(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Сделка заключена</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'deal-df'} isOpen={dealFailed} onClose={() => setDealFailed(false)}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Typography>Не удалось заключить сделку</Typography>
         </Card>
       </MovableModal>
@@ -668,7 +668,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
         setDealResultList([]);
         setShowDealResult(false);
       }}>
-        <Card className={globalClasses.centeredModal}>
+        <Card>
           <Stack spacing={1}>
             {dealResultList.map((item, index) => (
               <Typography key={index}>
