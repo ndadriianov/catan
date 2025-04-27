@@ -26,6 +26,7 @@ export class User {
       this._activeRoom = null;
       this._eventEmitter.removeAllListeners(`${this.username}:debut-turn`);
     }
+    this._eventEmitter.emit('update-user-status', this.username, this._status);
   }
   
   
