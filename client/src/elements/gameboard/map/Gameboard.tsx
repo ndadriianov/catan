@@ -42,6 +42,7 @@ enum AlertTypes {
 	Roads,
 	Robber,
 	Winner,
+	Dice
 }
 
 
@@ -77,34 +78,25 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	useEffect(() => {
 		const newAlerts = [...alerts];
 
-		if (me.freeVillages === 0) {
-			newAlerts[AlertTypes.Villages] = '';
-		} else {
-			newAlerts[AlertTypes.Villages] = `У вас осталось ${me.freeVillages} неиспользованных бесплатных поселений!
-    Если их не использовать за этот ход, то они исчезнут!`;
-		}
+		if (me.freeVillages === 0) newAlerts[AlertTypes.Villages] = '';
+		else if (room.debutMode) newAlerts[AlertTypes.Villages] = 'Перед завершением хода необходимо построить 1 деревню';
+		else newAlerts[AlertTypes.Villages] = `У вас осталось ${me.freeVillages} неиспользованных бесплатных поселений!`;
 
-		if (me.freeRoads === 0) {
-			newAlerts[AlertTypes.Roads] = '';
-		} else {
-			newAlerts[AlertTypes.Roads] = `У вас осталось ${me.freeRoads} неиспользованных бесплатных дорог!
-    Если их не использовать за этот ход, то они исчезнут!`;
-		}
+		if (me.freeRoads === 0) newAlerts[AlertTypes.Roads] = '';
+		else if (room.debutMode) newAlerts[AlertTypes.Roads] = 'Перед завершением хода необходимо построить 1 дорогу';
+		else newAlerts[AlertTypes.Roads] = `У вас осталось ${me.freeRoads} неиспользованных бесплатных дорог!`;
 
-		if (room.robberShouldBeMoved) {
-			newAlerts[AlertTypes.Robber] = 'Необходимо передвинуть разбойника!';
-		} else {
-			newAlerts[AlertTypes.Robber] = '';
-		}
+		if (room.robberShouldBeMoved) newAlerts[AlertTypes.Robber] = 'Необходимо передвинуть разбойника!';
+		else newAlerts[AlertTypes.Robber] = '';
 
-		if (winner !== '') {
-			newAlerts[AlertTypes.Winner] = `Игрок ${winner} победил`;
-		} else {
-			newAlerts[AlertTypes.Winner] = '';
-		}
+		if (winner !== '') newAlerts[AlertTypes.Winner] = `Игрок ${winner} победил`;
+		else newAlerts[AlertTypes.Winner] = '';
+
+		if (!room.debutMode && isMyTurnNow && !me.threwTheDice) newAlerts[AlertTypes.Dice] = 'Необходимо бросить кубик'
+		else newAlerts[AlertTypes.Dice] = '';
 
 		setAlerts(newAlerts);
-	}, [me.freeVillages, me.freeRoads, room.robberShouldBeMoved, winner]);
+	}, [me.freeVillages, me.freeRoads, room.robberShouldBeMoved, winner, isMyTurnNow, me.threwTheDice]);
 	
 	
 	function endTurn(): void {
@@ -114,7 +106,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 	}
 	
 	function onNumberClick(coords: Coords): void {
-		if (isMyTurnNow) {
+		if (isMyTurnNow && room.playWithRobber && room.robberShouldBeMoved) {
 			setNewRobberPosition(coords);
 			setShowNumbersModal(true);
 		}
@@ -333,7 +325,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 						</Box>
 
 						{renderResourcesWithCards && <ResourcesWithCards resources={inventory}/>}
-						{renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>}
+						{renderDevCards && <DevelopmentCards me={me} isMyTurnNow={isMyTurnNow} playWithRobber={room.playWithRobber}/>}
 					</Box>
 
 					{renderTrade && <Trade room={room} color={me.color} inventory={inventory}/>}
@@ -366,7 +358,7 @@ const Gameboard = ({owner, room, isMyTurnNow, me, inventory}: mapProps) => {
 
 				{renderDevCards ||
 					<MovableModal id={'development'} isOpen={showDevelopmentCards} onClose={() => setShowDevelopmentCards(false)}>
-						<DevelopmentCards me={me} isMyTurnNow={isMyTurnNow}/>
+						<DevelopmentCards me={me} isMyTurnNow={isMyTurnNow} playWithRobber={room.playWithRobber}/>
 					</MovableModal>
 				}
 

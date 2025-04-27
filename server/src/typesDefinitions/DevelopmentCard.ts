@@ -34,6 +34,20 @@ export const InitialDevelopmentCards = [
   DevelopmentCard.Monopoly
 ]
 
+export const InitialDevelopmentCardsWithoutKnights = [
+  DevelopmentCard.VictoryPoint,
+  DevelopmentCard.VictoryPoint,
+  DevelopmentCard.VictoryPoint,
+  DevelopmentCard.VictoryPoint,
+  DevelopmentCard.VictoryPoint,
+  DevelopmentCard.RoadBuilding,
+  DevelopmentCard.RoadBuilding,
+  DevelopmentCard.Invention,
+  DevelopmentCard.Invention,
+  DevelopmentCard.Monopoly,
+  DevelopmentCard.Monopoly
+]
+
 
 export class DevelopmentCards {
   Knights: number;

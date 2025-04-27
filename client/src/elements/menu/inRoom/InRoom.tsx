@@ -269,7 +269,7 @@ const InRoom = () => {
                       label="Очков для победы"
                       value={pointsToWin}
                       error={pointsError}
-                      helperText={pointsError || "Введите число от 3 до 20"}
+                      helperText={pointsError || "Введите число от 3 до 20 и нажмите кнопку изменить чтобы изменить количество очков для победы"}
                       onChange={handlePointsToWinChange}
                       disabled={!me}
                       type="number"
@@ -295,7 +295,7 @@ const InRoom = () => {
                         height: '56px'
                       }}
                     >
-                      Подтвердить
+                      Изменить
                     </Button>
                   </Box>
                 </Box>
@@ -312,6 +312,17 @@ const InRoom = () => {
                   >
                     Начать игру
                   </Button>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: !arePlayersOk ? 'error.main' : 'text.secondary',
+                      fontSize: '0.75rem',
+                      mt: 1,
+                      ml: 1.5
+                    }}
+                  >
+                    Чтобы начать игру нужно от 2 до 4 игроков в комнате,каждый игрок должен выбрать цвет, цвета игроков не должны повторяться
+                  </Typography>
                 </Box>
                 
                 <Box sx={{ width: '100%', mt: 3 }}>

@@ -4,7 +4,7 @@ import {Gameboard, Owner} from './Gameboard';
 import {Coords, Inventory, Player} from './Player';
 import {PriceCalculator} from './PriceCalculator';
 import {PurchaseService} from './Purchase';
-import {DevelopmentCard, InitialDevelopmentCards} from './DevelopmentCard';
+import {DevelopmentCard, InitialDevelopmentCards, InitialDevelopmentCardsWithoutKnights} from './DevelopmentCard';
 
 
 export interface RoomOptions {
@@ -372,7 +372,10 @@ export class Room {
     this.gameboard = new Gameboard();
     this.purchases = new PurchaseService(this._players, this._eventEmitter, this.id);
     
-    if (!this.playWithRobber) this.gameboard.TurnRobberOff();
+    if (!this.playWithRobber) {
+      this.gameboard.TurnRobberOff();
+      this._developmentCardDeck = [...InitialDevelopmentCardsWithoutKnights].sort(() => Math.random() - 0.5);
+    }
     
     this._players.forEach((player: Player): void => {
       player.freeRoads = 1;

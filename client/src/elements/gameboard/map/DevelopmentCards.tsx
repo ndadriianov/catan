@@ -9,6 +9,7 @@ import {resourceTypes} from '../../../typesDefinitions/resourceTypes.ts';
 type Props = {
   me: player;
   isMyTurnNow: boolean;
+  playWithRobber: boolean;
 }
 
 type CardItemProps = {
@@ -42,7 +43,7 @@ const DevCardItem = ({name, value, addValue, onApply, disabled}: CardItemProps) 
   </Box>
 );
 
-const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
+const DevelopmentCards = ({me, isMyTurnNow, playWithRobber}: Props) => {
   const [showPurchaseSucceed, setShowPurchaseSucceed] = useState(false);
   const [showPurchaseFailed, setShowPurchaseFailed] = useState(false);
   const [showInventionModal, setShowInventionModal] = useState(false);
@@ -83,9 +84,14 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
       <Card sx={{minWidth: 240, boxShadow: 3, bgcolor: 'background.paper'}}>
         <Box sx={{p: 1}}>
           <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
-            <Typography variant="subtitle2" sx={{color: 'text.secondary'}}>
-              Карты развития
-            </Typography>
+            <Box>
+              <Typography variant="subtitle2" sx={{color: 'text.secondary'}}>
+                Карты развития
+              </Typography>
+              <Typography variant="caption" sx={{color: 'text.disabled', lineHeight: 1}}>
+                1 овца, 1 камень, 1 пшеница
+              </Typography>
+            </Box>
             <Button
               variant="outlined"
               size="small"
@@ -99,13 +105,13 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
           
           <Card variant="outlined" sx={{p: 1, borderColor: 'divider'}}>
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
-              <DevCardItem
+              {playWithRobber && <DevCardItem
                 name="Рыцарь"
                 value={me.knights}
                 addValue={me.addedKnights}
                 onApply={ActivateKnight}
                 disabled={!(isMyTurnNow && (!me.threwTheDice && !me.usedKnightThisTurn) && me.knights > 0)}
-              />
+              />}
               <DevCardItem
                 name="Дороги"
                 value={me.roadBuildings}
@@ -133,13 +139,13 @@ const DevelopmentCards = ({me, isMyTurnNow}: Props) => {
       </Card>
       
       <MovableModal id={'vpadc-ps'} isOpen={showPurchaseSucceed} onClose={() => setShowPurchaseSucceed(false)}>
-        <Card className={classes.centeredModal}>
+        <Card>
           <Typography whiteSpace={'nowrap'}>покупка карты развития состоялась</Typography>
         </Card>
       </MovableModal>
       
       <MovableModal id={'vpadc-pf'} isOpen={showPurchaseFailed} onClose={() => setShowPurchaseFailed(false)}>
-        <Card className={classes.centeredModal}>
+        <Card>
           <Typography whiteSpace={'nowrap'}>покупка карты развития не состоялась</Typography>
         </Card>
       </MovableModal>

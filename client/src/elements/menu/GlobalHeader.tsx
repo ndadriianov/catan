@@ -5,6 +5,8 @@ import socket from '../../socket.ts';
 import MyModal from '../UI/modal/MyModal.tsx';
 import globalClasses from '../../styles.module.css'
 import classes from './menu.module.css'
+import RulesModal from "./RulesModal.tsx";
+import {Button} from "@mui/material";
 
 const GlobalHeader = () => {
   const {user, setUser} = useContext(UserContext)!;
@@ -70,9 +72,13 @@ const GlobalHeader = () => {
       {user.username && (
         <div style={{display: 'flex', justifyContent: 'space-between'}}>
           <div className={classes.headerText}>{user.username}</div>
-          <button onClick={LogOut} className={globalClasses.button} style={{margin: '5px'}}>
-            выйти из аккаунта
-          </button>
+
+          <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+            <RulesModal/>
+            <Button onClick={LogOut} variant={'contained'}>
+              выйти из аккаунта
+            </Button>
+          </div>
         </div>
       )}
       

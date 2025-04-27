@@ -303,7 +303,7 @@ const Trade = ({ room, color, inventory }: TradeProps) => {
       </Box>
       
       <MovableModal id={'deals'} isOpen={showDeals} onClose={() => setShowDeals(false)}>
-        <Card className={classes.dealsModal}>
+        <Card>
           <Typography variant="h6" className={classes.dealsHeader}>
             {room.activePlayer !== user.username ? 'Предложения вам' : 'Ваши предложения'}
           </Typography>
